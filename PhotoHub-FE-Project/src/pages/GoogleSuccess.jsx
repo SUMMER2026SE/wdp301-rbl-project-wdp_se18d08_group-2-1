@@ -1,28 +1,35 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { googleAuthService } from "../services/googleAuthService";
 
 export default function GoogleSuccess() {
+  const navigate = useNavigate();
+
   useEffect(() => {
-    const { token, userId, error } =
-      googleAuthService.getGoogleAuthResult();
+    const handleLogin = async () => {
+      const { token, error } = googleAuthService.getGoogleAuthResult();
 
-    if (error) {
-      console.log("Google login failed:", error);
-      return;
-    }
+      if (error || !token) {
+        navigate("/auth");
+        return;
+      }
 
-    if (token) {
-      // lưu token
       localStorage.setItem("token", token);
-      localStorage.setItem("userId", userId);
 
-      // clear URL cho sạch
+      // 🔥 lấy full user từ backend
+      const user = await googleAuthService.fetchGoogleUser(token);
+
+      localStorage.setItem("user", JSON.stringify(user));
+
+      window.dispatchEvent(new Event("storage_user_changed"));
+
       googleAuthService.clearUrl();
 
-      // redirect về home
-      window.location.href = "/";
-    }
+      navigate("/");
+    };
+
+    handleLogin();
   }, []);
 
-  return <div>Đang đăng nhập bằng Google...</div>;
+  return <div>Logging in with Google...</div>;
 }
