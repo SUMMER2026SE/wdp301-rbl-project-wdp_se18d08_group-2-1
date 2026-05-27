@@ -1,9 +1,11 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Footer from "./components/landingPage/Footer";
 import Header from "./components/landingPage/Header";
 import Home from "./pages/Home";
 import PhotographerProfile from "./components/photographers/PhotographerProfile";
+import AuthPage from "./pages/AuthPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function getInitialTheme() {
   const storedTheme = localStorage.getItem("photohub-theme");
@@ -22,6 +24,9 @@ function getInitialLanguage() {
 export default function App() {
   const [theme, setTheme] = useState(getInitialTheme);
   const [language, setLanguage] = useState(getInitialLanguage);
+
+  const location = useLocation();
+  const isAuthPage = location.pathname === "/login";
 
   useEffect(() => {
     localStorage.setItem("photohub-theme", theme);
@@ -43,18 +48,46 @@ export default function App() {
 
   return (
     <div className={`theme-${theme} relative flex min-h-screen w-full flex-col overflow-x-hidden`}>
+      {/* Đã gỡ bỏ !isAuthPage -> Header tổng sẽ hiển thị ở toàn bộ các trang, kể cả /login */}
       <Header
         language={language}
         theme={theme}
         onToggleLanguage={toggleLanguage}
         onToggleTheme={toggleTheme}
       />
+
       <Routes>
         <Route path="/" element={<Home language={language} />} />
         <Route path="/photographers/:id" element={<PhotographerProfile language={language} />} />
+
+        <Route
+          path="/login"
+          element={
+            <AuthPage
+              language={language}
+              theme={theme}
+              onToggleLanguage={toggleLanguage}
+              onToggleTheme={toggleTheme}
+            />
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProfilePage
+              language={language}
+              theme={theme}
+              onToggleLanguage={toggleLanguage}
+              onToggleTheme={toggleTheme}
+            />
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <Footer language={language} />
+
+      {/* Giữ nguyên ẩn footer ở trang login để giao diện gọn gàng hơn */}
+      {!isAuthPage && <Footer language={language} />}
     </div>
   );
 }
