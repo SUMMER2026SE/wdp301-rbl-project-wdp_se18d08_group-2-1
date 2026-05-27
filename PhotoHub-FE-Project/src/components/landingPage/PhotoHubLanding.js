@@ -548,21 +548,20 @@ function SectionIntro({ eyebrow, title, copy, align = "center" }) {
     </motion.div>
   );
 }
-
 function GradientButton({ children, className = "" }) {
   return (
     <button
-      className={`group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full border border-white/10 bg-white px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_50px_rgba(34,211,238,0.18)] transition-all duration-500 hover:-translate-y-0.5 hover:shadow-[0_0_70px_rgba(139,92,246,0.35)] ${className}`}
+      className={`group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-[0_0_50px_rgba(34,211,238,0.18)] transition-all duration-500 hover:-translate-y-0.5 hover:shadow-[0_0_70px_rgba(139,92,246,0.35)] ${className}`}
     >
       <span className="absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-cyan-200/60 to-transparent transition-transform duration-700 group-hover:translate-x-[120%]" />
-      <span className="relative flex items-center gap-2">
+
+      <span className="relative flex items-center gap-2 font-semibold text-slate-900">
         {children}
-        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" {...iconProps} />
+        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
       </span>
     </button>
   );
 }
-
 function GhostButton({ children }) {
   return (
     <button className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition-all duration-500 hover:border-cyan-300/40 hover:bg-white/[0.08]">
@@ -628,13 +627,12 @@ function DashboardMockup({ copy, scale, y, opacity }) {
                       </p>
                     </div>
                     <span
-                      className={`self-start rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                        color === "cyan"
-                          ? "bg-cyan-300/10 text-cyan-200"
-                          : color === "violet"
-                            ? "bg-violet-400/10 text-violet-200"
-                            : "bg-slate-200/10 text-slate-200"
-                      }`}
+                      className={`self-start rounded-full px-2.5 py-1 text-[11px] font-semibold ${color === "cyan"
+                        ? "bg-cyan-300/10 text-cyan-200"
+                        : color === "violet"
+                          ? "bg-violet-400/10 text-violet-200"
+                          : "bg-slate-200/10 text-slate-200"
+                        }`}
                     >
                       {status}
                     </span>
@@ -894,14 +892,13 @@ function AIScannerCard({ copy }) {
             {copy.signals.map((label, index) => (
               <div
                 key={label}
-                className={`absolute hidden rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-xs font-medium text-slate-200 shadow-[0_10px_30px_rgba(15,23,42,0.14)] backdrop-blur-md sm:block ${
-                  [
-                    "left-1/2 top-3 -translate-x-1/2",
-                    "right-0 top-1/2 -translate-y-1/2",
-                    "bottom-3 left-1/2 -translate-x-1/2",
-                    "left-0 top-1/2 -translate-y-1/2",
-                  ][index]
-                }`}
+                className={`absolute hidden rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-xs font-medium text-slate-200 shadow-[0_10px_30px_rgba(15,23,42,0.14)] backdrop-blur-md sm:block ${[
+                  "left-1/2 top-3 -translate-x-1/2",
+                  "right-0 top-1/2 -translate-y-1/2",
+                  "bottom-3 left-1/2 -translate-x-1/2",
+                  "left-0 top-1/2 -translate-y-1/2",
+                ][index]
+                  }`}
               >
                 {label}
               </div>
@@ -1080,19 +1077,16 @@ function WorkflowSection({ copy }) {
                 <motion.div
                   key={step.title}
                   variants={fadeUp}
-                  className={`relative grid gap-6 pl-16 sm:grid-cols-2 sm:pl-0 ${
-                    isRight ? "" : "sm:text-right"
-                  }`}
+                  className={`relative grid gap-6 pl-16 sm:grid-cols-2 sm:pl-0 ${isRight ? "" : "sm:text-right"
+                    }`}
                 >
                   <div
-                    className={`rounded-3xl border border-white/10 bg-white/[0.035] p-6 backdrop-blur-md ${
-                      isRight ? "sm:col-start-2" : ""
-                    }`}
+                    className={`rounded-3xl border border-white/10 bg-white/[0.035] p-6 backdrop-blur-md ${isRight ? "sm:col-start-2" : ""
+                      }`}
                   >
                     <div
-                      className={`mb-4 flex items-center gap-3 ${
-                        isRight ? "" : "sm:justify-end"
-                      }`}
+                      className={`mb-4 flex items-center gap-3 ${isRight ? "" : "sm:justify-end"
+                        }`}
                     >
                       <Icon className="h-5 w-5 text-cyan-200" {...iconProps} />
                       <span className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
@@ -1141,9 +1135,8 @@ function MarqueeRow({ reverse = false, testimonials }) {
   return (
     <div className="relative flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
       <div
-        className={`flex min-w-max ${
-          reverse ? "animate-marquee-reverse" : "animate-marquee"
-        }`}
+        className={`flex min-w-max ${reverse ? "animate-marquee-reverse" : "animate-marquee"
+          }`}
       >
         {row.map((item, index) => (
           <TestimonialCard key={`${item.name}-${index}`} item={item} />
@@ -1193,11 +1186,10 @@ function PricingSection({ copy }) {
             <button
               key={key}
               onClick={() => setMode(key)}
-              className={`rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${
-                mode === key
-                  ? "bg-white text-slate-950"
-                  : "text-slate-400 hover:text-white"
-              }`}
+              className={`rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${mode === key
+                ? "bg-white text-slate-950"
+                : "text-slate-400 hover:text-white"
+                }`}
             >
               {label}
             </button>
