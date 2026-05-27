@@ -7,9 +7,19 @@ class PhotographerController {
   async searchPhotographers(req, res) {
     try {
       const result = await PhotographerService.searchPhotographers(req.query);
-      return res.status(200).json(new ApiResponse(200, result, "Search successful"));
+      return ApiResponse.success(res, result, "Search successful");
     } catch (error) {
-      return res.status(400).json(new ApiResponse(400, null, error.message));
+      return ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+  // Lấy danh sách photographers
+  async listPhotographers(req, res) {
+    try {
+      const result = await PhotographerService.listPhotographers(req.query);
+      return ApiResponse.success(res, result, "List photographers successful");
+    } catch (error) {
+      return ApiResponse.error(res, error.message, 400);
     }
   }
 
@@ -18,9 +28,9 @@ class PhotographerController {
     try {
       const { id } = req.params;
       const photographer = await PhotographerService.getPhotographerDetail(id);
-      return res.status(200).json(new ApiResponse(200, photographer, "Get photographer detail successful"));
+      return ApiResponse.success(res, photographer, "Get photographer detail successful");
     } catch (error) {
-      return res.status(400).json(new ApiResponse(400, null, error.message));
+      return ApiResponse.error(res, error.message, 400);
     }
   }
 
@@ -29,9 +39,9 @@ class PhotographerController {
     try {
       const { limit } = req.query;
       const photographers = await PhotographerService.getTopPhotographers(limit);
-      return res.status(200).json(new ApiResponse(200, photographers, "Get top photographers successful"));
+      return ApiResponse.success(res, photographers, "Get top photographers successful");
     } catch (error) {
-      return res.status(400).json(new ApiResponse(400, null, error.message));
+      return ApiResponse.error(res, error.message, 400);
     }
   }
 
@@ -39,9 +49,9 @@ class PhotographerController {
   async getStyles(req, res) {
     try {
       const styles = await PhotographerService.getAllPhotographyStyles();
-      return res.status(200).json(new ApiResponse(200, styles, "Get styles successful"));
+      return ApiResponse.success(res, styles, "Get styles successful");
     } catch (error) {
-      return res.status(400).json(new ApiResponse(400, null, error.message));
+      return ApiResponse.error(res, error.message, 400);
     }
   }
 
@@ -49,21 +59,21 @@ class PhotographerController {
   async getLocations(req, res) {
     try {
       const locations = await PhotographerService.getAllPhotographyLocations();
-      return res.status(200).json(new ApiResponse(200, locations, "Get locations successful"));
+      return ApiResponse.success(res, locations, "Get locations successful");
     } catch (error) {
-      return res.status(400).json(new ApiResponse(400, null, error.message));
+      return ApiResponse.error(res, error.message, 400);
     }
   }
 
-  // Tạo photographer profile (khi user upgrade to photographer)
+  // Tạo photographer profile
   async createPhotographerProfile(req, res) {
     try {
-      const userId = req.user.id; // Từ middleware authenticate
+      const userId = req.user.id;
       const profileData = req.body;
       const photographer = await PhotographerService.createPhotographerProfile(userId, profileData);
-      return res.status(201).json(new ApiResponse(201, photographer, "Photographer profile created"));
+      return ApiResponse.success(res, photographer, "Photographer profile created", 201);
     } catch (error) {
-      return res.status(400).json(new ApiResponse(400, null, error.message));
+      return ApiResponse.error(res, error.message, 400);
     }
   }
 
@@ -73,9 +83,9 @@ class PhotographerController {
       const { id } = req.params;
       const updateData = req.body;
       const photographer = await PhotographerService.updatePhotographerProfile(id, updateData);
-      return res.status(200).json(new ApiResponse(200, photographer, "Photographer profile updated"));
+      return ApiResponse.success(res, photographer, "Photographer profile updated");
     } catch (error) {
-      return res.status(400).json(new ApiResponse(400, null, error.message));
+      return ApiResponse.error(res, error.message, 400);
     }
   }
 
@@ -85,11 +95,11 @@ class PhotographerController {
       const userId = req.user.id;
       const photographer = await PhotographerService.getPhotographerByUserId(userId);
       if (!photographer) {
-        return res.status(404).json(new ApiResponse(404, null, "Photographer profile not found"));
+        return ApiResponse.error(res, "Photographer profile not found", 404);
       }
-      return res.status(200).json(new ApiResponse(200, photographer, "Get my photographer profile successful"));
+      return ApiResponse.success(res, photographer, "Get my photographer profile successful");
     } catch (error) {
-      return res.status(400).json(new ApiResponse(400, null, error.message));
+      return ApiResponse.error(res, error.message, 400);
     }
   }
 }

@@ -98,6 +98,51 @@ class PhotographerService {
     }
   }
 
+  // Lấy tất cả photographers (có phân trang)
+  async listPhotographers(options = {}) {
+    try {
+      const { page = 1, limit = 12, sortBy = "relevance" } = options;
+
+      let sortOptions = {};
+      switch (sortBy) {
+        case "rating":
+          sortOptions = { averageRating: -1, totalReviews: -1 };
+          break;
+        case "price":
+          sortOptions = { hourlyRate: 1 };
+          break;
+        case "experience":
+          sortOptions = { experienceYears: -1 };
+          break;
+        case "relevance":
+        default:
+          sortOptions = { completedBookings: -1, averageRating: -1 };
+          break;
+      }
+
+      const skip = (page - 1) * limit;
+      const photographers = await Photographer.find()
+        .populate("user", "avatar email fullName")
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(parseInt(limit));
+
+      const total = await Photographer.countDocuments();
+
+      return {
+        data: photographers,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    } catch (error) {
+      throw new Error(`List photographers failed: ${error.message}`);
+    }
+  }
+
   // Lấy chi tiết photographer
   async getPhotographerDetail(photographerId) {
     try {

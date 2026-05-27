@@ -6,6 +6,7 @@ const { authenticate } = require("../../../middlewares/authenticate");
 const router = express.Router();
 
 // Public routes
+router.get("/", PhotographerController.listPhotographers);
 router.get("/search", PhotographerController.searchPhotographers);
 router.get("/top", PhotographerController.getTopPhotographers);
 router.get("/styles", PhotographerController.getStyles);
