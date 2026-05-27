@@ -14,24 +14,57 @@ export const usePhotographers = () => {
     totalPages: 0,
   });
 
+  const buildQuery = (params) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === "") return;
+      if (Array.isArray(value)) {
+        value.forEach((v) => queryParams.append(key, v));
+      } else {
+        queryParams.append(key, value);
+      }
+    });
+    return queryParams.toString();
+  };
+
+  const hasFilterValues = (filters) => {
+    return Object.entries(filters).some(([key, value]) => {
+      if (key === "page" || key === "limit") return false;
+      if (Array.isArray(value)) return value.length > 0;
+      return value !== undefined && value !== null && value !== "";
+    });
+  };
+
+  const listPhotographers = useCallback(async (options = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const query = buildQuery(options);
+      const response = await fetch(`${API_BASE_URL}/photographers${query ? `?${query}` : ""}`);
+      if (!response.ok) throw new Error("Failed to list photographers");
+
+      const data = await response.json();
+      if (data.success) {
+        setPhotographers(data.data?.data || []);
+        setPagination(data.data?.pagination || {});
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Search & filter photographers
   const searchPhotographers = useCallback(async (filters) => {
     try {
       setLoading(true);
       setError(null);
 
-      const queryParams = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value && value !== "") {
-          if (Array.isArray(value)) {
-            value.forEach((v) => queryParams.append(key, v));
-          } else {
-            queryParams.append(key, value);
-          }
-        }
-      });
-
-      const response = await fetch(`${API_BASE_URL}/photographers/search?${queryParams}`);
+      const query = buildQuery(filters);
+      const endpoint = hasFilterValues(filters) ? "search" : "";
+      const response = await fetch(`${API_BASE_URL}/photographers${endpoint ? `/${endpoint}` : ""}${query ? `?${query}` : ""}`);
       if (!response.ok) throw new Error("Failed to search photographers");
 
       const data = await response.json();
@@ -117,6 +150,7 @@ export const usePhotographers = () => {
     loading,
     error,
     pagination,
+     listPhotographers,
     searchPhotographers,
     getPhotographerDetail,
     getTopPhotographers,

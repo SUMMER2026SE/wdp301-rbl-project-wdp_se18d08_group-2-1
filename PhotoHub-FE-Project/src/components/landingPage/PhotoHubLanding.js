@@ -33,6 +33,7 @@ import {
   useTransform,
 } from "framer-motion";
 import PhotographerGallery from "../photographers/PhotographerGallery";
+import PhotographerList from "../photographers/PhotographerList";
 
 const ease = [0.22, 1, 0.36, 1];
 
@@ -1318,7 +1319,7 @@ export default function PhotoHubLanding({ language = "en" }) {
                 : "Search verified professional photographers, compare prices, ratings, and photography styles"}
             </p>
           </motion.div>
-          <PhotographerGallery language={language} />
+          <PhotographerList language={language} />
         </div>
       </section>
 
