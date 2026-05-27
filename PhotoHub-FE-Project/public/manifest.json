@@ -1,9 +1,9 @@
 {
-  "short_name": "Cinema",
-  "name": "Cinema Management System",
+  "short_name": "PhotoHub",
+  "name": "PhotoHub Secure Photography Marketplace",
   "icons": [],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#E50914",
-  "background_color": "#141414"
+  "theme_color": "#020617",
+  "background_color": "#000000"
 }
