@@ -198,7 +198,8 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
           ) : (
             <Link
               to="/login"
-              className="hidden rounded-full border border-white/10 bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_40px_rgba(34,211,238,0.2)] sm:inline-flex"
+              className="hidden sm:inline-flex rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black border border-white/20
+             hover:bg-white hover:text-black transition-none"
             >
               {t.cta}
             </Link>
