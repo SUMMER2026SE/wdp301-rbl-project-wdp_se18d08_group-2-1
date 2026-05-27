@@ -1,53 +1,138 @@
-import { Share2, Mail } from 'lucide-react';
+import {
+  Camera,
+  Github,
+  Instagram,
+  Linkedin,
+  Mail,
+  ShieldCheck,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
-export default function Footer() {
+const iconProps = { strokeWidth: 1.5 };
+
+const copy = {
+  en: {
+    description:
+      "Premium photography booking with verified creators, protected payment, and AI-guided discovery.",
+    trust: "Escrow-backed creative work",
+    signal: "Signal",
+    signalCopy:
+      "Follow product updates, creator tools, and trust infrastructure notes.",
+    rights: "(c) 2026 PhotoHub. All rights reserved.",
+    built: "Built for secure creative commerce.",
+    columns: [
+      {
+        title: "Product",
+        links: ["Marketplace", "AI Matching", "Escrow", "Portfolio"],
+      },
+      {
+        title: "Company",
+        links: ["About", "Trust", "Careers", "Press"],
+      },
+      {
+        title: "Legal",
+        links: ["Privacy", "Terms", "Protection", "Disputes"],
+      },
+    ],
+  },
+  vi: {
+    description:
+      "Nền tảng đặt nhiếp ảnh cao cấp với creator đã xác thực, thanh toán được bảo vệ và gợi ý bằng AI.",
+    trust: "Công việc sáng tạo được bảo vệ bằng ký quỹ",
+    signal: "Cập nhật",
+    signalCopy:
+      "Theo dõi cập nhật sản phẩm, công cụ cho creator và các ghi chú về hạ tầng niềm tin.",
+    rights: "(c) 2026 PhotoHub. Đã bảo lưu mọi quyền.",
+    built: "Xây dựng cho thương mại sáng tạo an toàn.",
+    columns: [
+      {
+        title: "Sản phẩm",
+        links: ["Marketplace", "Ghép cặp AI", "Ký quỹ", "Portfolio"],
+      },
+      {
+        title: "Công ty",
+        links: ["Giới thiệu", "Niềm tin", "Tuyển dụng", "Báo chí"],
+      },
+      {
+        title: "Pháp lý",
+        links: ["Riêng tư", "Điều khoản", "Bảo vệ", "Tranh chấp"],
+      },
+    ],
+  },
+};
+
+export default function Footer({ language }) {
+  const t = copy[language] || copy.en;
+
   return (
-    <footer className="mt-auto bg-background-dark border-t border-white/5 px-6 lg:px-20 py-12">
-      <div className="grid md:grid-cols-4 gap-12 mb-12">
-        <div className="col-span-1 space-y-4">
-          <div className="flex items-center gap-2 text-primary">
-            <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-red-600/20">
-              <span className="font-black text-2xl italic">S</span>
+    <footer className="relative border-t border-white/10 bg-black px-4 py-14 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="grid gap-10 lg:grid-cols-[1.15fr_1.4fr_0.8fr]">
+          <div>
+            <Link to="/" className="inline-flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] text-cyan-100">
+                <Camera className="h-5 w-5" {...iconProps} />
+              </span>
+              <span className="text-xl font-semibold tracking-tight text-white">
+                PhotoHub
+              </span>
+            </Link>
+            <p className="mt-5 max-w-sm text-sm leading-7 text-slate-500">
+              {t.description}
+            </p>
+            <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-slate-400">
+              <ShieldCheck className="h-4 w-4 text-cyan-200" {...iconProps} />
+              {t.trust}
             </div>
-            <h2 className="text-white text-xl font-black uppercase italic tracking-tighter uppercase">FCINEMA</h2>
           </div>
-          <p className="text-slate-500 text-sm leading-relaxed font-medium">
-            Redefining the cinematic experience with luxury and cutting-edge technology. Experience film as it was meant to be seen.
-          </p>
-        </div>
-        <div>
-          <h4 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Discover</h4>
-          <ul className="space-y-4 text-sm text-slate-500 font-medium">
-            <li><a className="hover:text-primary transition-colors" href="/movies">Movies</a></li>
-            <li><a className="hover:text-primary transition-colors" href="/">Showtimes</a></li>
-            <li><a className="hover:text-primary transition-colors" href="/">IMAX Experiences</a></li>
-            <li><a className="hover:text-primary transition-colors" href="/">Private Hire</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Support</h4>
-          <ul className="space-y-4 text-sm text-slate-500 font-medium">
-            <li><a className="hover:text-primary transition-colors" href="/">Help Center</a></li>
-            <li><a className="hover:text-primary transition-colors" href="/">Contact Us</a></li>
-            <li><a className="hover:text-primary transition-colors" href="/">Terms of Service</a></li>
-            <li><a className="hover:text-primary transition-colors" href="/">Privacy Policy</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 className="text-white font-bold mb-4 uppercase text-xs tracking-widest">Stay Connected</h4>
-          <div className="flex gap-4 mb-6">
-            <a className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center hover:bg-primary transition-all border border-white/5 group" href="#">
-              <Share2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
-            </a>
-            <a className="w-12 h-12 rounded-2xl glass-effect flex items-center justify-center hover:bg-primary transition-all border border-white/5 group" href="#">
-              <Mail className="w-5 h-5 group-hover:scale-110 transition-transform" />
-            </a>
+
+          <div className="grid gap-8 sm:grid-cols-3">
+            {t.columns.map((column) => (
+              <div key={column.title}>
+                <h3 className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-300">
+                  {column.title}
+                </h3>
+                <ul className="mt-5 space-y-3">
+                  {column.links.map((link) => (
+                    <li key={link}>
+                      <a
+                        href="/"
+                        className="text-sm text-slate-500 transition-colors duration-300 hover:text-cyan-100"
+                      >
+                        {link}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-          <p className="text-xs text-slate-600 font-medium">Subscribe for weekly premieres and exclusive offers.</p>
+
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-300">
+              {t.signal}
+            </h3>
+            <p className="mt-5 text-sm leading-7 text-slate-500">
+              {t.signalCopy}
+            </p>
+            <div className="mt-6 flex gap-3">
+              {[Instagram, Linkedin, Github, Mail].map((Icon, index) => (
+                <a
+                  key={index}
+                  href="/"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-400 transition-all duration-300 hover:border-cyan-200/40 hover:text-cyan-100"
+                >
+                  <Icon className="h-4 w-4" {...iconProps} />
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="border-t border-white/5 pt-8 text-center text-slate-600 text-[10px] font-black uppercase tracking-widest">
-        © 2024 FCINEMA Luxury Cinemas. All Rights Reserved.
+
+        <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+          <p>{t.rights}</p>
+          <p>{t.built}</p>
+        </div>
       </div>
     </footer>
   );

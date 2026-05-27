@@ -4,7 +4,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#E50914",   // đỏ Netflix
+        primary: "#22D3EE",
+        secondary: "#8B5CF6",
+        "background-dark": "#020617",
       },
     },
   },
