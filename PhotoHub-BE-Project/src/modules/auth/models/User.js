@@ -6,6 +6,7 @@ const UserRole = {
   MANAGER: "manager",
   STAFF: "staff",
   CUSTOMER: "customer",
+  PHOTOGRAPHER: "photographer",
 };
 
 const UserSchema = new Schema({
