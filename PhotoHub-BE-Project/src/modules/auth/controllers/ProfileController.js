@@ -104,9 +104,15 @@ class ProfileController {
 
             // Xóa avatar cũ (chỉ file local)
             if (user.avatar && user.avatar.startsWith("/uploads/")) {
-                const oldPath = path.join(__dirname, "..", "..", "..", "..", user.avatar);
+                const oldPath = path.join(
+                    __dirname,
+                    "..",
+                    "..",
+                    "..",
+                    user.avatar
+                );
                 console.log("[uploadAvatar] deleting old avatar:", oldPath);
-                fs.unlink(oldPath, () => {});
+                fs.unlink(oldPath, () => { });
             }
 
             // Lưu đường dẫn tương đối vào DB
