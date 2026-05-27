@@ -17,7 +17,7 @@ const auth = new AuthController();
 const profile = new ProfileController();
 
 // ── Upload avatar config ────────────────────────────────────────────────
-const UPLOADS_DIR = path.join(__dirname, "..", "..", "uploads", "avatars");
+const UPLOADS_DIR = path.join(__dirname, "..", "..", "..", "uploads", "avatars");
 
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -71,7 +71,7 @@ router.post("/reset-password", (req, res) =>
 );
 
 // ================= PROFILE =================
-router.get("/me", authenticate, (req, res) =>
+router.get("/profile", authenticate, (req, res) =>
   profile.getProfile(req, res)
 );
 
