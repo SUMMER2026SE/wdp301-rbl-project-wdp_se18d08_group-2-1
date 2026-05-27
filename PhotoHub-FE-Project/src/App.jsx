@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Footer from "./components/landingPage/Footer";
 import Header from "./components/landingPage/Header";
 import Home from "./pages/Home";
+import PhotographerProfile from "./components/photographers/PhotographerProfile";
 
 function getInitialTheme() {
   const storedTheme = localStorage.getItem("photohub-theme");
@@ -50,6 +51,7 @@ export default function App() {
       />
       <Routes>
         <Route path="/" element={<Home language={language} />} />
+        <Route path="/photographers/:id" element={<PhotographerProfile language={language} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Footer language={language} />
