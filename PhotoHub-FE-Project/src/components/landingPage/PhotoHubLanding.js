@@ -32,6 +32,7 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
+import PhotographerGallery from "../photographers/PhotographerGallery";
 
 const ease = [0.22, 1, 0.36, 1];
 
@@ -1302,6 +1303,33 @@ export default function PhotoHubLanding({ language = "en" }) {
       <SecuritySection copy={copy.security} />
       <WorkflowSection copy={copy.workflow} />
       <SocialProofSection copy={copy.social} />
+      
+      {/* Photographer Gallery Section */}
+      <section className="relative bg-slate-950 px-4 py-24 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="mb-12 text-center"
+          >
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-200">
+              Discover Talent
+            </p>
+            <h2 className="mt-3 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+              Find Your Perfect Photographer
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-slate-300">
+              {language === "vi"
+                ? "Tìm kiếm các nhiếp ảnh gia chuyên nghiệp được xác thực, so sánh giá, đánh giá và phong cách chụp"
+                : "Search verified professional photographers, compare prices, ratings, and photography styles"}
+            </p>
+          </motion.div>
+          <PhotographerGallery language={language} />
+        </div>
+      </section>
+
       <PricingSection copy={copy.pricing} />
       <FinalCTASection copy={copy.finalCta} />
     </main>
