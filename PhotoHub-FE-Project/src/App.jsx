@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import PhotographerProfile from "./components/photographers/PhotographerProfile";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
+import GoogleSuccess from "./pages/GoogleSuccess";
 
 function getInitialTheme() {
   const storedTheme = localStorage.getItem("photohub-theme");
@@ -83,6 +84,8 @@ export default function App() {
             />
           }
         />
+
+        <Route path="/auth/google/success" element={<GoogleSuccess />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
