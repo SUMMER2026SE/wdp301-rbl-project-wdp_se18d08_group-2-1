@@ -87,4 +87,4 @@ const photographerSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Photographer", photographerSchema);
+module.exports = mongoose.models.Photographer || mongoose.model("Photographer", photographerSchema);

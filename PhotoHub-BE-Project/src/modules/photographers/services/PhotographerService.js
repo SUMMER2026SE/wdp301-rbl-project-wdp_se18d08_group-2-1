@@ -163,7 +163,7 @@ class PhotographerService {
   async getPhotographerByUserId(userId) {
     try {
       const photographer = await Photographer.findOne({ user: userId })
-        .populate("user", "avatar email fullName");
+        .populate("user", "avatar email fullName phoneNumber address");
 
       return photographer;
     } catch (error) {
