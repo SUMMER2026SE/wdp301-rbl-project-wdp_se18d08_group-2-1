@@ -1,16 +1,16 @@
-import { Camera, Menu, Moon, ShieldCheck, Sun, X, User, LogOut, Settings } from "lucide-react";
+import { Camera, Menu, Moon, ShieldCheck, Sun, X, User, LogOut, Settings, Briefcase } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom"; // Sẽ dùng Link cho Login
+import { Link } from "react-router-dom";
 
 const iconProps = { strokeWidth: 1.5 };
 
 const copy = {
   en: {
     navItems: [
-      { label: "Ecosystem", href: "/#ecosystem" },
-      { label: "Escrow", href: "/#security" },
-      { label: "Workflow", href: "/#workflow" },
-      { label: "Pricing", href: "/#pricing" },
+      { label: "About Us", href: "/#ecosystem" },
+      { label: "Photographer", href: "/#security" },
+      { label: "Booking", href: "/#workflow" },
+      { label: "Forum", href: "/#pricing" },
     ],
     cta: "Login",
     languageLabel: "Chuyển sang tiếng Việt",
@@ -18,13 +18,15 @@ const copy = {
       dark: "Light mode",
       light: "Dark mode",
     },
+    profileLabel: "Profile",
+    dashboardLabel: "Photographer Space"
   },
   vi: {
     navItems: [
-      { label: "Hệ sinh thái", href: "/#ecosystem" },
-      { label: "Ký quỹ", href: "/#security" },
-      { label: "Quy trình", href: "/#workflow" },
-      { label: "Chi phí", href: "/#pricing" },
+      { label: "Về PhotoHub", href: "/#ecosystem" },
+      { label: "Nhiếp Ảnh Gia", href: "/#security" },
+      { label: "Đặt Lịch", href: "/#workflow" },
+      { label: "Diễn Đàn", href: "/#pricing" },
     ],
     cta: "Đăng nhập",
     languageLabel: "Switch to English",
@@ -32,6 +34,8 @@ const copy = {
       dark: "Giao diện sáng",
       light: "Giao diện tối",
     },
+    profileLabel: "Hồ sơ cá nhân",
+    dashboardLabel: "Không gian Nhiếp ảnh"
   },
 };
 
@@ -55,7 +59,6 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
-    // Hàm lấy user từ localStorage
     const checkUser = () => {
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
@@ -65,13 +68,8 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
       }
     };
 
-    // Chạy lần đầu khi mount
     checkUser();
-
-    // Lắng nghe sự kiện khi AuthPage thay đổi dữ liệu
     window.addEventListener("storage_user_changed", checkUser);
-
-    // (Tùy chọn) Lắng nghe nếu thay đổi từ tab khác
     window.addEventListener("storage", checkUser);
 
     return () => {
@@ -79,6 +77,7 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
       window.removeEventListener("storage", checkUser);
     };
   }, []);
+
   const t = copy[language] || copy.en;
 
   useEffect(() => {
@@ -87,6 +86,10 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Xác định tuyến đường Profile dựa vào role của user
+  const isPhotographer = user?.role === "photographer";
+  const profileTargetRoute = isPhotographer ? "/photographerProfile" : "/profile";
 
   const shellClass = scrolled
     ? "border-white/10 bg-black/60 shadow-[0_18px_60px_rgba(0,0,0,0.35)]"
@@ -134,7 +137,7 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
             )}
           </button>
 
-          {/* ================= THAY ĐỔI Ở ĐÂY (DESKTOP) ================= */}
+          {/* ================= DESKTOP USER DROPDOWN ================= */}
           {user ? (
             <div
               className="relative hidden sm:block"
@@ -142,33 +145,33 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
               onMouseLeave={() => setShowDropdown(false)}
             >
               {/* AVATAR */}
-              <div className="flex cursor-pointer items-center gap-3 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/[0.06] px-3 py-2 backdrop-blur-md">                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500 text-white font-semibold">
-                {user.fullName?.charAt(0)?.toUpperCase() || "U"}
-              </div>
+              <div className="flex cursor-pointer items-center gap-3 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/[0.06] px-3 py-2 backdrop-blur-md">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500 text-white font-semibold">
+                  {user.fullName?.charAt(0)?.toUpperCase() || "U"}
+                </div>
 
                 <div className="text-left">
-                  {/* Sửa text-slate-500 thành text-slate-400 (light) và dark:text-slate-400 */}
                   <p className="text-xs text-slate-400 dark:text-slate-400">
                     Hello,
                   </p>
-
-                  {/* Sửa text-slate-900 thành text-slate-200 (light) và dark:text-slate-100 */}
                   <p className="max-w-[120px] truncate text-sm font-semibold text-slate-200 dark:text-slate-100">
                     {user.fullName}
                   </p>
                 </div>
               </div>
 
-              {/* DROPDOWN */}
+              {/* DROPDOWN MENU */}
               {showDropdown && (
                 <div className="absolute right-0 top-full z-50 pt-2">
                   <div className="w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/95">
+                    
+                    {/* Đường dẫn linh hoạt dựa trên Role */}
                     <Link
-                      to="/profile"
+                      to={profileTargetRoute}
                       className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
                     >
-                      <User className="h-4 w-4" />
-                      Profile
+                      {isPhotographer ? <Briefcase className="h-4 w-4 text-cyan-400" /> : <User className="h-4 w-4" />}
+                      {isPhotographer ? t.dashboardLabel : t.profileLabel}
                     </Link>
 
                     <Link
@@ -185,12 +188,11 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
                         localStorage.removeItem("user");
                         window.location.href = "/";
                       }}
-                      className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-400 transition hover:bg-red-500/10"
+                      className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-500 transition hover:bg-red-500/10"
                     >
                       <LogOut className="h-4 w-4" />
                       Logout
                     </button>
-
                   </div>
                 </div>
               )}
@@ -198,12 +200,11 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
           ) : (
             <Link
               to="/login"
-              className="hidden rounded-full border border-white/10 bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_40px_rgba(34,211,238,0.2)] sm:inline-flex"
+              className="hidden sm:inline-flex rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black border border-white/20 hover:bg-white hover:text-black transition-none"
             >
               {t.cta}
             </Link>
           )}
-          {/* ========================================================== */}
 
           <button
             onClick={() => setShowMobileNav((value) => !value)}
@@ -219,6 +220,7 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
         </div>
       </div>
 
+      {/* ================= MOBILE NAVIGATION ================= */}
       {showMobileNav && (
         <div className="mx-auto mt-3 max-w-7xl rounded-3xl border border-white/10 bg-slate-950/90 p-3 backdrop-blur-xl lg:hidden">
           {t.navItems.map((item) => (
@@ -233,19 +235,34 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
             </a>
           ))}
 
-          {/* === THÊM NÚT LOGIN TRÊN MOBILE (Vì mặc định ban đầu bị ẩn trên mobile) === */}
+          {/* Khu vực thao tác User trên Mobile */}
           {user ? (
-            <button
-              onClick={() => {
-                localStorage.removeItem("token");
-                localStorage.removeItem("user");
-                window.location.href = "/";
-              }}
-              className="mt-2 flex w-full items-center justify-between rounded-2xl bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-500 dark:text-red-400"
-            >
-              Logout
-              <LogOut className="h-4 w-4" />
-            </button>
+            <>
+              {/* Mục điều hướng nhanh đến Profile/Dashboard ngay trên Mobile */}
+              <Link
+                to={profileTargetRoute}
+                onClick={() => setShowMobileNav(false)}
+                className="mt-2 flex items-center justify-between rounded-2xl bg-white/[0.04] px-4 py-3 text-sm font-medium text-slate-300 hover:bg-white/[0.08]"
+              >
+                <span className="flex items-center gap-2">
+                  {isPhotographer ? <Briefcase className="h-4 w-4 text-cyan-400" /> : <User className="h-4 w-4" />}
+                  {isPhotographer ? t.dashboardLabel : t.profileLabel}
+                </span>
+                <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full capitalize">{user.role}</span>
+              </Link>
+
+              <button
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("user");
+                  window.location.href = "/";
+                }}
+                className="mt-1 flex w-full items-center justify-between rounded-2xl bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-400 hover:bg-red-500/20"
+              >
+                Logout
+                <LogOut className="h-4 w-4" />
+              </button>
+            </>
           ) : (
             <Link
               to="/login"

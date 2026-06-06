@@ -15,7 +15,7 @@ router.get("/:id", PhotographerController.getPhotographerDetail);
 
 // Protected routes
 router.post("/", authenticate, PhotographerController.createPhotographerProfile);
-router.put("/:id", authenticate, PhotographerController.updatePhotographerProfile);
 router.get("/me/profile", authenticate, PhotographerController.getMyPhotographerProfile);
+router.put("/:id", authenticate, PhotographerController.updatePhotographerProfile);
 
 module.exports = router;

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { Camera, ArrowRight} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Camera, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
 import { authService } from '../services/authService';
+import { googleAuthService } from "../services/googleAuthService";
+
 import Swal from "sweetalert2";
 
 const iconProps = { strokeWidth: 1.5 };
@@ -34,7 +36,10 @@ const copy = {
         labelLogged: "Logged in as:",
         btnLogout: "Logout from session",
         langLabel: "VI",
-        themeLabel: "☀️"
+        themeLabel: "☀️",
+        labelRole: "I want to join as a:",
+        roleCustomer: "Client (Hire Talent)",
+        rolePhotographer: "Photographer (Provide Services)",
     },
     vi: {
         badge: "SÀN THƯƠNG MẠI NHIẾP ẢNH KÝ QUỸ ĐẦU TIÊN",
@@ -62,14 +67,19 @@ const copy = {
         labelLogged: "Đã đăng nhập bằng:",
         btnLogout: "Đăng xuất khỏi phiên",
         langLabel: "EN",
-        themeLabel: "🌙"
+        themeLabel: "🌙",
+        labelRole: "Tôi muốn tham gia với vai trò:",
+        roleCustomer: "Khách hàng (Tìm thợ chụp)",
+        rolePhotographer: "Nhiếp ảnh gia (Nhận lịch hẹn)",
     }
 };
 
 export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLanguage, onToggleTheme }) {
     const navigate = useNavigate();
 
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(
+        !!localStorage.getItem("token")
+    );
     const [isRegister, setIsRegister] = useState(false);
     const [step, setStep] = useState('auth'); // 'auth' hoặc 'otp'
 
@@ -82,10 +92,31 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
 
     const [loading, setLoading] = useState(false);
     const [resendLoading, setResendLoading] = useState(false);
+    const [role, setRole] = useState("customer");
 
     const t = copy[language] || copy.en;
     const isDark = theme === 'dark';
     const styles = getDynamicStyles(isDark);
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    const handleGoogleLogin = () => {
+        googleAuthService.loginWithGoogle();
+    };
+
+    useEffect(() => {
+        const syncAuth = () => {
+            setIsLoggedIn(!!localStorage.getItem("token"));
+        };
+
+        window.addEventListener("storage_user_changed", syncAuth);
+        window.addEventListener("storage", syncAuth);
+
+        return () => {
+            window.removeEventListener("storage_user_changed", syncAuth);
+            window.removeEventListener("storage", syncAuth);
+        };
+    }, []);
+
 
     // XỬ LÝ ĐĂNG NHẬP & ĐĂNG KÝ
     const handleSubmit = async (e) => {
@@ -98,7 +129,8 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
                 const result = await authService.register({
                     fullName,
                     email,
-                    password
+                    password,
+                    role
                 });
 
                 console.log("REGISTER RESULT:", result);
@@ -251,6 +283,61 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
                                 <form onSubmit={handleSubmit} style={styles.form}>
                                     {isRegister && (
                                         <div style={styles.inputGroup}>
+                                            <label style={styles.label}>{t.labelRole}</label>
+                                            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setRole("customer")}
+                                                    style={{
+                                                        flex: 1,
+                                                        padding: '12px',
+                                                        borderRadius: '12px',
+                                                        fontSize: '14px',
+                                                        fontWeight: '500',
+                                                        cursor: 'pointer',
+                                                        border: role === "customer"
+                                                            ? (isDark ? '2px solid #06b6d4' : '2px solid #0f172a')
+                                                            : (isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(15,23,42,0.1)'),
+                                                        backgroundColor: role === "customer"
+                                                            ? (isDark ? 'rgba(6, 182, 212, 0.1)' : 'rgba(15,23,42,0.05)')
+                                                            : 'transparent',
+                                                        color: role === "customer"
+                                                            ? (isDark ? '#06b6d4' : '#0f172a')
+                                                            : (isDark ? '#94a3b8' : '#64748b'),
+                                                        transition: 'all 0.2s ease'
+                                                    }}
+                                                >
+                                                    {t.roleCustomer}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setRole("photographer")}
+                                                    style={{
+                                                        flex: 1,
+                                                        padding: '12px',
+                                                        borderRadius: '12px',
+                                                        fontSize: '14px',
+                                                        fontWeight: '500',
+                                                        cursor: 'pointer',
+                                                        border: role === "photographer"
+                                                            ? (isDark ? '2px solid #06b6d4' : '2px solid #0f172a')
+                                                            : (isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(15,23,42,0.1)'),
+                                                        backgroundColor: role === "photographer"
+                                                            ? (isDark ? 'rgba(6, 182, 212, 0.1)' : 'rgba(15,23,42,0.05)')
+                                                            : 'transparent',
+                                                        color: role === "photographer"
+                                                            ? (isDark ? '#06b6d4' : '#0f172a')
+                                                            : (isDark ? '#94a3b8' : '#64748b'),
+                                                        transition: 'all 0.2s ease'
+                                                    }}
+                                                >
+                                                    {t.rolePhotographer}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {isRegister && (
+                                        <div style={styles.inputGroup}>
                                             <label style={styles.label}>{t.labelFullName}</label>
                                             <input
                                                 type="text"
@@ -304,7 +391,7 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
                                     <div style={styles.dividerLine}></div>
                                 </div>
 
-                                <button style={styles.googleBtn}>
+                                <button onClick={handleGoogleLogin} style={styles.googleBtn}>
                                     <FcGoogle size={16} style={{ marginRight: '8px' }} /> {t.btnGoogle}
                                 </button>
 
@@ -398,7 +485,7 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
                                 color: isDark ? '#f8fafc' : '#0f172a',
                                 fontWeight: '500'
                             }}>
-                                {email}
+                                {user.email}
                             </p>
 
                             {redirecting && (

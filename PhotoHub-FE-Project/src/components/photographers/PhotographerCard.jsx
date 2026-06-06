@@ -1,21 +1,18 @@
-// src/components/photographers/PhotographerCard.jsx
-import { Star, MapPin, Award, BookOpen } from "lucide-react";
+import { Star, MapPin, Award, Camera } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const PhotographerCard = ({ photographer, language }) => {
   const labels = {
     en: {
-      bookNow: "Book Now",
-      completedBookings: "Completed Bookings",
-      experience: "Experience",
+      bookNow: "View Portfolio",
+      experience: "Exp",
       rating: "Rating",
       reviews: "reviews",
-      years: "years",
+      years: "yrs",
     },
     vi: {
-      bookNow: "Đặt Ngay",
-      completedBookings: "Lịch Chụp Hoàn Thành",
-      experience: "Kinh Nghiệm",
+      bookNow: "Xem Hồ Sơ",
+      experience: "Kinh nghiệm",
       rating: "Đánh Giá",
       reviews: "đánh giá",
       years: "năm",
@@ -25,107 +22,118 @@ const PhotographerCard = ({ photographer, language }) => {
   const t = labels[language] || labels.en;
   const { user, displayName, location, experienceYears, averageRating, completedBookings, styles, _id } = photographer;
 
+  // Helper xử lý chuẩn hóa URL avatar từ backend
+  const getAvatarUrl = () => {
+    if (!user?.avatar) return null;
+    if (user.avatar.startsWith("http://") || user.avatar.startsWith("https://")) {
+      return user.avatar;
+    }
+    const BACKEND_URL = "http://localhost:3000"; // Hãy thay port backend của bạn tại đây
+    const cleanPath = user.avatar.startsWith("/") ? user.avatar : `/${user.avatar}`;
+    return `${BACKEND_URL}${cleanPath}`;
+  };
+
+  const avatarUrl = getAvatarUrl();
+
   return (
-    <div className="group relative overflow-hidden rounded-lg bg-white shadow-md transition-all duration-300 hover:shadow-xl dark:bg-gray-800">
-      {/* Avatar */}
-      <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-blue-400 to-purple-500">
-        {user?.avatar ? (
-          <img
-            src={user.avatar}
-            alt={displayName}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-4xl font-bold text-white">
-            {displayName?.charAt(0).toUpperCase()}
+    <div className="group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-white border border-slate-100 shadow-xl shadow-slate-100/40 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-cyan-500/5 hover:border-cyan-500/20 dark:bg-zinc-950 dark:border-zinc-900/80 dark:shadow-black/40 dark:hover:border-purple-500/20 h-full">
+      <div>
+        
+        {/* Top Image Section */}
+        <div className="relative h-56 w-full overflow-hidden bg-slate-100 dark:bg-zinc-900">
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={displayName}
+              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-tr from-cyan-500/10 to-purple-600/10 text-cyan-500 dark:text-cyan-400 gap-2">
+              <Camera size={28} className="opacity-80 group-hover:scale-110 transition-transform" />
+              <span className="text-2xl font-black tracking-tight">{displayName?.charAt(0).toUpperCase()}</span>
+            </div>
+          )}
+
+          {/* Location Badge (Ghim đè lên góc ảnh nhìn điện ảnh hơn) */}
+          {location && (
+            <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-xl bg-black/40 backdrop-blur-md px-3 py-1.5 text-xs font-semibold text-white tracking-wide border border-white/5 shadow-inner">
+              <MapPin size={12} className="text-cyan-400" />
+              <span className="line-clamp-1">{location}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Info Content Section */}
+        <div className="p-5">
+          {/* Main Stage Name */}
+          <h3 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white line-clamp-1 group-hover:text-cyan-500 dark:group-hover:text-cyan-400 transition-colors">
+            {displayName || "Anonymous Creator"}
+          </h3>
+
+          {/* Email */}
+          <p className="mt-0.5 mb-4 line-clamp-1 text-xs font-medium text-slate-400 dark:text-zinc-500 tracking-wide">
+            {user?.email}
+          </p>
+
+          {/* Specialized Styles Container */}
+          {styles && styles.length > 0 && (
+            <div className="mb-4 flex flex-wrap gap-1.5">
+              {styles.slice(0, 3).map((style, idx) => (
+                <span
+                  key={idx}
+                  className="inline-block rounded-xl bg-slate-100 dark:bg-zinc-900 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:text-zinc-400 tracking-wide border border-transparent dark:border-zinc-800/40"
+                >
+                  {style}
+                </span>
+              ))}
+              {styles.length > 3 && (
+                <span className="inline-block self-center text-xs font-bold text-slate-400 dark:text-zinc-600 ml-1">
+                  +{styles.length - 3}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Dual Metrics Grid */}
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            {/* Rating Box */}
+            <div className="flex items-center gap-2.5 rounded-2xl bg-amber-500/[0.04] border border-amber-500/10 p-2.5 dark:bg-amber-500/[0.02]">
+              <Star size={15} className="text-amber-500 fill-amber-500" />
+              <div>
+                <div className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">{t.rating}</div>
+                <div className="text-sm font-black text-slate-800 dark:text-zinc-200 mt-0.5">
+                  {averageRating ? averageRating.toFixed(1) : "5.0"}
+                </div>
+              </div>
+            </div>
+
+            {/* Experience Box */}
+            <div className="flex items-center gap-2.5 rounded-2xl bg-emerald-500/[0.04] border border-emerald-500/10 p-2.5 dark:bg-emerald-500/[0.02]">
+              <Award size={15} className="text-emerald-500" />
+              <div>
+                <div className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">{t.experience}</div>
+                <div className="text-sm font-black text-slate-800 dark:text-zinc-200 mt-0.5">
+                  {experienceYears || 0} {t.years}
+                </div>
+              </div>
+            </div>
           </div>
-        )}
+
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="p-4">
-        {/* Name */}
-        <h3 className="mb-1 line-clamp-1 text-lg font-semibold text-gray-900 dark:text-white">
-          {displayName}
-        </h3>
-
-        {/* Email */}
-        <p className="mb-3 line-clamp-1 text-sm text-gray-500 dark:text-gray-400">
-          {user?.email}
-        </p>
-
-        {/* Location */}
-        {location && (
-          <div className="mb-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <MapPin size={14} />
-            <span className="line-clamp-1">{location}</span>
-          </div>
-        )}
-
-        {/* Styles */}
-        {styles && styles.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1">
-            {styles.slice(0, 2).map((style, idx) => (
-              <span
-                key={idx}
-                className="inline-block rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-              >
-                {style}
-              </span>
-            ))}
-            {styles.length > 2 && (
-              <span className="inline-block text-xs text-gray-500 dark:text-gray-400">
-                +{styles.length - 2}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Stats */}
-        <div className="mb-4 grid grid-cols-2 gap-2 text-sm">
-          {/* Rating */}
-          <div className="flex items-center gap-1 rounded-lg bg-amber-50 p-2 dark:bg-amber-900/20">
-            <Star size={14} className="text-amber-500" />
-            <div>
-              <div className="font-semibold text-gray-900 dark:text-white">
-                {averageRating?.toFixed(1) || "0"}
-              </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">
-                {completedBookings} {t.reviews}
-              </div>
-            </div>
-          </div>
-
-          {/* Experience */}
-          <div className="flex items-center gap-1 rounded-lg bg-green-50 p-2 dark:bg-green-900/20">
-            <Award size={14} className="text-green-600" />
-            <div>
-              <div className="font-semibold text-gray-900 dark:text-white">
-                {experienceYears || "0"}
-              </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">
-                {t.years}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bookings */}
-        <div className="mb-4 flex items-center gap-2 rounded-lg bg-blue-50 p-2 text-sm dark:bg-blue-900/20">
-          <BookOpen size={14} className="text-blue-600 dark:text-blue-400" />
-          <span className="text-gray-600 dark:text-gray-300">
-            {completedBookings} {t.completedBookings}
-          </span>
-        </div>
-
-        {/* Book Button */}
+      {/* Primary Action Button (Luôn dính sát đáy Card) */}
+      <div className="px-5 pb-5">
         <Link
           to={`/photographers/${_id}`}
-          className="block w-full rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-2 text-center font-medium text-white transition-all duration-200 hover:from-blue-600 hover:to-purple-700"
+          className="block w-full rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 p-[1.5px] shadow-lg shadow-cyan-500/10 transition-transform active:scale-[0.98] duration-200"
         >
-          {t.bookNow}
+          <span className="block w-full rounded-[14px] bg-white dark:bg-zinc-950 px-4 py-3 text-center text-xs font-black tracking-widest uppercase text-slate-900 dark:text-white transition-colors group-hover:bg-transparent group-hover:text-white">
+            {t.bookNow}
+          </span>
         </Link>
       </div>
+
     </div>
   );
 };
