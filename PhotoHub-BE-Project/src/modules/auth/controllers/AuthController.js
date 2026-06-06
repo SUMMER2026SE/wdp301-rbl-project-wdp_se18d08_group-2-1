@@ -9,13 +9,15 @@ class AuthController {
     const email = String(req.body.email || "").trim().toLowerCase();
     const password = String(req.body.password || "").trim();
     const fullName = req.body.fullName != null ? String(req.body.fullName).trim() : "";
+    const role = String(req.body.role || "customer").trim(); // Thêm dòng này
 
     if (!email || !password) {
       return ApiResponse.error(res, "Vui lòng nhập email và mật khẩu", 400);
     }
 
     try {
-      const result = await authService.register({ email, password, fullName });
+      // Truyền thêm role vào service
+      const result = await authService.register({ email, password, fullName, role });
       return ApiResponse.success(res, result, "Register successfully", 201);
     } catch (e) {
       return ApiResponse.error(res, e.message, 400);

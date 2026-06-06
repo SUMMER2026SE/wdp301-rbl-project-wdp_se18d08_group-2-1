@@ -1,5 +1,6 @@
 // auth.service.js
-const { User } = require("../models/User");
+const { User, UserRole } = require("../models/User");
+const Photographer = require("../../photographers/models/Photographer");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { sendVerifyEmailOtp } = require("../../../utils/emailService");
@@ -34,50 +35,79 @@ function queueOtpEmail(to, otp, fullName) {
 class AuthService {
   async register(data) {
     const email = data.email;
-    const existing = await findUserByEmail(email);
+    const role = data.role || UserRole.CUSTOMER; // Mặc định là customer nếu không truyền
 
+    // Kiểm tra role hợp lệ
+    if (!Object.values(UserRole).includes(role)) {
+      throw new Error("Vai trò đăng ký không hợp lệ.");
+    }
+
+    const existing = await User.findOne({ email }); // Đảm bảo hàm findUserByEmail của bạn chạy đúng
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const verifyEmailExpires = new Date(Date.now() + 15 * 60 * 1000);
 
     if (existing) {
       if (existing.isVerified) {
-        throw new Error(
-          "Email đã được đăng ký. Vui lòng đăng nhập hoặc dùng chức năng quên mật khẩu."
-        );
+        throw new Error("Email đã được đăng ký. Vui lòng đăng nhập hoặc dùng chức năng quên mật khẩu.");
       }
-      // Đã đăng ký nhưng chưa xác thực — cập nhật mật khẩu + OTP mới (tránh 400 "Email đã tồn tại")
+
+      // Đã đăng ký nhưng chưa xác thực — cập nhật thông tin mới
       existing.password = hashedPassword;
       if (data.fullName) existing.fullName = data.fullName;
-      existing.email = email;
+      existing.role = role; // Cập nhật lại role nếu họ muốn đổi lúc đăng ký lại
       existing.verifyEmailOTP = otp;
       existing.verifyEmailExpires = verifyEmailExpires;
       await existing.save();
+
+      // Kiểm tra xem đã có bản ghi Photographer chưa, nếu chọn role photographer mà chưa có thì tạo mới
+      if (role === UserRole.PHOTOGRAPHER) {
+        const photoExist = await Photographer.findOne({ user: existing._id });
+        if (!photoExist) {
+          await Photographer.create({
+            UUID: existing.UUID, // Dùng chung UUID từ User để đồng bộ dữ liệu nhanh
+            user: existing._id,
+            displayName: existing.fullName || "Nhiếp ảnh gia mới",
+          });
+        }
+      }
 
       console.log(`[REGISTER] Gửi lại OTP (chưa verify): ${email} | OTP: ${otp}`);
       queueOtpEmail(email, otp, existing.fullName);
 
       return {
-        message:
-          "Đã cập nhật thông tin và gửi lại mã OTP. Vui lòng kiểm tra email (hoặc thư mục Spam).",
+        message: "Đã cập nhật thông tin và gửi lại mã OTP. Vui lòng kiểm tra email.",
         email,
       };
     }
 
-    await User.create({
+    // Tạo mới hoàn toàn User
+    const newUser = await User.create({
       email,
       password: hashedPassword,
       fullName: data.fullName,
+      role,
       isVerified: false,
       verifyEmailOTP: otp,
       verifyEmailExpires,
     });
 
-    console.log(`[REGISTER] User mới: ${email} | OTP: ${otp}`);
+    // Nếu đăng ký với tư cách Photographer -> Tạo profile Photographer tương ứng
+    if (role === UserRole.PHOTOGRAPHER) {
+      await Photographer.create({
+        UUID: newUser.UUID, // Đồng bộ UUID từ hàm default sinh ra bên User
+        user: newUser._id,
+        displayName: data.fullName || "Nhiếp ảnh gia mới",
+        experienceYears: 0,
+        completionStatus: "UNVERIFIED"
+      });
+    }
+
+    console.log(`[REGISTER] User mới [${role}]: ${email} | OTP: ${otp}`);
     queueOtpEmail(email, otp, data.fullName);
 
     return {
-      message: "Đăng ký thành công! Vui lòng kiểm tra email để xác thực (kể cả thư mục Spam).",
+      message: "Đăng ký thành công! Vui lòng kiểm tra email để xác thực.",
       email,
     };
   }

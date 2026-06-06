@@ -6,6 +6,8 @@ import Home from "./pages/Home";
 import PhotographerProfile from "./components/photographers/PhotographerProfile";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
+import GoogleSuccess from "./pages/GoogleSuccess";
+import PhotographerDashboard from "./pages/PhotographerDashboard";
 
 function getInitialTheme() {
   const storedTheme = localStorage.getItem("photohub-theme");
@@ -30,7 +32,17 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem("photohub-theme", theme);
-    document.documentElement.dataset.theme = theme;
+
+    // Đổi đoạn này để Tailwind nhận diện được class "dark"
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+
+    // Bạn vẫn có thể giữ dòng này nếu có CSS custom chạy bằng data-theme
+    root.dataset.theme = theme;
   }, [theme]);
 
   useEffect(() => {
@@ -83,6 +95,20 @@ export default function App() {
             />
           }
         />
+
+        <Route
+          path="/photographerProfile"
+          element={
+            <PhotographerDashboard
+              language={language}
+              theme={theme}
+              onToggleLanguage={toggleLanguage}
+              onToggleTheme={toggleTheme}
+            />
+          }
+        />
+
+        <Route path="/auth/google/success" element={<GoogleSuccess />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
