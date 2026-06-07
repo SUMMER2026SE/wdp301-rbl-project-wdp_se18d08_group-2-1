@@ -15,7 +15,7 @@ async function seedAdmin() {
     await mongoose.connect(MONGO_URI);
     console.log("✅ Kết nối MongoDB thành công");
 
-    const adminEmail = "admin@photohub.com";
+    const adminEmail = "lebaochau1704@gmail.com";
     const existingAdmin = await User.findOne({ email: adminEmail });
 
     if (existingAdmin) {
