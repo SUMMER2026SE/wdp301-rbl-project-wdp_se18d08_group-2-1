@@ -166,6 +166,16 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
                   <div className="w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/95">
                     
                     {/* Đường dẫn linh hoạt dựa trên Role */}
+                    {user?.role === "admin" && (
+                      <Link
+                        to="/admin"
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 transition hover:bg-white/[0.06] hover:text-white border-b border-slate-100 dark:border-white/5"
+                      >
+                        <ShieldCheck className="h-4 w-4 text-cyan-400" />
+                        Admin Space
+                      </Link>
+                    )}
+
                     <Link
                       to={profileTargetRoute}
                       className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
