@@ -25,7 +25,11 @@ export default function GoogleSuccess() {
 
       googleAuthService.clearUrl();
 
-      navigate("/");
+      if (user && user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     };
 
     handleLogin();
