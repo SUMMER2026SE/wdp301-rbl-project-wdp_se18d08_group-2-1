@@ -1,4 +1,7 @@
+import axios from "axios";
+
 const BASE_URL = "http://localhost:3000/api/photographers";
+const MARKETPLACE_BASE_URL = "http://localhost:3000/api/photographer";
 
 export const photographerService = {
 
@@ -114,7 +117,6 @@ export const photographerService = {
     getMyPhotographerProfile: async () => {
         const token = localStorage.getItem("token");
 
-        // Chỉ gửi Authorization Header, loại bỏ hoàn toàn Content-Type
         const response = await fetch(`${BASE_URL}/me/profile`, {
             method: "GET",
             headers: {
@@ -122,12 +124,33 @@ export const photographerService = {
             },
         });
 
-        // Thêm kiểm tra nếu response không ok thì quăng lỗi ra để catch xử lý
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.message || `Lỗi hệ thống: ${response.status}`);
         }
 
         return response.json();
+    },
+};
+
+const getAuthConfig = (isMultipart = false) => {
+    const token = localStorage.getItem("token");
+    return {
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": isMultipart ? "multipart/form-data" : "application/json",
+        },
+    };
+};
+
+export const photographerMarketplaceService = {
+    // --- BOOKINGS ---
+    rejectBooking: async (bookingId, reason) => {
+        const response = await axios.put(
+            `${MARKETPLACE_BASE_URL}/bookings/${bookingId}/reject`,
+            { reason },
+            getAuthConfig()
+        );
+        return response.data;
     },
 };
