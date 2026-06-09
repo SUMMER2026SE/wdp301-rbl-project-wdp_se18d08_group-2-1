@@ -176,4 +176,10 @@ export const photographerMarketplaceService = {
         const response = await axios.get(`${MARKETPLACE_BASE_URL}/jobs/${id}`, getAuthConfig());
         return response.data;
     },
+
+    // --- RECOMMENDATIONS ---
+    getRecommendations: async () => {
+        const response = await axios.get(`${MARKETPLACE_BASE_URL}/jobs/recommended`, getAuthConfig());
+        return response.data;
+    },
 };
