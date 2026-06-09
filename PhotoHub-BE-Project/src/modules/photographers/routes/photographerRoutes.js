@@ -6,6 +6,7 @@ const bookingRoutes = require("../booking/booking.routes");
 const calendarRoutes = require("../calendar/calendar.routes");
 const jobRoutes = require("../job/job.routes");
 const recommendationRoutes = require("../recommendation/recommendation.routes");
+const bidRoutes = require("../bid/bid.routes");
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ router.use("/bookings", bookingRoutes);
 router.use("/calendar", calendarRoutes);
 router.use("/jobs/recommended", recommendationRoutes); // More specific first
 router.use("/jobs", jobRoutes);
+router.use("/bids", bidRoutes);
 
 // Protected routes
 router.post("/", authenticate, PhotographerController.createPhotographerProfile);

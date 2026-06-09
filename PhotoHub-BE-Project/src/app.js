@@ -41,6 +41,7 @@ app.use(
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/photographers", photographerRoutes);
+app.use("/api/photographer", photographerRoutes);
 app.use("/api/favoritephotographers", favoritePhotographerRoutes);
 
 // Health check
