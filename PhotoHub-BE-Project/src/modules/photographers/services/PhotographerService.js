@@ -10,6 +10,7 @@ class PhotographerService {
         location = "",
         styles = [],
         minRating = 0,
+        minPrice = 0,
         maxPrice = Infinity,
         minExperience = 0,
         sortBy = "relevance", // relevance, rating, price, experience
@@ -47,7 +48,10 @@ class PhotographerService {
       if (maxPrice !== Infinity) {
         query.hourlyRate = { $lte: maxPrice };
       }
-
+      // filter min price
+      if (minPrice > 0) {
+        query.hourlyRate = { ...query.hourlyRate, $gte: minPrice };
+      }
       // Filter theo kinh nghiệm
       if (minExperience > 0) {
         query.experienceYears = { $gte: minExperience };
