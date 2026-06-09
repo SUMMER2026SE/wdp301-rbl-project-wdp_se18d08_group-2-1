@@ -6,5 +6,6 @@ const authorize = require("../../../middlewares/roleMiddlewares");
 const router = express.Router();
 
 router.put("/:id/reject", authenticate, authorize(["photographer"]), bookingController.rejectBooking);
+router.put("/:id/complete", authenticate, authorize(["photographer"]), bookingController.completeBooking);
 
 module.exports = router;

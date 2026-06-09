@@ -13,6 +13,17 @@ class BookingController {
       return ApiResponse.error(res, error.message, 400);
     }
   }
+
+  async completeBooking(req, res) {
+    try {
+      const { id } = req.params;
+      const booking = await bookingService.completeBooking(id, req.user.id);
+      return ApiResponse.success(res, booking, "Booking marked as completed successfully");
+    } catch (error) {
+      console.error("Error completing booking:", error);
+      return ApiResponse.error(res, error.message, 400);
+    }
+  }
 }
 
 module.exports = new BookingController();
