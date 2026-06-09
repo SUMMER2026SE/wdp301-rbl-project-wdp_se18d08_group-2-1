@@ -82,6 +82,7 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
     );
     const [isRegister, setIsRegister] = useState(false);
     const [step, setStep] = useState('auth'); // 'auth' hoặc 'otp'
+    const [confirmPassword, setConfirmPassword] = useState('');
 
     // Form States
     const [email, setEmail] = useState('');
@@ -126,6 +127,18 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
             setLoading(true);
 
             if (isRegister) {
+                if (password !== confirmPassword) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Mật khẩu không khớp",
+                        text: "Vui lòng nhập lại mật khẩu xác nhận",
+                        background: isDark ? "#0f172a" : "#fff",
+                        color: isDark ? "#fff" : "#0f172a",
+                        confirmButtonColor: "#ef4444"
+                    });
+
+                    return;
+                }
                 const result = await authService.register({
                     fullName,
                     email,
@@ -375,6 +388,20 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
                                             required
                                         />
                                     </div>
+                                    {isRegister && (
+                                        <div style={styles.inputGroup}>
+                                            <label style={styles.label}>Confirm Password</label>
+
+                                            <input
+                                                type="password"
+                                                placeholder="••••••••"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                style={styles.input}
+                                                required
+                                            />
+                                        </div>
+                                    )}
 
                                     <button type="submit" style={styles.loginBtn} disabled={loading}>
                                         <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
