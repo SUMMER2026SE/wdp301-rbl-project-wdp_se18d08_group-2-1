@@ -817,7 +817,7 @@ export default function PhotographerDashboard({
 
                     {/* REVENUE TAB */}
                     {activeTab === "revenue" && (
-                        <PhotographerRevenueDashboard theme={theme} />
+                        <PhotographerRevenueDashboard theme={theme} onNavigateToWithdraw={() => setActiveTab("withdraw")} />
                     )}
 
                     {/* WITHDRAW TAB */}

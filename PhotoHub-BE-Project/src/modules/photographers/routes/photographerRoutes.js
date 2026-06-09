@@ -9,6 +9,7 @@ const recommendationRoutes = require("../recommendation/recommendation.routes");
 const bidRoutes = require("../bid/bid.routes");
 const chatRoutes = require("../chat/chat.routes");
 const albumRoutes = require("../album/album.routes");
+const revenueRoutes = require("../revenue/revenue.routes");
 
 const router = express.Router();
 
@@ -27,6 +28,7 @@ router.use("/jobs", jobRoutes);
 router.use("/bids", bidRoutes);
 router.use("/chat", chatRoutes);
 router.use("/albums", albumRoutes);
+router.use("/revenue", revenueRoutes);
 
 // Protected routes
 router.post("/", authenticate, PhotographerController.createPhotographerProfile);
