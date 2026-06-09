@@ -32,7 +32,6 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import PhotographerGallery from "../photographers/PhotographerGallery";
 import PhotographerList from "../photographers/PhotographerList";
 
 const ease = [0.22, 1, 0.36, 1];
