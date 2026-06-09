@@ -3,6 +3,7 @@ const express = require("express");
 const PhotographerController = require("../controllers/PhotographerController");
 const { authenticate } = require("../../../middlewares/authenticate");
 const bookingRoutes = require("../booking/booking.routes");
+const calendarRoutes = require("../calendar/calendar.routes");
 
 const router = express.Router();
 
@@ -15,6 +16,7 @@ router.get("/locations", PhotographerController.getLocations);
 router.get("/:id", PhotographerController.getPhotographerDetail);
 
 router.use("/bookings", bookingRoutes);
+router.use("/calendar", calendarRoutes);
 
 // Protected routes
 router.post("/", authenticate, PhotographerController.createPhotographerProfile);

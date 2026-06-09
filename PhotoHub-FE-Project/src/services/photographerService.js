@@ -153,4 +153,13 @@ export const photographerMarketplaceService = {
         );
         return response.data;
     },
+
+    // --- CALENDAR ---
+    getCalendar: async (params = {}) => {
+        const response = await axios.get(`${MARKETPLACE_BASE_URL}/calendar`, {
+            ...getAuthConfig(),
+            params,
+        });
+        return response.data;
+    },
 };
