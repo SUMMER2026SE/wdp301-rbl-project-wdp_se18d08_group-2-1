@@ -14,14 +14,7 @@ const withdrawRoutes = require("../withdraw/withdraw.routes");
 
 const router = express.Router();
 
-// Public routes
-router.get("/", PhotographerController.listPhotographers);
-router.get("/search", PhotographerController.searchPhotographers);
-router.get("/top", PhotographerController.getTopPhotographers);
-router.get("/styles", PhotographerController.getStyles);
-router.get("/locations", PhotographerController.getLocations);
-router.get("/:id", PhotographerController.getPhotographerDetail);
-
+// Mount specific sub-routes first so they don't get intercepted by wildcard parameter /:id
 router.use("/bookings", bookingRoutes);
 router.use("/calendar", calendarRoutes);
 router.use("/jobs/recommended", recommendationRoutes); // More specific first
@@ -31,6 +24,14 @@ router.use("/chat", chatRoutes);
 router.use("/albums", albumRoutes);
 router.use("/revenue", revenueRoutes);
 router.use("/withdraw", withdrawRoutes);
+
+// Public routes
+router.get("/", PhotographerController.listPhotographers);
+router.get("/search", PhotographerController.searchPhotographers);
+router.get("/top", PhotographerController.getTopPhotographers);
+router.get("/styles", PhotographerController.getStyles);
+router.get("/locations", PhotographerController.getLocations);
+router.get("/:id", PhotographerController.getPhotographerDetail);
 
 // Protected routes
 router.post("/", authenticate, PhotographerController.createPhotographerProfile);
