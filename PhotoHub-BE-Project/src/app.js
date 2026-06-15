@@ -13,6 +13,7 @@ const app = express();
 const authRoutes = require("./modules/auth/routes/authRoutes");
 const photographerRoutes = require("./modules/photographers/routes/photographerRoutes");
 const favoritePhotographerRoutes = require("./modules/favorite_photographers/routes/favoritePhotographerRoutes");
+const airecommendRoutes = require("./modules/airecomment/routes/airecommendRoutes");
 // Middlewares
 app.use(express.json({ limit: "50mb" }));
 
@@ -41,7 +42,9 @@ app.use(
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/photographers", photographerRoutes);
+app.use("/api/photographer", photographerRoutes);
 app.use("/api/favoritephotographers", favoritePhotographerRoutes);
+app.use("/api/airecommend", airecommendRoutes);
 
 // Health check
 app.get("/", (_req, res) => {
