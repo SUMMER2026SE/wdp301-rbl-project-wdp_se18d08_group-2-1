@@ -8,6 +8,8 @@ import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
 import GoogleSuccess from "./pages/GoogleSuccess";
 import PhotographerDashboard from "./pages/PhotographerDashboard";
+import FavoritesPage from "./pages/FavoritesPage";
+import PhotographersPage from "./pages/PhotographersPage";
 
 function getInitialTheme() {
   const storedTheme = localStorage.getItem("photohub-theme");
@@ -108,7 +110,28 @@ export default function App() {
           }
         />
 
+        <Route
+          path="/photographers"
+          element={
+            <PhotographersPage
+              language={language}
+              theme={theme}
+            />
+          }
+        />
+
         <Route path="/auth/google/success" element={<GoogleSuccess />} />
+
+        <Route
+          path="/favorites"
+          element={
+            <FavoritesPage
+              language={language}
+              theme={theme}
+            />
+          }
+        />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 

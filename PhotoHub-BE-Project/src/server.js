@@ -4,11 +4,15 @@ const { initSocket } = require("./socket");
 const PORT = process.env.PORT || 3000;
 
 const { connectMongo } = require("./mongo");
+const { warmupModel } = require("./modules/airecomment/services/aiService");
 
 async function startServer() {
   try {
     await connectMongo();
     console.log("Database connected");
+
+    // Warm up AI model in background
+    warmupModel();
 
     const server = http.createServer(app);
     initSocket(server);

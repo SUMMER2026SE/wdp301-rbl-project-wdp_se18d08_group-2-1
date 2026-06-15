@@ -1,4 +1,4 @@
-import { Camera, Menu, Moon, ShieldCheck, Sun, X, User, LogOut, Settings, Briefcase } from "lucide-react";
+import { Camera, Menu, Moon, ShieldCheck, Sun, X, User, LogOut, Settings, Briefcase, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -8,7 +8,7 @@ const copy = {
   en: {
     navItems: [
       { label: "About Us", href: "/#ecosystem" },
-      { label: "Photographer", href: "/#security" },
+      { label: "Photographer", href: "/photographers", isRoute: true },
       { label: "Booking", href: "/#workflow" },
       { label: "Forum", href: "/#pricing" },
     ],
@@ -19,12 +19,13 @@ const copy = {
       light: "Dark mode",
     },
     profileLabel: "Profile",
-    dashboardLabel: "Photographer Space"
+    dashboardLabel: "Photographer Space",
+    favoritesLabel: "Favorite Photographers",
   },
   vi: {
     navItems: [
       { label: "Về PhotoHub", href: "/#ecosystem" },
-      { label: "Nhiếp Ảnh Gia", href: "/#security" },
+      { label: "Nhiếp Ảnh Gia", href: "/photographers", isRoute: true },
       { label: "Đặt Lịch", href: "/#workflow" },
       { label: "Diễn Đàn", href: "/#pricing" },
     ],
@@ -35,7 +36,8 @@ const copy = {
       light: "Giao diện tối",
     },
     profileLabel: "Hồ sơ cá nhân",
-    dashboardLabel: "Không gian Nhiếp ảnh"
+    dashboardLabel: "Không gian Nhiếp ảnh",
+    favoritesLabel: "Nhiếp ảnh gia yêu thích",
   },
 };
 
@@ -103,15 +105,25 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
         <BrandMark />
 
         <nav className="hidden items-center gap-1 lg:flex">
-          {t.navItems.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className="rounded-full px-4 py-2 text-sm font-medium text-slate-400 transition-all duration-300 hover:bg-white/[0.06] hover:text-white"
-            >
-              {item.label}
-            </a>
-          ))}
+          {t.navItems.map((item) =>
+            item.isRoute ? (
+              <Link
+                key={item.label}
+                to={item.href}
+                className="rounded-full px-4 py-2 text-sm font-medium text-slate-400 transition-all duration-300 hover:bg-white/[0.06] hover:text-white"
+              >
+                {item.label}
+              </Link>
+            ) : (
+              <a
+                key={item.label}
+                href={item.href}
+                className="rounded-full px-4 py-2 text-sm font-medium text-slate-400 transition-all duration-300 hover:bg-white/[0.06] hover:text-white"
+              >
+                {item.label}
+              </a>
+            )
+          )}
         </nav>
 
         <div className="flex items-center gap-2">
@@ -173,6 +185,17 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
                       {isPhotographer ? <Briefcase className="h-4 w-4 text-cyan-400" /> : <User className="h-4 w-4" />}
                       {isPhotographer ? t.dashboardLabel : t.profileLabel}
                     </Link>
+
+                    {/* Mục yêu thích — chỉ hiện với customer */}
+                    {!isPhotographer && (
+                      <Link
+                        to="/favorites"
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+                      >
+                        <Heart className="h-4 w-4 text-rose-400" />
+                        {t.favoritesLabel}
+                      </Link>
+                    )}
 
                     <Link
                       to="/settings"
@@ -250,6 +273,20 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
                 </span>
                 <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full capitalize">{user.role}</span>
               </Link>
+
+              {/* Yêu thích trên mobile — chỉ hiện với customer */}
+              {!isPhotographer && (
+                <Link
+                  to="/favorites"
+                  onClick={() => setShowMobileNav(false)}
+                  className="mt-1 flex items-center justify-between rounded-2xl bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-400 hover:bg-rose-500/20"
+                >
+                  <span className="flex items-center gap-2">
+                    <Heart className="h-4 w-4" />
+                    {t.favoritesLabel}
+                  </span>
+                </Link>
+              )}
 
               <button
                 onClick={() => {

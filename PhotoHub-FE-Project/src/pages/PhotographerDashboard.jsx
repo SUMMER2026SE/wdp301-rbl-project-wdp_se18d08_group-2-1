@@ -18,12 +18,22 @@ import {
     Grid,
     TrendingUp,
     Phone,
-    Home
+    Home,
+    MessageSquare,
+    Wallet
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { photographerService } from "../services/photographerService";
 // Import profileService để xử lý upload avatar
 import { profileService } from "../services/profileService";
+
+// Import photographer marketplace sub-components
+import PhotographerBookingCalendar from "../components/photographers/PhotographerBookingCalendar";
+import PhotographerJobPosts from "../components/photographers/PhotographerJobPosts";
+import PhotographerRecommendedJobs from "../components/photographers/PhotographerRecommendedJobs";
+import PhotographerChat from "../components/photographers/PhotographerChat";
+import PhotographerRevenueDashboard from "../components/photographers/PhotographerRevenueDashboard";
+import WithdrawMoney from "../components/photographers/WithdrawMoney";
 
 export default function PhotographerDashboard({
     language = "vi",
@@ -114,10 +124,15 @@ export default function PhotographerDashboard({
             verificationLabel: "Trạng thái kiểm duyệt:",
             unverified: "Chưa xác minh",
             verified: "Đã xác minh",
-            calendarComingSoon: "Tính năng quản lý lịch chụp đang được đồng bộ hóa thời gian thực...",
+                        calendarComingSoon: "Tính năng quản lý lịch chụp đang được đồng bộ hóa thời gian thực...",
             customersComingSoon: "Danh sách khách hàng đã đặt lịch và lịch sử giao dịch sẽ xuất hiện tại đây.",
             avatarSuccess: "Cập nhật ảnh đại diện thành công!",
-            avatarError: "Không thể upload ảnh đại diện mới."
+            avatarError: "Không thể upload ảnh đại diện mới.",
+            jobs: "Chợ việc làm",
+            recommendations: "Gợi ý việc làm AI",
+            chat: "Trò chuyện",
+            revenue: "Doanh thu",
+            withdraw: "Rút tiền payout"
         },
         en: {
             dashboard: "Dashboard",
@@ -164,7 +179,12 @@ export default function PhotographerDashboard({
             calendarComingSoon: "Schedule management features are being synchronized in real-time...",
             customersComingSoon: "Your client lists and booking historical logs will appear here.",
             avatarSuccess: "Avatar updated successfully!",
-            avatarError: "Failed to upload new avatar."
+            avatarError: "Failed to upload new avatar.",
+            jobs: "Job Marketplace",
+            recommendations: "AI Recommendations",
+            chat: "Live Chat",
+            revenue: "Revenue",
+            withdraw: "Withdraw Money"
         }
     };
 
@@ -522,7 +542,11 @@ export default function PhotographerDashboard({
                             {[
                                 { id: "profile", label: t.profile, icon: User },
                                 { id: "calendar", label: t.calendar, icon: Calendar },
-                                { id: "customers", label: t.customers, icon: Users }
+                                { id: "jobs", label: t.jobs, icon: Briefcase },
+                                { id: "recommendations", label: t.recommendations, icon: TrendingUp },
+                                { id: "chat", label: t.chat, icon: MessageSquare },
+                                { id: "revenue", label: t.revenue, icon: DollarSign },
+                                { id: "withdraw", label: t.withdraw, icon: Wallet },
                             ].map((tab) => {
                                 const IconComponent = tab.icon;
                                 const isSelected = activeTab === tab.id;
@@ -773,24 +797,32 @@ export default function PhotographerDashboard({
 
                     {/* CALENDAR TAB */}
                     {activeTab === "calendar" && (
-                        <div className={`${cardClass} min-h-[300px] flex flex-col items-center justify-center text-center p-12 border-dashed border-2 dark:border-white/10`}>
-                            <div className="p-4 rounded-3xl bg-cyan-500/10 text-cyan-400 mb-4 animate-bounce">
-                                <Calendar size={32} />
-                            </div>
-                            <h3 className="text-lg font-bold mb-2">{t.calendar}</h3>
-                            <p className="text-slate-400 max-w-sm text-sm font-medium leading-relaxed">{t.calendarComingSoon}</p>
-                        </div>
+                        <PhotographerBookingCalendar theme={theme} />
                     )}
 
-                    {/* CUSTOMERS TAB */}
-                    {activeTab === "customers" && (
-                        <div className={`${cardClass} min-h-[300px] flex flex-col items-center justify-center text-center p-12 border-dashed border-2 dark:border-white/10`}>
-                            <div className="p-4 rounded-3xl bg-purple-500/10 text-purple-400 mb-4 animate-pulse">
-                                <Users size={32} />
-                            </div>
-                            <h3 className="text-lg font-bold mb-2">{t.customers}</h3>
-                            <p className="text-slate-400 max-w-sm text-sm font-medium leading-relaxed">{t.customersComingSoon}</p>
-                        </div>
+                    {/* JOBS TAB */}
+                    {activeTab === "jobs" && (
+                        <PhotographerJobPosts theme={theme} />
+                    )}
+
+                    {/* RECOMMENDATIONS TAB */}
+                    {activeTab === "recommendations" && (
+                        <PhotographerRecommendedJobs theme={theme} />
+                    )}
+
+                    {/* CHAT TAB */}
+                    {activeTab === "chat" && (
+                        <PhotographerChat theme={theme} />
+                    )}
+
+                    {/* REVENUE TAB */}
+                    {activeTab === "revenue" && (
+                        <PhotographerRevenueDashboard theme={theme} onNavigateToWithdraw={() => setActiveTab("withdraw")} />
+                    )}
+
+                    {/* WITHDRAW TAB */}
+                    {activeTab === "withdraw" && (
+                        <WithdrawMoney theme={theme} />
                     )}
 
                 </div>

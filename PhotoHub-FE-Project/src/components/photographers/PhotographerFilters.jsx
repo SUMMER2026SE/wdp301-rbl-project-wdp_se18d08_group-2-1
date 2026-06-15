@@ -26,6 +26,7 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], locati
       sortRating: "Rating",
       descending: "High to Low",
       ascending: "Low to High",
+      clearAll: "Clear all",
     },
     vi: {
       searchPlaceholder: "Tìm kiếm nhiếp ảnh gia...",
@@ -48,6 +49,7 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], locati
       sortRating: "Số điểm đánh giá",
       descending: "Giảm dần",
       ascending: "Tăng dần",
+      clearAll: "Hủy tất cả",
     },
   };
 
@@ -119,6 +121,13 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], locati
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // ── Đóng sort dropdown khi scroll ───────────────────────────────────
+  useEffect(() => {
+    const handleScroll = () => { if (sortOpen) setSortOpen(false); };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [sortOpen]);
+
   // ── Đóng filter panel bằng Escape ─────────────────────────────────────
   useEffect(() => {
     const handler = (e) => { if (e.key === "Escape") setFilterOpen(false); };
@@ -154,7 +163,9 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], locati
     setTempFilters(cleared);
     const newApplied = { location: "", styles: [], minRating: 0, minExperience: 0 };
     setAppliedFilters(newApplied);
-    onFilterChange({ search: searchValue, ...newApplied, sortBy: currentSort });
+    setSearchValue("");
+    setCurrentSort("relevance");
+    onFilterChange({ search: "", ...newApplied, sortBy: "relevance" });
   };
 
   const handleSortSelect = (sortValue) => {
@@ -170,6 +181,8 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], locati
     appliedFilters.minRating > 0,
     appliedFilters.minExperience > 0,
   ].filter(Boolean).length;
+
+  const hasAnyActive = activeCount > 0 || searchValue.trim() !== "" || currentSort !== "relevance";
 
   // ── Render ─────────────────────────────────────────────────────────────
   return (
@@ -229,7 +242,7 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], locati
             {t.sortBtn}
           </button>
 
-          {/* Sort Dropdown - rendered via portal to escape transform stacking context */}
+          {/* Sort Dropdown — portal để thoát stacking context của card */}
           {sortOpen && createPortal(
             <div
               style={{ position: "fixed", top: sortPos.top, right: sortPos.right, zIndex: 99999, width: "240px" }}
@@ -310,9 +323,20 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], locati
                 </button>
               </div>
             </div>,
-             document.body
+            document.body
           )}
         </div>
+
+        {/* Nút hủy tất cả — góc phải, chỉ hiện khi có filter active */}
+        {hasAnyActive && (
+          <button
+            onClick={handleClearFilters}
+            className="ml-auto flex items-center gap-1.5 rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 transition-all duration-200 select-none"
+          >
+            <X size={14} />
+            {t.clearAll}
+          </button>
+        )}
       </div>
 
       {/* ═══ FILTER PANEL (right-side overlay) ═══ */}

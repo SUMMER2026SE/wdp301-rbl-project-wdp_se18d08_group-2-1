@@ -2,8 +2,28 @@
 const express = require("express");
 const PhotographerController = require("../controllers/PhotographerController");
 const { authenticate } = require("../../../middlewares/authenticate");
+const bookingRoutes = require("../booking/booking.routes");
+const calendarRoutes = require("../calendar/calendar.routes");
+const jobRoutes = require("../job/job.routes");
+const recommendationRoutes = require("../recommendation/recommendation.routes");
+const bidRoutes = require("../bid/bid.routes");
+const chatRoutes = require("../chat/chat.routes");
+const albumRoutes = require("../album/album.routes");
+const revenueRoutes = require("../revenue/revenue.routes");
+const withdrawRoutes = require("../withdraw/withdraw.routes");
 
 const router = express.Router();
+
+// Mount specific sub-routes first so they don't get intercepted by wildcard parameter /:id
+router.use("/bookings", bookingRoutes);
+router.use("/calendar", calendarRoutes);
+router.use("/jobs/recommended", recommendationRoutes); // More specific first
+router.use("/jobs", jobRoutes);
+router.use("/bids", bidRoutes);
+router.use("/chat", chatRoutes);
+router.use("/albums", albumRoutes);
+router.use("/revenue", revenueRoutes);
+router.use("/withdraw", withdrawRoutes);
 
 // Public routes
 router.get("/", PhotographerController.listPhotographers);
