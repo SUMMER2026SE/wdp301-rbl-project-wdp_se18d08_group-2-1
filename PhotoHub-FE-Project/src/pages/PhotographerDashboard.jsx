@@ -36,7 +36,6 @@ import PhotographerRecommendedJobs from "../components/photographers/Photographe
 import PhotographerChat from "../components/photographers/PhotographerChat";
 import PhotographerRevenueDashboard from "../components/photographers/PhotographerRevenueDashboard";
 import WithdrawMoney from "../components/photographers/WithdrawMoney";
-import PhotographerPortfolioManager from "../components/photographers/PhotographerPortfolioManager";
 
 export default function PhotographerDashboard({
     language = "vi",
@@ -148,7 +147,13 @@ export default function PhotographerDashboard({
             chat: "Trò chuyện",
             revenue: "Doanh thu",
             withdraw: "Rút tiền payout",
-            portfolio: "Quản lý Portfolio"
+            idVerificationTitle: "Xác minh danh tính (CCCD)",
+            frontIdLabel: "Mặt trước CCCD",
+            backIdLabel: "Mặt sau CCCD",
+            uploadVeriBtn: "Gửi yêu cầu xác minh",
+            uploadingVeri: "Đang tải hồ sơ xác minh...",
+            veriSuccess: "Hồ sơ xác minh đã được gửi, vui lòng chờ hệ thống kiểm duyệt!",
+            veriError: "Không thể upload hồ sơ xác minh."
         },
         en: {
             dashboard: "Dashboard",
@@ -202,7 +207,13 @@ export default function PhotographerDashboard({
             chat: "Live Chat",
             revenue: "Revenue",
             withdraw: "Withdraw Money",
-            portfolio: "Portfolio Manager"
+            idVerificationTitle: "Identity Verification (ID Card)",
+            frontIdLabel: "Front of ID Card",
+            backIdLabel: "Back of ID Card",
+            uploadVeriBtn: "Submit Verification Request",
+            uploadingVeri: "Uploading verification profiles...",
+            veriSuccess: "Verification profiles submitted successfully! Please wait for approval.",
+            veriError: "Failed to upload verification profiles."
         }
     };
 
@@ -576,8 +587,7 @@ export default function PhotographerDashboard({
     const avatarUrl = getAvatarUrl();
 
     const canEditVerification =
-        photographerData.verificationStatus === "REJECTED" ||
-        !photographerData.verificationStatus;
+        photographerData.verificationStatus !== "VERIFIED";
     return (
         <div className={`min-h-screen pt-28 pb-16 transition-colors duration-500 ${isDark ? "bg-[#030303] text-white" : "bg-slate-50 text-slate-900"}`}>
             <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-4 gap-8">
@@ -651,7 +661,6 @@ export default function PhotographerDashboard({
                         <nav className="space-y-1.5 relative z-10">
                             {[
                                 { id: "profile", label: t.profile, icon: User },
-                                { id: "portfolio", label: t.portfolio, icon: Grid },
                                 { id: "calendar", label: t.calendar, icon: Calendar },
                                 { id: "jobs", label: t.jobs, icon: Briefcase },
                                 { id: "recommendations", label: t.recommendations, icon: TrendingUp },
@@ -870,7 +879,7 @@ export default function PhotographerDashboard({
                                     <div>
                                         <label className={labelClass}>
                                             {t.backIdLabel}
-                                            {photographerData.verificationStatus !== "VERIFIED" }
+                                            {photographerData.verificationStatus !== "VERIFIED"}
                                             <span className="text-rose-500"> *</span>
                                         </label>
 
@@ -889,8 +898,8 @@ export default function PhotographerDashboard({
                                                 }
                                             }}
                                             className={`mt-1.5 border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center min-h-[160px] transition-all relative overflow-hidden ${canEditVerification
-                                                    ? "cursor-pointer"
-                                                    : "cursor-default"
+                                                ? "cursor-pointer"
+                                                : "cursor-default"
                                                 } ${isDark
                                                     ? "border-white/10 bg-[#09090b] hover:border-cyan-500/50"
                                                     : "border-slate-300 bg-slate-50 hover:border-cyan-500"
@@ -1103,15 +1112,6 @@ export default function PhotographerDashboard({
                                 </div>
                             </div>
                         </div>
-                    )}
-
-                    {/* PORTFOLIO TAB */}
-                    {activeTab === "portfolio" && (
-                        <PhotographerPortfolioManager
-                            photographerId={photographerData._id}
-                            language={language}
-                            theme={theme}
-                        />
                     )}
 
                     {/* CALENDAR TAB */}

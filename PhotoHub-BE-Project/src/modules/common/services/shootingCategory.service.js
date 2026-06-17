@@ -1,64 +1,82 @@
 const ShootingCategory = require("../models/shootingCategory");
+const slugify = require("slugify");
 
 class ShootingCategoryService {
-  async createCategory(data) {
-    const existing = await ShootingCategory.findOne({
-      $or: [
-        { name: data.name },
-        { slug: data.slug }
-      ]
-    });
+    async createCategory(data) {
+        // 1. Tự sinh slug nếu chưa có
+        let baseSlug = data.slug?.trim()
+            ? data.slug
+            : slugify(data.name, {
+                lower: true,
+                strict: true,
+                locale: "vi"
+            });
 
-    if (existing) {
-      throw new Error("Category already exists");
+        let slug = baseSlug;
+
+        // 2. Check trùng slug -> nếu trùng thì thêm suffix
+        let counter = 1;
+        while (await ShootingCategory.exists({ slug })) {
+            slug = `${baseSlug}-${counter}`;
+            counter++;
+        }
+
+        // 3. Check trùng name (option)
+        const existingName = await ShootingCategory.findOne({ name: data.name });
+        if (existingName) {
+            throw new Error("Category name already exists");
+        }
+
+        // 4. Create
+        return await ShootingCategory.create({
+            ...data,
+            slug
+        });
     }
 
-    return await ShootingCategory.create(data);
-  }
-
-  async getAllCategories() {
-    return await ShootingCategory.find({
-      status: "ACTIVE"
-    }).sort({ createdAt: -1 });
-  }
-
-  async getCategoryById(id) {
-    const category = await ShootingCategory.findById(id);
-
-    if (!category) {
-      throw new Error("Category not found");
+    async getAllCategories() {
+        return await ShootingCategory.find({
+            status: "ACTIVE"
+        }).sort({ createdAt: -1 });
     }
 
-    return category;
-  }
+    async getCategoryById(id) {
+        const category = await ShootingCategory.findById(id);
 
-  async updateCategory(id, data) {
-    const category = await ShootingCategory.findById(id);
+        if (!category) {
+            throw new Error("Category not found");
+        }
 
-    if (!category) {
-      throw new Error("Category not found");
+        return category;
     }
 
-    Object.assign(category, data);
+    async updateCategory(id, data) {
+        const category = await ShootingCategory.findById(id);
 
-    await category.save();
+        if (!category) {
+            throw new Error("Category not found");
+        }
 
-    return category;
-  }
+        Object.assign(category, data);
 
-  async deleteCategory(id) {
-    const category = await ShootingCategory.findById(id);
+        await category.save();
 
-    if (!category) {
-      throw new Error("Category not found");
+        return category;
     }
 
-    category.status = "INACTIVE";
+    async deleteCategory(id) {
+        const category = await ShootingCategory.findById(id);
 
-    await category.save();
+        if (!category) {
+            throw new Error("Category not found");
+        }
 
-    return category;
-  }
+        category.status = "INACTIVE";
+
+        await category.save();
+
+        return category;
+    }
 }
 
 module.exports = new ShootingCategoryService();
