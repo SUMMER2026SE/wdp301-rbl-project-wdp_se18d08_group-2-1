@@ -37,6 +37,7 @@ import PhotographerChat from "../components/photographers/PhotographerChat";
 import PhotographerRevenueDashboard from "../components/photographers/PhotographerRevenueDashboard";
 import WithdrawMoney from "../components/photographers/WithdrawMoney";
 import PhotographerPortfolioManager from "../components/photographers/PhotographerPortfolioManager";
+import PhotographerPackages from "../components/photographers/PhotographerPackages";
 
 export default function PhotographerDashboard({
     language = "vi",
@@ -665,6 +666,7 @@ export default function PhotographerDashboard({
                             {[
                                 { id: "profile", label: t.profile, icon: User },
                                 { id: "portfolio", label: "Portfolio", icon: Layers },
+                                { id: "packages", label: "Packages", icon: CreditCard },
                                 { id: "calendar", label: t.calendar, icon: Calendar },
                                 { id: "jobs", label: t.jobs, icon: Briefcase },
                                 { id: "recommendations", label: t.recommendations, icon: TrendingUp },
@@ -1125,6 +1127,11 @@ export default function PhotographerDashboard({
                             language={language}
                             theme={theme}
                         />
+                    )}
+
+                    {/* PACKAGES TAB */}
+                    {activeTab === "packages" && (
+                        <PhotographerPackages theme={theme} language={language} />
                     )}
 
                     {/* CALENDAR TAB */}

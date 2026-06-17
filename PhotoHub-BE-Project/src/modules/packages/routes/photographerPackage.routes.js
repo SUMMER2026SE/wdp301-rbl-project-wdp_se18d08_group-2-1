@@ -13,4 +13,16 @@ router.post(
   controller.create
 );
 
+router.get(
+  "/my",
+  authenticate,
+  attachPhotographer,
+  controller.getMyPackages
+);
+
+router.get("/:id", authenticate, controller.getPackageDetail);
+router.put("/:id", authenticate, attachPhotographer, controller.update);
+router.patch("/:id/toggle-status", authenticate, attachPhotographer, controller.toggleStatus);
+router.delete("/:id", authenticate, attachPhotographer, controller.softDelete);
+
 module.exports = router;
