@@ -46,6 +46,8 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
   const [lightboxImg, setLightboxImg] = useState(null);
   const navigate = useNavigate();
   const [realPortfolios, setRealPortfolios] = useState([]);
+  const [albums, setAlbums] = useState([]);
+  const [selectedAlbumImages, setSelectedAlbumImages] = useState(null); // null | { album, images }
 
 
   // Hook yêu thích — dùng photographerId từ props
@@ -118,16 +120,12 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
         setPhotographer(data);
 
         try {
-          const portfolioRes = await aiRecommendService.getPortfolios(photographerId);
-          if (portfolioRes.success && portfolioRes.data?.portfolios) {
-            const urls = portfolioRes.data.portfolios.map(p => {
-              const imgUrl = p.image_url;
-              return imgUrl.startsWith("http") ? imgUrl : `http://localhost:3000${imgUrl}`;
-            });
-            setRealPortfolios(urls);
+          const albumRes = await aiRecommendService.getAlbumsByPhotographer(photographerId);
+          if (albumRes.success) {
+            setAlbums(albumRes.data?.albums || []);
           }
         } catch (err) {
-          console.error("Lỗi tải ảnh drawer portfolio:", err);
+          console.error("Lỗi tải albums drawer:", err);
         }
         setLoading(false);
       };
@@ -206,8 +204,6 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
             hourlyRate,
             verificationStatus,
             isAvailable,
-            portfolio = realPortfolios.length > 0 ? realPortfolios : dummyGallery,
-
           } = photographer;
 
           const avatarUrl = getAvatarUrl(user?.avatar);
@@ -470,7 +466,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
               {/* --- TABS --- */}
               <div className="sticky top-0 z-10 flex border-b border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5">
                 <button
-                  onClick={() => setActiveTab("photos")}
+                  onClick={() => { setActiveTab("photos"); setSelectedAlbumImages(null); }}
                   className={`flex items-center gap-1.5 py-3 mr-6 text-sm font-bold border-b-2 transition-all ${activeTab === "photos"
                       ? "border-orange-500 text-orange-500"
                       : "border-transparent text-slate-400 dark:text-zinc-500 hover:text-slate-600"
@@ -494,26 +490,72 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
               {/* --- TAB CONTENT --- */}
               <div className="px-5 py-5 pb-10">
                 {activeTab === "photos" && (
-                  portfolio.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      {portfolio.map((imgUrl, idx) => (
-                        <div
-                          key={idx}
-                          onClick={() => setLightboxImg(imgUrl)}
-                          className="group relative aspect-square overflow-hidden rounded-xl bg-slate-100 dark:bg-zinc-800 cursor-pointer"
-                        >
-                          <img
-                            src={imgUrl}
-                            alt={`Photo ${idx + 1}`}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            loading="lazy"
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <Eye size={20} className="text-white" />
+                  albums.length > 0 ? (
+                    selectedAlbumImages ? (
+                      /* Album detail in drawer */
+                      <div>
+                        <button onClick={() => setSelectedAlbumImages(null)}
+                          className="flex items-center gap-1.5 mb-4 text-xs font-bold text-orange-500 hover:text-orange-600 transition-colors">
+                          <ChevronDown size={13} className="rotate-90" /> Quay lại Albums
+                        </button>
+                        <p className="font-black text-sm mb-1">{selectedAlbumImages.album?.title}</p>
+                        {selectedAlbumImages.album?.price_package && (
+                          <p className="text-xs font-bold text-cyan-500 mb-3">{selectedAlbumImages.album.price_package.toLocaleString()} VNĐ</p>
+                        )}
+                        {selectedAlbumImages.images?.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                            {selectedAlbumImages.images.map((img, idx) => (
+                              <div key={img._id || idx} onClick={() => setLightboxImg(getAvatarUrl(img.image_url) || img.image_url)}
+                                className="group relative aspect-square overflow-hidden rounded-xl bg-slate-100 dark:bg-zinc-800 cursor-pointer">
+                                <img
+                                  src={img.image_url?.startsWith("http") ? img.image_url : `http://localhost:3000${img.image_url}`}
+                                  alt={img.caption || `Photo ${idx+1}`}
+                                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Eye size={18} className="text-white" />
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ) : (
+                          <p className="text-center py-6 text-sm text-slate-400">Album chưa có ảnh</p>
+                        )}
+                      </div>
+                    ) : (
+                      /* Album list in drawer */
+                      <div className="grid grid-cols-2 gap-2">
+                        {albums.map(album => (
+                          <div key={album._id}
+                            onClick={async () => {
+                              try {
+                                const res = await aiRecommendService.getAlbumDetail(album._id);
+                                if (res.success) setSelectedAlbumImages(res.data);
+                              } catch(e) { console.error(e); }
+                            }}
+                            className="group cursor-pointer rounded-xl overflow-hidden border border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 hover:shadow-md transition-all">
+                            <div className="relative aspect-square overflow-hidden bg-slate-200 dark:bg-zinc-800">
+                              {album.coverImageUrl ? (
+                                <img
+                                  src={album.coverImageUrl?.startsWith("http") ? album.coverImageUrl : `http://localhost:3000${album.coverImageUrl}`}
+                                  alt={album.title}
+                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+                              ) : (
+                                <div className="flex items-center justify-center h-full">
+                                  <Camera size={20} className="text-slate-300 dark:text-zinc-700" />
+                                </div>
+                              )}
+                              <div className="absolute bottom-1 right-1 bg-black/60 rounded-full px-1.5 py-0.5 text-white text-[9px] font-bold">
+                                {album.imageCount || 0}
+                              </div>
+                            </div>
+                            <div className="p-2">
+                              <p className="text-[11px] font-black truncate text-slate-800 dark:text-zinc-100">{album.title}</p>
+                              <p className="text-[9px] font-bold text-cyan-500 mt-0.5">{album.price_package?.toLocaleString()} VNĐ</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )
                   ) : (
                     <p className="text-center py-10 text-sm text-slate-400 dark:text-zinc-500">{t.noPhotos}</p>
                   )
