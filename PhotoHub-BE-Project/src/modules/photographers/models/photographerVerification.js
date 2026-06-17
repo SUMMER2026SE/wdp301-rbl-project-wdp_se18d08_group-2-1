@@ -32,7 +32,7 @@ const photographerVerificationSchema = new mongoose.Schema(
       type: String,
       enum: [
         "PENDING",
-        "APPROVED",
+        "VERIFIED",
         "REJECTED",
       ],
       default: "PENDING",

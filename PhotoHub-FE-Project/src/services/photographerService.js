@@ -131,6 +131,48 @@ export const photographerService = {
 
         return response.json();
     },
+
+    // Upload CCCD xác minh
+    uploadVerification: async (frontImage, backImage) => {
+        const token = localStorage.getItem("token");
+
+        const formData = new FormData();
+
+        formData.append("frontImage", frontImage);
+
+        if (backImage) {
+            formData.append("backImage", backImage);
+        }
+
+        const response = await axios.post(
+            `${BASE_URL}/me/verification`,
+            formData,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+        );
+
+        return response.data;
+    },
+
+    // Kiểm tra trạng thái hồ sơ photographer
+    getProfileStatus: async () => {
+        const token = localStorage.getItem("token");
+
+        const response = await axios.get(
+            `${BASE_URL}/me/profile-status`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        return response.data;
+    },
 };
 
 const getAuthConfig = (isMultipart = false) => {
@@ -262,4 +304,5 @@ export const photographerMarketplaceService = {
         const response = await axios.get(`${MARKETPLACE_BASE_URL}/withdraw`, getAuthConfig());
         return response.data;
     },
+
 };
