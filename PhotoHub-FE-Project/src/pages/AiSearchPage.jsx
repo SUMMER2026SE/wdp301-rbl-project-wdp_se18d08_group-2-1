@@ -27,6 +27,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [maxBudget, setMaxBudget] = useState("");
+  const [limit, setLimit] = useState(5);
   const [loading, setLoading] = useState(false);
 
   // Drawer state
@@ -39,7 +40,8 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
         "Xin chào! Tôi là **Trợ lý AI của PhotoHub**. Hãy gửi cho tôi một hình ảnh tham chiếu về phong cách chụp mà bạn mong muốn, và (tùy chọn) đặt ngân sách tối đa. Tôi sẽ quét hàng ngàn portfolio của các nhiếp ảnh gia để tìm ra người phù hợp nhất với bạn!",
       imagePrompt: "Tải lên phong cách của bạn",
       budgetPrompt: "Ngân sách tối đa (VNĐ)",
-      budgetPlaceholder: "Không giới hạn",
+    budgetPlaceholder: "Không giới hạn",
+      limitLabel: "Số kết quả",
       btnSend: "Tìm kiếm",
       btnSending: "Đang phân tích phong cách...",
       userMessageLabel: "Đã yêu cầu tìm kiếm nhiếp ảnh gia khớp phong cách:",
@@ -58,6 +60,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
       imagePrompt: "Upload your style",
       budgetPrompt: "Maximum Budget (USD/VNĐ)",
       budgetPlaceholder: "Unlimited",
+      limitLabel: "Results",
       btnSend: "Search",
       btnSending: "Analyzing style...",
       userMessageLabel: "Requested photographer matchmaking for style:",
@@ -161,7 +164,8 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
       // 3. Call search API
       const res = await aiRecommendService.searchByImage(
         currentFile,
-        currentBudget ? Number(currentBudget) : null
+        currentBudget ? Number(currentBudget) : null,
+        limit
       );
 
       // Remove loading message & append actual results
@@ -417,8 +421,8 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
               </div>
             </div>
 
-            {/* Budget Input */}
-            <div className="w-full sm:w-56 relative">
+          {/* Budget Input */}
+            <div className="w-full sm:w-44 relative">
               <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
                 type="number"
@@ -428,6 +432,27 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
                 className="w-full rounded-2xl pl-10 pr-4 py-3 outline-none border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-bold text-slate-800 dark:text-zinc-200 placeholder-slate-400 dark:placeholder-zinc-500 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 focus:bg-white dark:focus:bg-[#030303] transition-all"
                 placeholder={t.budgetPlaceholder}
               />
+            </div>
+
+            {/* Limit selector */}
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs font-bold text-slate-500 dark:text-zinc-400 whitespace-nowrap">{t.limitLabel}:</span>
+              <div className="flex rounded-2xl overflow-hidden border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                {[3, 5, 8, 10].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setLimit(n)}
+                    className={`px-3 py-2.5 text-xs font-black transition-all ${
+                      limit === n
+                        ? "bg-cyan-500 text-white"
+                        : "text-slate-500 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800"
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Send Button */}
