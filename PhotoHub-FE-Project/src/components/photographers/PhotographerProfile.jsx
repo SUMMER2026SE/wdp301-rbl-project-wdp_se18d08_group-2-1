@@ -22,6 +22,10 @@ import {
   Cpu,
   Image as ImageIcon,
   Eye,
+  ArrowLeft,
+  Tag,
+  DollarSign,
+  Grid3X3,
 } from "lucide-react";
 
 const PhotographerProfile = ({ language = "en" }) => {
@@ -29,7 +33,8 @@ const PhotographerProfile = ({ language = "en" }) => {
   const { getPhotographerDetail, loading, error } = usePhotographers();
   const [photographer, setPhotographer] = useState(null);
   const [selectedImg, setSelectedImg] = useState(null);
-  const [realPortfolios, setRealPortfolios] = useState([]);
+  const [albums, setAlbums] = useState([]);
+  const [selectedAlbumDetail, setSelectedAlbumDetail] = useState(null); // { album, images }
 
 
   // Giả lập danh sách ảnh portfolio nếu DB chưa có (Thay bằng data thật từ photographer.portfolio sau này)
@@ -99,30 +104,40 @@ const PhotographerProfile = ({ language = "en" }) => {
 
   const t = labels[language] || labels.en;
 
+  const getFullUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http://") || url.startsWith("https://")) return url;
+    return `http://localhost:3000${url}`;
+  };
+
   useEffect(() => {
   if (id) {
     const loadPhotographer = async () => {
       const data = await getPhotographerDetail(id);
       setPhotographer(data);
 
-      // Tải danh sách ảnh portfolio thực tế
+      // Tải danh sách Albums
       try {
-        const portfolioRes = await aiRecommendService.getPortfolios(id);
-        if (portfolioRes.success && portfolioRes.data?.portfolios) {
-          // Lấy ra danh sách url ảnh đầy đủ
-          const urls = portfolioRes.data.portfolios.map(p => {
-            const imgUrl = p.image_url;
-            return imgUrl.startsWith("http") ? imgUrl : `http://localhost:3000${imgUrl}`;
-          });
-          setRealPortfolios(urls);
+        const albumRes = await aiRecommendService.getAlbumsByPhotographer(id);
+        if (albumRes.success) {
+          setAlbums(albumRes.data?.albums || []);
         }
       } catch (err) {
-        console.error("Lỗi khi tải ảnh portfolio thực tế:", err);
+        console.error("Lỗi khi tải albums:", err);
       }
     };
     loadPhotographer();
   }
 }, [id, getPhotographerDetail]);
+
+  const openAlbumDetail = async (album) => {
+    try {
+      const res = await aiRecommendService.getAlbumDetail(album._id);
+      if (res.success) setSelectedAlbumDetail(res.data);
+    } catch (err) {
+      console.error("Lỗi tải chi tiết album:", err);
+    }
+  };
 
 
   if (loading) {
@@ -165,8 +180,6 @@ const PhotographerProfile = ({ language = "en" }) => {
     verificationStatus,
     isAvailable,
     hourlyRate,
-    portfolio = realPortfolios.length > 0 ? realPortfolios : dummyGallery,
- // Sử dụng ảnh từ server, nếu trống sẽ lấy list dummy trên
   } = photographer;
 
   const getAvatarUrl = () => {
@@ -174,7 +187,7 @@ const PhotographerProfile = ({ language = "en" }) => {
     if (user.avatar.startsWith("http://") || user.avatar.startsWith("https://")) {
       return user.avatar;
     }
-    const BACKEND_URL = "http://localhost:3000"; // Hãy thay port backend của bạn tại đây
+    const BACKEND_URL = "http://localhost:3000";
     const cleanPath = user.avatar.startsWith("/") ? user.avatar : `/${user.avatar}`;
     return `${BACKEND_URL}${cleanPath}`;
   };
@@ -341,47 +354,121 @@ const PhotographerProfile = ({ language = "en" }) => {
             </div>
           )}
 
-          {/* ================= ĐÃ THÊM: KHU VỰC TRIỂN LÃM ẢNH (PORTFOLIO GALLERY) ================= */}
-          {portfolio && portfolio.length > 0 && (
+          {/* ================= ALBUM PORTFOLIO GALLERY ================= */}
+          {albums.length > 0 && (
             <div className="rounded-3xl bg-white p-6 sm:p-8 shadow-md dark:bg-gray-800 border border-gray-100/50 dark:border-gray-700/40 transition-all duration-300 hover:shadow-lg">
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="flex items-center gap-2 text-xl font-black text-gray-900 dark:text-white">
-                  <ImageIcon size={22} className="text-indigo-500" />
-                  {t.gallery}
-                </h3>
-                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-                  {portfolio.length} Photos
-                </span>
-              </div>
-
-              {/* Grid hình ảnh Masonry-style mượt mà */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-                {portfolio.map((imgUrl, index) => (
-                  <div
-                    key={index}
-                    onClick={() => setSelectedImg(imgUrl)}
-                    className="group relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-900 shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-xl"
-                  >
-                    <img
-                      src={imgUrl}
-                      alt={`Portfolio item ${index + 1}`}
-                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                      loading="lazy"
-                    />
-                    {/* Hiệu ứng lớp phủ Dark Overlay mang tính điện ảnh khi hover */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 flex items-end justify-center p-4">
-                      <button onClick={(e) => {
-                        e.stopPropagation(); // 👉 THÊM: Ngăn sự kiện nổi bọt để không lỗi click đúp
-                        setSelectedImg(imgUrl);
-                      }}
-                        className="flex items-center gap-2 rounded-xl bg-white/20 backdrop-blur-md px-4 py-2 text-xs font-bold text-white tracking-wide border border-white/20 hover:bg-white hover:text-black transition-all duration-300">
-                        <Eye size={14} />
-                        {t.viewProject}
-                      </button>
+              {selectedAlbumDetail ? (
+                /* ── Album Detail View ────────────────────────────────── */
+                <div>
+                  <div className="mb-5 flex items-center justify-between flex-wrap gap-3">
+                    <button
+                      onClick={() => setSelectedAlbumDetail(null)}
+                      className="flex items-center gap-1.5 text-sm font-bold text-indigo-500 hover:text-indigo-700 transition-colors"
+                    >
+                      <ArrowLeft size={15} /> Quay lại Albums
+                    </button>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedAlbumDetail.album?.category?.name && (
+                        <span className="flex items-center gap-1 text-xs font-bold text-indigo-500 bg-indigo-500/10 rounded-full px-2.5 py-0.5 border border-indigo-500/15">
+                          <Tag size={9} /> {selectedAlbumDetail.album.category.name}
+                        </span>
+                      )}
+                      {selectedAlbumDetail.album?.styleTags?.map(tag => (
+                        <span key={tag._id || tag} className="text-[10px] font-bold rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-0.5 border border-purple-500/15">
+                          #{tag.name || tag}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="mb-4">
+                    <h3 className="flex items-center gap-2 text-lg font-black text-gray-900 dark:text-white">
+                      <ImageIcon size={20} className="text-indigo-500" />
+                      {selectedAlbumDetail.album?.title}
+                    </h3>
+                    {selectedAlbumDetail.album?.description && (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{selectedAlbumDetail.album.description}</p>
+                    )}
+                    {selectedAlbumDetail.album?.price_package && (
+                      <p className="flex items-center gap-1 text-sm font-black text-cyan-600 dark:text-cyan-400 mt-2">
+                        <DollarSign size={13} /> {selectedAlbumDetail.album.price_package.toLocaleString()} VNĐ
+                      </p>
+                    )}
+                  </div>
+                  {selectedAlbumDetail.images?.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+                      {selectedAlbumDetail.images.map((img, index) => (
+                        <div key={img._id || index} onClick={() => setSelectedImg(getFullUrl(img.image_url))}
+                          className="group relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-900 shadow-sm transition-all duration-500 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+                          <img src={getFullUrl(img.image_url)} alt={img.caption || `Photo ${index + 1}`}
+                            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" loading="lazy" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 flex items-end justify-center p-4">
+                            <button onClick={e => { e.stopPropagation(); setSelectedImg(getFullUrl(img.image_url)); }}
+                              className="flex items-center gap-2 rounded-xl bg-white/20 backdrop-blur-md px-4 py-2 text-xs font-bold text-white border border-white/20 hover:bg-white hover:text-black transition-all">
+                              <Eye size={14} /> {t.viewProject}
+                            </button>
+                          </div>
+                          {img.caption && (
+                            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <p className="text-xs font-semibold text-white/90 truncate">{img.caption}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-center py-10 text-sm text-gray-400">Album này chưa có ảnh</p>
+                  )}
+                </div>
+              ) : (
+                /* ── Albums List View ─────────────────────────────────── */
+                <div>
+                  <div className="mb-6 flex items-center justify-between">
+                    <h3 className="flex items-center gap-2 text-xl font-black text-gray-900 dark:text-white">
+                      <ImageIcon size={22} className="text-indigo-500" />
+                      {t.gallery}
+                    </h3>
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                      {albums.length} Albums
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3">
+                    {albums.map(album => (
+                      <div key={album._id} onClick={() => openAlbumDetail(album)}
+                        className="group cursor-pointer rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                        <div className="relative aspect-[16/9] overflow-hidden bg-gray-200 dark:bg-gray-800">
+                          {album.coverImageUrl ? (
+                            <img src={getFullUrl(album.coverImageUrl)} alt={album.title}
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
+                          ) : (
+                            <div className="flex items-center justify-center h-full">
+                              <Grid3X3 size={28} className="text-gray-300 dark:text-gray-700" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md rounded-xl px-4 py-2 text-xs font-bold text-white border border-white/20">
+                              <Eye size={13} /> Xem album
+                            </span>
+                          </div>
+                          <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full px-2 py-0.5 text-white text-[10px] font-bold">
+                            <ImageIcon size={9} /> {album.imageCount || 0}
+                          </div>
+                        </div>
+                        <div className="p-4">
+                          <p className="font-black text-sm text-gray-900 dark:text-white truncate">{album.title}</p>
+                          {album.category?.name && (
+                            <p className="flex items-center gap-1 text-[10px] font-semibold text-indigo-500 mt-1">
+                              <Tag size={9} /> {album.category.name}
+                            </p>
+                          )}
+                          <p className="text-xs font-black text-cyan-600 dark:text-cyan-400 mt-1.5">
+                            {album.price_package?.toLocaleString()} VNĐ
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
