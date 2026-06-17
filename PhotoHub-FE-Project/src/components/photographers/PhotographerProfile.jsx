@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import usePhotographers from "../../hooks/usePhotographers";
+import { aiRecommendService } from "../../services/aiRecommendService";
+
 import {
   Star,
   MapPin,
@@ -27,6 +29,8 @@ const PhotographerProfile = ({ language = "en" }) => {
   const { getPhotographerDetail, loading, error } = usePhotographers();
   const [photographer, setPhotographer] = useState(null);
   const [selectedImg, setSelectedImg] = useState(null);
+  const [realPortfolios, setRealPortfolios] = useState([]);
+
 
   // Giả lập danh sách ảnh portfolio nếu DB chưa có (Thay bằng data thật từ photographer.portfolio sau này)
   const dummyGallery = [
@@ -96,14 +100,30 @@ const PhotographerProfile = ({ language = "en" }) => {
   const t = labels[language] || labels.en;
 
   useEffect(() => {
-    if (id) {
-      const loadPhotographer = async () => {
-        const data = await getPhotographerDetail(id);
-        setPhotographer(data);
-      };
-      loadPhotographer();
-    }
-  }, [id, getPhotographerDetail]);
+  if (id) {
+    const loadPhotographer = async () => {
+      const data = await getPhotographerDetail(id);
+      setPhotographer(data);
+
+      // Tải danh sách ảnh portfolio thực tế
+      try {
+        const portfolioRes = await aiRecommendService.getPortfolios(id);
+        if (portfolioRes.success && portfolioRes.data?.portfolios) {
+          // Lấy ra danh sách url ảnh đầy đủ
+          const urls = portfolioRes.data.portfolios.map(p => {
+            const imgUrl = p.image_url;
+            return imgUrl.startsWith("http") ? imgUrl : `http://localhost:3000${imgUrl}`;
+          });
+          setRealPortfolios(urls);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải ảnh portfolio thực tế:", err);
+      }
+    };
+    loadPhotographer();
+  }
+}, [id, getPhotographerDetail]);
+
 
   if (loading) {
     return (
@@ -145,7 +165,8 @@ const PhotographerProfile = ({ language = "en" }) => {
     verificationStatus,
     isAvailable,
     hourlyRate,
-    portfolio = dummyGallery, // Sử dụng ảnh từ server, nếu trống sẽ lấy list dummy trên
+    portfolio = realPortfolios.length > 0 ? realPortfolios : dummyGallery,
+ // Sử dụng ảnh từ server, nếu trống sẽ lấy list dummy trên
   } = photographer;
 
   const getAvatarUrl = () => {
