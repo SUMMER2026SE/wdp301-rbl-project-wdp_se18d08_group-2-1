@@ -1,4 +1,5 @@
 const { Server } = require("socket.io");
+const { registerChatHandlers } = require("./modules/photographers/chat/chat.socket");
 
 let io;
 
@@ -9,6 +10,9 @@ const initSocket = (server) => {
 
   io.on("connection", (socket) => {
     console.log("socket connected:", socket.id);
+
+    // Register module-specific handlers
+    registerChatHandlers(io, socket);
 
     socket.onAny((event, ...args) => {
       console.log("event received:", event, args);

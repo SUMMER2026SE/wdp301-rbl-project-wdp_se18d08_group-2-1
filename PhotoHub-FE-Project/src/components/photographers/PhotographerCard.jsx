@@ -1,7 +1,9 @@
-import { Star, MapPin, Award, Camera } from "lucide-react";
+import { Star, MapPin, Award, Camera, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useFavorite } from "../../hooks/useFavorite";
 
-const PhotographerCard = ({ photographer, language, onViewClick }) => {
+const PhotographerCard = ({ photographer, language, onViewClick, onRequireLogin }) => {
   const labels = {
     en: {
       viewProfile: "View Profile",
@@ -21,6 +23,12 @@ const PhotographerCard = ({ photographer, language, onViewClick }) => {
 
   const t = labels[language] || labels.en;
   const { user, displayName, location, experienceYears, averageRating, completedBookings, styles, _id } = photographer;
+
+  const { isFavorited, loading: favLoading, toggle: toggleFavorite, checkStatus } = useFavorite(_id);
+
+  useEffect(() => {
+    checkStatus();
+  }, [checkStatus]);
 
   const getAvatarUrl = () => {
     if (!user?.avatar) return null;
@@ -58,6 +66,34 @@ const PhotographerCard = ({ photographer, language, onViewClick }) => {
               <span className="line-clamp-1">{location}</span>
             </div>
           )}
+
+          {/* ❤️ Nút Yêu Thích */}
+          <button
+            onClick={async (e) => {
+              e.stopPropagation();
+              const result = await toggleFavorite();
+              if (result?.requireLogin && onRequireLogin) {
+                onRequireLogin();
+              }
+            }}
+            disabled={favLoading}
+            aria-label={isFavorited ? "Bỏ yêu thích" : "Thêm yêu thích"}
+            className={`absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full backdrop-blur-md border transition-all duration-200 shadow-lg
+              ${
+                isFavorited
+                  ? "bg-rose-500 border-rose-400 text-white shadow-rose-500/40 scale-110"
+                  : "bg-black/30 border-white/10 text-white/70 hover:bg-rose-500/80 hover:border-rose-400 hover:text-white hover:scale-110"
+              }
+              ${favLoading ? "animate-pulse cursor-not-allowed" : "active:scale-95"}
+            `}
+          >
+            <Heart
+              size={16}
+              className="transition-transform duration-200"
+              fill={isFavorited ? "currentColor" : "none"}
+              strokeWidth={isFavorited ? 0 : 2}
+            />
+          </button>
         </div>
 
         {/* Info Content */}

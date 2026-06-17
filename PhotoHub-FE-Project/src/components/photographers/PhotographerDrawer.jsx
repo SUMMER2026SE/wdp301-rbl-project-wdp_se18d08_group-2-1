@@ -22,7 +22,9 @@ import {
   Eye,
 } from "lucide-react";
 import usePhotographers from "../../hooks/usePhotographers";
+import { useFavorite } from "../../hooks/useFavorite";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 
 const dummyGallery = [
   "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=800&q=80",
@@ -39,8 +41,16 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("photos");
   const [showMoreBio, setShowMoreBio] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
   const [lightboxImg, setLightboxImg] = useState(null);
+  const navigate = useNavigate();
+
+  // Hook yêu thích — dùng photographerId từ props
+  const {
+    isFavorited,
+    loading: favLoading,
+    toggle: toggleFavorite,
+    checkStatus,
+  } = useFavorite(photographerId);
 
   const labels = {
     en: {
@@ -103,8 +113,10 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
         setLoading(false);
       };
       load();
+      // Kiểm tra trạng thái yêu thích khi mở
+      checkStatus();
     }
-  }, [isOpen, photographerId, getPhotographerDetail]);
+  }, [isOpen, photographerId, getPhotographerDetail, checkStatus]);
 
   // Khóa scroll khi drawer mở
   useEffect(() => {
@@ -290,18 +302,27 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
 
                 {/* Action Buttons */}
                 <div className="mb-5 flex gap-2">
-                  {/* Yêu thích */}
+                  {/* Yêu thích — gọi API thật */}
                   <button
-                    onClick={() => setIsLiked(!isLiked)}
+                    onClick={async () => {
+                      const result = await toggleFavorite();
+                      if (result?.requireLogin) {
+                        const ok = window.confirm(
+                          "Bạn cần đăng nhập để yêu thích.\nNhấn OK để đến trang đăng nhập."
+                        );
+                        if (ok) navigate("/login");
+                      }
+                    }}
+                    disabled={favLoading}
                     className={`flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-bold transition-all duration-200 ${
-                      isLiked
+                      isFavorited
                         ? "border-pink-500 bg-pink-50 text-pink-600 dark:bg-pink-500/10 dark:text-pink-400"
                         : "border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:border-pink-400 hover:text-pink-500"
-                    }`}
+                    } ${favLoading ? "animate-pulse cursor-not-allowed opacity-70" : ""}`}
                   >
                     <Heart
                       size={16}
-                      className={isLiked ? "fill-pink-500 text-pink-500" : ""}
+                      className={isFavorited ? "fill-pink-500 text-pink-500" : ""}
                     />
                     {t.likeBtn}
                   </button>

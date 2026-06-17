@@ -1,5 +1,6 @@
 // src/components/photographers/PhotographerList.jsx
 import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import PhotographerCard from "./PhotographerCard";
 import PhotographerListItem from "./PhotographerListItem";
 import PhotographerFilters from "./PhotographerFilters";
@@ -36,6 +37,7 @@ export default function PhotographerList({ language = "en" }) {
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedPhotographerId, setSelectedPhotographerId] = useState(null);
+  const navigate = useNavigate();
 
 
   const labels = {
@@ -113,6 +115,13 @@ export default function PhotographerList({ language = "en" }) {
     setDrawerOpen(true);
   }, []);
 
+  const handleRequireLogin = useCallback(() => {
+    const confirmLogin = window.confirm(
+      "Bạn cần đăng nhập để thêm vào danh sách yêu thích.\nNhấn OK để đến trang đăng nhập."
+    );
+    if (confirmLogin) navigate("/login");
+  }, [navigate]);
+
 
   // ✅ QUAN TRỌNG: Luôn render toàn bộ layout, KHÔNG return sớm
   // PhotographerFilters phải luôn được mount để tránh infinite loop
@@ -175,8 +184,13 @@ export default function PhotographerList({ language = "en" }) {
         ) : viewType === "grid" ? (
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {photographers.map((p) => (
-              <PhotographerCard key={p._id} photographer={p} language={language} onViewClick={handleViewClick} />
-
+              <PhotographerCard
+                key={p._id}
+                photographer={p}
+                language={language}
+                onViewClick={handleViewClick}
+                onRequireLogin={handleRequireLogin}
+              />
             ))}
           </div>
         ) : (
