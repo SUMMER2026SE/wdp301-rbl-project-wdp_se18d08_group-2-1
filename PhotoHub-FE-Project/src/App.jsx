@@ -10,6 +10,7 @@ import GoogleSuccess from "./pages/GoogleSuccess";
 import PhotographerDashboard from "./pages/PhotographerDashboard";
 import FavoritesPage from "./pages/FavoritesPage";
 import PhotographersPage from "./pages/PhotographersPage";
+import AiSearchPage from "./pages/AiSearchPage";
 
 function getInitialTheme() {
   const storedTheme = localStorage.getItem("photohub-theme");
@@ -126,6 +127,16 @@ export default function App() {
           path="/favorites"
           element={
             <FavoritesPage
+              language={language}
+              theme={theme}
+            />
+          }
+        />
+
+        <Route
+          path="/ai-search"
+          element={
+            <AiSearchPage
               language={language}
               theme={theme}
             />

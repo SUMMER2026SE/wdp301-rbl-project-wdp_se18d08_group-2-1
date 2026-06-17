@@ -1,5 +1,7 @@
 // src/components/photographers/PhotographerDrawer.jsx
 import { useEffect, useState } from "react";
+import { aiRecommendService } from "../../services/aiRecommendService";
+
 import {
   X,
   MapPin,
@@ -43,6 +45,8 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
   const [showMoreBio, setShowMoreBio] = useState(false);
   const [lightboxImg, setLightboxImg] = useState(null);
   const navigate = useNavigate();
+  const [realPortfolios, setRealPortfolios] = useState([]);
+
 
   // Hook yêu thích — dùng photographerId từ props
   const {
@@ -104,19 +108,34 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
   useEffect(() => {
     if (isOpen && photographerId) {
       setPhotographer(null);
-      setLoading(true);
+      setLoading(false); // Cập nhật lại logic loading để tránh conflict
       setActiveTab("photos");
       setShowMoreBio(false);
+
       const load = async () => {
+        setLoading(true);
         const data = await getPhotographerDetail(photographerId);
         setPhotographer(data);
+
+        try {
+          const portfolioRes = await aiRecommendService.getPortfolios(photographerId);
+          if (portfolioRes.success && portfolioRes.data?.portfolios) {
+            const urls = portfolioRes.data.portfolios.map(p => {
+              const imgUrl = p.image_url;
+              return imgUrl.startsWith("http") ? imgUrl : `http://localhost:3000${imgUrl}`;
+            });
+            setRealPortfolios(urls);
+          }
+        } catch (err) {
+          console.error("Lỗi tải ảnh drawer portfolio:", err);
+        }
         setLoading(false);
       };
       load();
-      // Kiểm tra trạng thái yêu thích khi mở
       checkStatus();
     }
   }, [isOpen, photographerId, getPhotographerDetail, checkStatus]);
+
 
   // Khóa scroll khi drawer mở
   useEffect(() => {
@@ -147,7 +166,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
 
   if (!isOpen) return null;
 
-    return createPortal(
+  return createPortal(
     <>
       {/* Overlay */}
       <div
@@ -187,7 +206,8 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
             hourlyRate,
             verificationStatus,
             isAvailable,
-            portfolio = dummyGallery,
+            portfolio = realPortfolios.length > 0 ? realPortfolios : dummyGallery,
+
           } = photographer;
 
           const avatarUrl = getAvatarUrl(user?.avatar);
@@ -314,11 +334,10 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                       }
                     }}
                     disabled={favLoading}
-                    className={`flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-bold transition-all duration-200 ${
-                      isFavorited
+                    className={`flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-bold transition-all duration-200 ${isFavorited
                         ? "border-pink-500 bg-pink-50 text-pink-600 dark:bg-pink-500/10 dark:text-pink-400"
                         : "border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:border-pink-400 hover:text-pink-500"
-                    } ${favLoading ? "animate-pulse cursor-not-allowed opacity-70" : ""}`}
+                      } ${favLoading ? "animate-pulse cursor-not-allowed opacity-70" : ""}`}
                   >
                     <Heart
                       size={16}
@@ -329,11 +348,10 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
 
                   {/* Đặt lịch */}
                   <button
-                    className={`flex flex-[2] items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition-all duration-200 shadow-md active:scale-[0.98] ${
-                      isAvailable
+                    className={`flex flex-[2] items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition-all duration-200 shadow-md active:scale-[0.98] ${isAvailable
                         ? "bg-orange-500 hover:bg-orange-600 shadow-orange-400/30"
                         : "bg-slate-400 cursor-not-allowed"
-                    }`}
+                      }`}
                     disabled={!isAvailable}
                   >
                     <CalendarCheck size={16} />
@@ -342,11 +360,10 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                 </div>
 
                 {/* Availability badge */}
-                <div className={`mb-5 flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold w-fit ${
-                  isAvailable
+                <div className={`mb-5 flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold w-fit ${isAvailable
                     ? "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-500/20"
                     : "bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 border border-slate-200 dark:border-zinc-700"
-                }`}>
+                  }`}>
                   <span className={`h-2 w-2 rounded-full ${isAvailable ? "bg-green-500 animate-pulse" : "bg-slate-400"}`} />
                   {isAvailable ? t.available : t.unavailable}
                 </div>
@@ -454,22 +471,20 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
               <div className="sticky top-0 z-10 flex border-b border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5">
                 <button
                   onClick={() => setActiveTab("photos")}
-                  className={`flex items-center gap-1.5 py-3 mr-6 text-sm font-bold border-b-2 transition-all ${
-                    activeTab === "photos"
+                  className={`flex items-center gap-1.5 py-3 mr-6 text-sm font-bold border-b-2 transition-all ${activeTab === "photos"
                       ? "border-orange-500 text-orange-500"
                       : "border-transparent text-slate-400 dark:text-zinc-500 hover:text-slate-600"
-                  }`}
+                    }`}
                 >
                   <Camera size={14} />
                   {t.tabPhotos}
                 </button>
                 <button
                   onClick={() => setActiveTab("reviews")}
-                  className={`flex items-center gap-1.5 py-3 text-sm font-bold border-b-2 transition-all ${
-                    activeTab === "reviews"
+                  className={`flex items-center gap-1.5 py-3 text-sm font-bold border-b-2 transition-all ${activeTab === "reviews"
                       ? "border-orange-500 text-orange-500"
                       : "border-transparent text-slate-400 dark:text-zinc-500 hover:text-slate-600"
-                  }`}
+                    }`}
                 >
                   <Star size={14} />
                   {t.tabReviews}
@@ -516,7 +531,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
         })()}
       </div>
 
-            {/* Lightbox */}
+      {/* Lightbox */}
       {lightboxImg && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm"
