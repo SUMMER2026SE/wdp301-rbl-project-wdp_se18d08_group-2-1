@@ -34,6 +34,7 @@ import PhotographerRecommendedJobs from "../components/photographers/Photographe
 import PhotographerChat from "../components/photographers/PhotographerChat";
 import PhotographerRevenueDashboard from "../components/photographers/PhotographerRevenueDashboard";
 import WithdrawMoney from "../components/photographers/WithdrawMoney";
+import PhotographerPortfolioManager from "../components/photographers/PhotographerPortfolioManager";
 
 export default function PhotographerDashboard({
     language = "vi",
@@ -132,7 +133,8 @@ export default function PhotographerDashboard({
             recommendations: "Gợi ý việc làm AI",
             chat: "Trò chuyện",
             revenue: "Doanh thu",
-            withdraw: "Rút tiền payout"
+            withdraw: "Rút tiền payout",
+            portfolio: "Quản lý Portfolio"
         },
         en: {
             dashboard: "Dashboard",
@@ -184,7 +186,8 @@ export default function PhotographerDashboard({
             recommendations: "AI Recommendations",
             chat: "Live Chat",
             revenue: "Revenue",
-            withdraw: "Withdraw Money"
+            withdraw: "Withdraw Money",
+            portfolio: "Portfolio Manager"
         }
     };
 
@@ -541,6 +544,7 @@ export default function PhotographerDashboard({
                         <nav className="space-y-1.5 relative z-10">
                             {[
                                 { id: "profile", label: t.profile, icon: User },
+                                { id: "portfolio", label: t.portfolio, icon: Grid },
                                 { id: "calendar", label: t.calendar, icon: Calendar },
                                 { id: "jobs", label: t.jobs, icon: Briefcase },
                                 { id: "recommendations", label: t.recommendations, icon: TrendingUp },
@@ -793,6 +797,15 @@ export default function PhotographerDashboard({
                                 </div>
                             </div>
                         </div>
+                    )}
+
+                    {/* PORTFOLIO TAB */}
+                    {activeTab === "portfolio" && (
+                        <PhotographerPortfolioManager
+                            photographerId={photographerData._id}
+                            language={language}
+                            theme={theme}
+                        />
                     )}
 
                     {/* CALENDAR TAB */}
