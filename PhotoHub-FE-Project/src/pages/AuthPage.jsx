@@ -82,6 +82,7 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
     );
     const [isRegister, setIsRegister] = useState(false);
     const [step, setStep] = useState('auth'); // 'auth' hoặc 'otp'
+    const [confirmPassword, setConfirmPassword] = useState('');
 
     // Form States
     const [email, setEmail] = useState('');
@@ -126,6 +127,18 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
             setLoading(true);
 
             if (isRegister) {
+                if (password !== confirmPassword) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Mật khẩu không khớp",
+                        text: "Vui lòng nhập lại mật khẩu xác nhận",
+                        background: isDark ? "#0f172a" : "#fff",
+                        color: isDark ? "#fff" : "#0f172a",
+                        confirmButtonColor: "#ef4444"
+                    });
+
+                    return;
+                }
                 const result = await authService.register({
                     fullName,
                     email,
@@ -182,20 +195,28 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
                 window.dispatchEvent(new Event("storage_user_changed"));
                 setIsLoggedIn(true);
 
+                const isAdminUser = result.data.user?.role === "admin";
+                const redirectPath = isAdminUser ? "/admin" : "/";
+                const redirectText = isAdminUser 
+                    ? "Đang chuyển hướng đến trang quản trị Admin..." 
+                    : "Sẽ chuyển về trang chủ sau 5 giây.";
+
                 Swal.fire({
                     icon: "success",
                     title: "Đăng nhập thành công",
-                    text: "Sẽ chuyển về trang chủ sau 5 giây.",
+                    text: redirectText,
                     background: isDark ? "#0f172a" : "#fff",
                     color: isDark ? "#fff" : "#0f172a",
-                    confirmButtonColor: "#06b6d4"
+                    confirmButtonColor: "#06b6d4",
+                    timer: isAdminUser ? 1500 : 5000,
+                    showConfirmButton: !isAdminUser
                 });
-                // tự chuyển sau 5 giây
+                // tự chuyển sau 1.5 hoặc 5 giây
                 setRedirecting(true);
 
                 setTimeout(() => {
-                    navigate("/");
-                }, 5000);
+                    navigate(redirectPath);
+                }, isAdminUser ? 1500 : 5000);
 
             } else {
                 Swal.fire({
@@ -375,6 +396,20 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
                                             required
                                         />
                                     </div>
+                                    {isRegister && (
+                                        <div style={styles.inputGroup}>
+                                            <label style={styles.label}>Confirm Password</label>
+
+                                            <input
+                                                type="password"
+                                                placeholder="••••••••"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                style={styles.input}
+                                                required
+                                            />
+                                        </div>
+                                    )}
 
                                     <button type="submit" style={styles.loginBtn} disabled={loading}>
                                         <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -495,11 +530,13 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
                                         marginBottom: "12px",
                                         fontSize: "14px"
                                     }}>
-                                        Sẽ chuyển về trang chủ sau 5 giây...
+                                        {user.role === "admin" 
+                                            ? "Đang chuyển hướng đến trang quản trị Admin..." 
+                                            : "Sẽ chuyển về trang chủ sau 5 giây..."}
                                     </p>
 
                                     <button
-                                        onClick={() => navigate("/")}
+                                        onClick={() => navigate(user.role === "admin" ? "/admin" : "/")}
                                         style={{
                                             width: "100%",
                                             padding: "12px",
@@ -511,7 +548,7 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
                                             fontWeight: "600"
                                         }}
                                     >
-                                        Về trang chủ ngay
+                                        {user.role === "admin" ? "Vào trang Admin ngay" : "Về trang chủ ngay"}
                                     </button>
                                 </div>
                             )}

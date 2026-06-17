@@ -8,6 +8,19 @@ import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
 import GoogleSuccess from "./pages/GoogleSuccess";
 import PhotographerDashboard from "./pages/PhotographerDashboard";
+import FavoritesPage from "./pages/FavoritesPage";
+import PhotographersPage from "./pages/PhotographersPage";
+
+// Admin Imports
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminVerifications from "./pages/admin/AdminVerifications";
+import AdminBookings from "./pages/admin/AdminBookings";
+import AdminFinance from "./pages/admin/AdminFinance";
+import AdminDisputes from "./pages/admin/AdminDisputes";
+import AdminReportsChats from "./pages/admin/AdminReportsChats";
+import AdminSettingsPackages from "./pages/admin/AdminSettingsPackages";
 
 function getInitialTheme() {
   const storedTheme = localStorage.getItem("photohub-theme");
@@ -108,7 +121,39 @@ export default function App() {
           }
         />
 
+        <Route
+          path="/photographers"
+          element={
+            <PhotographersPage
+              language={language}
+              theme={theme}
+            />
+          }
+        />
+
         <Route path="/auth/google/success" element={<GoogleSuccess />} />
+
+        {/* Phân hệ Admin */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="verifications" element={<AdminVerifications />} />
+          <Route path="bookings" element={<AdminBookings />} />
+          <Route path="finance" element={<AdminFinance />} />
+          <Route path="disputes" element={<AdminDisputes />} />
+          <Route path="reports-chats" element={<AdminReportsChats />} />
+          <Route path="settings-packages" element={<AdminSettingsPackages />} />
+        </Route>
+        <Route
+          path="/favorites"
+          element={
+            <FavoritesPage
+              language={language}
+              theme={theme}
+            />
+          }
+        />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 

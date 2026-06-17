@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const FavoritePhotographerService = require("../services/FavoritePhotographerService");
 const ApiResponse = require("../../../utils/ApiResponse");
 
@@ -8,8 +9,8 @@ class FavoritePhotographerController {
       const userId = req.user.id;
       const { photographerId } = req.body;
 
-      if (!photographerId) {
-        return ApiResponse.error(res, "Vui lòng cung cấp photographerId.", 400);
+      if (!photographerId || !mongoose.Types.ObjectId.isValid(photographerId)) {
+        return ApiResponse.error(res, "photographerId không hợp lệ.", 400);
       }
 
       const result = await FavoritePhotographerService.addFavorite(userId, photographerId);
@@ -25,12 +26,12 @@ class FavoritePhotographerController {
       const userId = req.user.id;
       const { photographerId } = req.params;
 
-      if (!photographerId) {
-        return ApiResponse.error(res, "Vui lòng cung cấp photographerId.", 400);
+      if (!mongoose.Types.ObjectId.isValid(photographerId)) {
+        return ApiResponse.error(res, "photographerId không hợp lệ.", 400);
       }
 
-      const result = await FavoritePhotographerService.removeFavorite(userId, photographerId);
-      return ApiResponse.success(res, result.message, "Đã xóa khỏi danh sách yêu thích.");
+      await FavoritePhotographerService.removeFavorite(userId, photographerId);
+      return ApiResponse.success(res, null, "Đã xóa khỏi danh sách yêu thích.");
     } catch (error) {
       return ApiResponse.error(res, error.message, 400);
     }
@@ -53,8 +54,8 @@ class FavoritePhotographerController {
       const userId = req.user.id;
       const { photographerId } = req.params;
 
-      if (!photographerId) {
-        return ApiResponse.error(res, "Vui lòng cung cấp photographerId.", 400);
+      if (!mongoose.Types.ObjectId.isValid(photographerId)) {
+        return ApiResponse.error(res, "photographerId không hợp lệ.", 400);
       }
 
       const result = await FavoritePhotographerService.checkFavoriteStatus(userId, photographerId);
