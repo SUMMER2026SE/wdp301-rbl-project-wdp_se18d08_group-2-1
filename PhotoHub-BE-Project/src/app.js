@@ -16,6 +16,8 @@ const adminRoutes = require("./modules/admin/routes/adminRoutes");
 
 const favoritePhotographerRoutes = require("./modules/favorite_photographers/routes/favoritePhotographerRoutes");
 const airecommendRoutes = require("./modules/airecomment/routes/airecommendRoutes");
+const shootingCategoryRoutes = require("./modules/common/routes/shootingCategory.routes");
+const styleTagRoutes = require("./modules/common/routes/styleTag.routes");
 // Middlewares
 app.use(express.json({ limit: "50mb" }));
 
@@ -48,6 +50,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/photographer", photographerRoutes);
 app.use("/api/favoritephotographers", favoritePhotographerRoutes);
 app.use("/api/airecommend", airecommendRoutes);
+app.use("/api/shooting-categories", shootingCategoryRoutes);
+app.use("/api/style-tags", styleTagRoutes);
 
 // Health check
 app.get("/", (_req, res) => {

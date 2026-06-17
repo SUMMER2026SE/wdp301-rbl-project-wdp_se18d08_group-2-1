@@ -99,7 +99,7 @@ class AuthService {
         user: newUser._id,
         displayName: data.fullName || "Nhiếp ảnh gia mới",
         experienceYears: 0,
-        completionStatus: "UNVERIFIED"
+        completionStatus: "PENDING"
       });
     }
 

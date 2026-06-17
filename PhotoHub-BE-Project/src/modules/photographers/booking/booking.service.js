@@ -25,6 +25,38 @@ class BookingService {
     return overlapCount > 0;
   }
 
+  async acceptBooking(bookingId, photographerUserId) {
+    const booking = await Booking.findById(bookingId);
+
+    if (!booking) {
+      throw new Error("Booking not found");
+    }
+
+    if (booking.photographer.toString() !== photographerUserId.toString()) {
+      throw new Error("You are not authorized to accept this booking");
+    }
+
+    if (booking.status !== "pending") {
+      throw new Error("Only pending bookings can be accepted");
+    }
+
+    const hasConflict = await this.checkOverlap(
+      booking.photographer,
+      booking.start,
+      booking.end,
+      booking._id
+    );
+
+    if (hasConflict) {
+      throw new Error("Schedule conflict detected");
+    }
+
+    booking.status = "accepted";
+    await booking.save();
+
+    return booking;
+  }
+
   async rejectBooking(bookingId, photographerUserId, rejectReason) {
     const booking = await Booking.findById(bookingId);
     if (!booking) {

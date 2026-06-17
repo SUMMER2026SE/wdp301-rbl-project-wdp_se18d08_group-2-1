@@ -2,6 +2,23 @@ const bookingService = require("./booking.service");
 const ApiResponse = require("../../../utils/ApiResponse");
 
 class BookingController {
+  async acceptBooking(req, res) {
+    try {
+      const booking = await bookingService.acceptBooking(
+        req.params.id,
+        req.user._id
+      );
+
+      return ApiResponse.success(
+        res,
+        booking,
+        "Booking accepted successfully"
+      );
+    } catch (error) {
+      return ApiResponse.error(res, error.message);
+    }
+  }
+
   async rejectBooking(req, res) {
     try {
       const { id } = req.params;

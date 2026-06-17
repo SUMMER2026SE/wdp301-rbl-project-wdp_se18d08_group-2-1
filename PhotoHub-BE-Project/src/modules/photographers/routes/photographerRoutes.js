@@ -11,7 +11,7 @@ const chatRoutes = require("../chat/chat.routes");
 const albumRoutes = require("../album/album.routes");
 const revenueRoutes = require("../revenue/revenue.routes");
 const withdrawRoutes = require("../withdraw/withdraw.routes");
-
+const uploadVerification = require("../../../middlewares/uploadVerification");
 const router = express.Router();
 
 // Mount specific sub-routes first so they don't get intercepted by wildcard parameter /:id
@@ -37,5 +37,20 @@ router.get("/:id", PhotographerController.getPhotographerDetail);
 router.post("/", authenticate, PhotographerController.createPhotographerProfile);
 router.get("/me/profile", authenticate, PhotographerController.getMyPhotographerProfile);
 router.put("/:id", authenticate, PhotographerController.updatePhotographerProfile);
+router.post(
+  "/me/verification",
+  authenticate,
+  uploadVerification.fields([
+    { name: "frontImage", maxCount: 1 },
+    { name: "backImage", maxCount: 1 },
+  ]),
+  PhotographerController.uploadVerification
+);
+
+router.get(
+  "/me/profile-status",
+  authenticate,
+  PhotographerController.getProfileStatus
+);
 
 module.exports = router;
