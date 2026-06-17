@@ -20,7 +20,9 @@ import {
     Phone,
     Home,
     MessageSquare,
-    Wallet
+    Wallet,
+    UploadCloud,
+    CreditCard
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { photographerService } from "../services/photographerService";
@@ -46,6 +48,17 @@ export default function PhotographerDashboard({
     const [loading, setLoading] = useState(false);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
+    const [uploadingIdCard, setUploadingIdCard] = useState(false);
+
+    const frontIdRef = useRef(null);
+    const backIdRef = useRef(null);
+
+    const [frontFile, setFrontFile] = useState(null);
+    const [backFile, setBackFile] = useState(null);
+    const [frontPreview, setFrontPreview] = useState(null);
+    const [backPreview, setBackPreview] = useState(null);
+    const [zoomImage, setZoomImage] = useState(null);
+
 
     // Dùng ref để kích hoạt click vào input file ẩn
     const fileInputRef = useRef(null);
@@ -124,7 +137,8 @@ export default function PhotographerDashboard({
             verificationLabel: "Trạng thái kiểm duyệt:",
             unverified: "Chưa xác minh",
             verified: "Đã xác minh",
-                        calendarComingSoon: "Tính năng quản lý lịch chụp đang được đồng bộ hóa thời gian thực...",
+            rejected: "Bị từ chối",
+            calendarComingSoon: "Tính năng quản lý lịch chụp đang được đồng bộ hóa thời gian thực...",
             customersComingSoon: "Danh sách khách hàng đã đặt lịch và lịch sử giao dịch sẽ xuất hiện tại đây.",
             avatarSuccess: "Cập nhật ảnh đại diện thành công!",
             avatarError: "Không thể upload ảnh đại diện mới.",
@@ -132,7 +146,14 @@ export default function PhotographerDashboard({
             recommendations: "Gợi ý việc làm AI",
             chat: "Trò chuyện",
             revenue: "Doanh thu",
-            withdraw: "Rút tiền payout"
+            withdraw: "Rút tiền payout",
+            idVerificationTitle: "Xác minh danh tính (CCCD)",
+            frontIdLabel: "Mặt trước CCCD",
+            backIdLabel: "Mặt sau CCCD",
+            uploadVeriBtn: "Gửi yêu cầu xác minh",
+            uploadingVeri: "Đang tải hồ sơ xác minh...",
+            veriSuccess: "Hồ sơ xác minh đã được gửi, vui lòng chờ hệ thống kiểm duyệt!",
+            veriError: "Không thể upload hồ sơ xác minh."
         },
         en: {
             dashboard: "Dashboard",
@@ -176,6 +197,7 @@ export default function PhotographerDashboard({
             verificationLabel: "Identity Verification:",
             unverified: "Unverified",
             verified: "Verified",
+            rejected: "Rejected",
             calendarComingSoon: "Schedule management features are being synchronized in real-time...",
             customersComingSoon: "Your client lists and booking historical logs will appear here.",
             avatarSuccess: "Avatar updated successfully!",
@@ -184,7 +206,14 @@ export default function PhotographerDashboard({
             recommendations: "AI Recommendations",
             chat: "Live Chat",
             revenue: "Revenue",
-            withdraw: "Withdraw Money"
+            withdraw: "Withdraw Money",
+            idVerificationTitle: "Identity Verification (ID Card)",
+            frontIdLabel: "Front of ID Card",
+            backIdLabel: "Back of ID Card",
+            uploadVeriBtn: "Submit Verification Request",
+            uploadingVeri: "Uploading verification profiles...",
+            veriSuccess: "Verification profiles submitted successfully! Please wait for approval.",
+            veriError: "Failed to upload verification profiles."
         }
     };
 
@@ -202,10 +231,28 @@ export default function PhotographerDashboard({
                 if (data && data._id) {
                     setPhotographerData({
                         ...data,
-                        user: data.user || { _id: "", email: "", avatar: "", phoneNumber: "", address: "" },
+                        user: data.user || {},
                         styles: data.styles || [],
-                        socialLinks: data.socialLinks || { instagram: "", facebook: "" }
+                        socialLinks: data.socialLinks || {
+                            instagram: "",
+                            facebook: ""
+                        }
                     });
+
+                    const BACKEND_URL = "http://localhost:3000";
+
+                    if (data.verification?.documentFrontUrl) {
+                        setFrontPreview(
+                            BACKEND_URL + data.verification.documentFrontUrl
+                        );
+                    }
+
+                    if (data.verification?.documentBackUrl) {
+                        setBackPreview(
+                            BACKEND_URL + data.verification.documentBackUrl
+                        );
+                    }
+
                     setIsEditMode(true);
                 } else {
                     setIsEditMode(false);
@@ -300,6 +347,66 @@ export default function PhotographerDashboard({
         }
     };
 
+    // --- HÀM XỬ LÝ CHỌN FILE CCCD & PREVIEW ---
+    const handleFrontIdChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFrontFile(file);
+            setFrontPreview(URL.createObjectURL(file));
+        }
+    };
+
+    const handleBackIdChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setBackFile(file);
+            setBackPreview(URL.createObjectURL(file));
+        }
+    };
+
+    // --- HÀM SUBMIT UPLOAD CCCD LÊN SERVER ---
+    const handleUploadVerification = async () => {
+        if (!frontFile) {
+            Swal.fire({
+                icon: "warning",
+                title: t.errorTitle,
+                text: "Vui lòng chọn mặt trước CCCD.",
+                background: isDark ? "#09090b" : "#fff",
+                color: isDark ? "#fff" : "#000",
+                confirmButtonColor: "#ef4444",
+            });
+            return;
+        }
+
+        setUploadingIdCard(true);
+        try {
+            await photographerService.uploadVerification(frontFile, backFile);
+
+            Swal.fire({
+                icon: "success",
+                title: t.successTitle,
+                text: t.veriSuccess,
+                background: isDark ? "#09090b" : "#fff",
+                color: isDark ? "#fff" : "#000",
+                confirmButtonColor: "#06b6d4",
+            });
+
+            // Sau khi upload thành công, có thể chuyển trạng thái tạm thời chờ duyệt 
+            setPhotographerData(prev => ({ ...prev, verificationStatus: "PENDING" }));
+        } catch (error) {
+            console.error("Error uploading verification identity:", error);
+            Swal.fire({
+                icon: "error",
+                title: t.errorTitle,
+                text: error?.response?.data?.message || t.veriError,
+                background: isDark ? "#09090b" : "#fff",
+                color: isDark ? "#fff" : "#000",
+                confirmButtonColor: "#ef4444",
+            });
+        } finally {
+            setUploadingIdCard(false);
+        }
+    };
     // --- UI HELPER CLASSES ---
     const labelClass = `text-xs font-semibold tracking-wider uppercase mb-2 block transition-colors ${isDark ? "text-slate-500" : "text-slate-500"}`;
 
@@ -478,6 +585,9 @@ export default function PhotographerDashboard({
 
     // Lấy link avatar an toàn từ Object user lồng nhau
     const avatarUrl = getAvatarUrl();
+
+    const canEditVerification =
+        photographerData.verificationStatus !== "VERIFIED";
     return (
         <div className={`min-h-screen pt-28 pb-16 transition-colors duration-500 ${isDark ? "bg-[#030303] text-white" : "bg-slate-50 text-slate-900"}`}>
             <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-4 gap-8">
@@ -530,11 +640,21 @@ export default function PhotographerDashboard({
                             </div>
 
                             <h3 className="font-bold text-xl tracking-tight text-center">{photographerData.displayName || "Creator Artist"}</h3>
-                            <span className={`mt-2 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${photographerData.verificationStatus === "VERIFIED"
-                                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                                : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                                }`}>
-                                {photographerData.verificationStatus === "VERIFIED" ? t.verified : t.unverified}
+                            <span
+                                className={`mt-2 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${photographerData.verificationStatus === "VERIFIED"
+                                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                    : photographerData.verificationStatus === "REJECTED"
+                                        ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                                        : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                    }`}
+                            >
+                                {
+                                    photographerData.verificationStatus === "VERIFIED"
+                                        ? t.verified
+                                        : photographerData.verificationStatus === "REJECTED"
+                                            ? t.rejected
+                                            : t.unverified
+                                }
                             </span>
                         </div>
 
@@ -677,6 +797,171 @@ export default function PhotographerDashboard({
 
                                 </div>
                             </div>
+
+                            {/* CCCD VERIFICATION BLOCK */}
+                            <div className={cardClass}>
+                                <div className="flex items-center gap-2.5 mb-6 text-cyan-400 border-b border-slate-200 dark:border-white/[0.06] pb-3">
+                                    <CreditCard size={18} className="text-cyan-400" />
+                                    <h3 className="text-sm font-bold tracking-tight text-slate-800 dark:text-zinc-200">
+                                        {t.idVerificationTitle}
+                                    </h3>
+
+                                    {photographerData.verificationStatus === "VERIFIED" && (
+                                        <span className="ml-auto px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                            VERIFIED
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-6">
+
+                                    {/* FRONT CCCD */}
+                                    <div>
+                                        <label className={labelClass}>
+                                            {t.frontIdLabel}
+                                            {photographerData.verificationStatus !== "VERIFIED" && (
+                                                <span className="text-rose-500"> *</span>
+                                            )}
+                                        </label>
+
+                                        <input
+                                            type="file"
+                                            ref={frontIdRef}
+                                            onChange={handleFrontIdChange}
+                                            accept="image/*"
+                                            className="hidden"
+                                        />
+
+                                        <div
+                                            onClick={() => {
+                                                if (canEditVerification) {
+                                                    frontIdRef.current?.click();
+                                                }
+                                            }}
+                                            className={`mt-1.5 border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center min-h-[160px] transition-all relative overflow-hidden ${canEditVerification
+                                                ? "cursor-pointer"
+                                                : "cursor-default"
+                                                } ${isDark
+                                                    ? "border-white/10 bg-[#09090b] hover:border-cyan-500/50"
+                                                    : "border-slate-300 bg-slate-50 hover:border-cyan-500"
+                                                }`}
+                                        >
+                                            {frontPreview ? (
+                                                <img
+                                                    src={frontPreview}
+                                                    alt="Front ID Preview"
+                                                    className="w-full h-full max-h-36 object-contain cursor-pointer"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+
+                                                        if (canEditVerification) {
+                                                            frontIdRef.current?.click();
+                                                        } else {
+                                                            setZoomImage(frontPreview);
+                                                        }
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="text-center space-y-2">
+                                                    <UploadCloud
+                                                        size={32}
+                                                        className="mx-auto text-slate-400"
+                                                    />
+                                                    <span className="text-xs text-slate-400 block">
+                                                        Click để chọn ảnh mặt trước
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* BACK CCCD */}
+                                    <div>
+                                        <label className={labelClass}>
+                                            {t.backIdLabel}
+                                            {photographerData.verificationStatus !== "VERIFIED"}
+                                            <span className="text-rose-500"> *</span>
+                                        </label>
+
+                                        <input
+                                            type="file"
+                                            ref={backIdRef}
+                                            onChange={handleBackIdChange}
+                                            accept="image/*"
+                                            className="hidden"
+                                        />
+
+                                        <div
+                                            onClick={() => {
+                                                if (canEditVerification) {
+                                                    backIdRef.current?.click();
+                                                }
+                                            }}
+                                            className={`mt-1.5 border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center min-h-[160px] transition-all relative overflow-hidden ${canEditVerification
+                                                ? "cursor-pointer"
+                                                : "cursor-default"
+                                                } ${isDark
+                                                    ? "border-white/10 bg-[#09090b] hover:border-cyan-500/50"
+                                                    : "border-slate-300 bg-slate-50 hover:border-cyan-500"
+                                                }`}
+                                        >
+                                            {backPreview ? (
+                                                <img
+                                                    src={backPreview}
+                                                    alt="Back ID Preview"
+                                                    className="w-full h-full max-h-36 object-contain cursor-pointer"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+
+                                                        if (canEditVerification) {
+                                                            backIdRef.current?.click();
+                                                        } else {
+                                                            setZoomImage(backPreview);
+                                                        }
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="text-center space-y-2">
+                                                    <UploadCloud
+                                                        size={32}
+                                                        className="mx-auto text-slate-400"
+                                                    />
+                                                    <span className="text-xs text-slate-400 block">
+                                                        Click để chọn ảnh mặt sau
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* NÚT GỬI XÁC MINH CHỈ HIỆN KHI CHƯA VERIFIED */}
+                                {photographerData.verificationStatus !== "VERIFIED" && (
+                                    <div className="flex justify-end mt-5">
+                                        <button
+                                            onClick={handleUploadVerification}
+                                            disabled={
+                                                uploadingIdCard ||
+                                                !frontFile ||
+                                                !backFile
+                                            }
+                                            className="w-full md:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-6 py-3 rounded-xl font-bold text-xs tracking-wide transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                                        >
+                                            <CreditCard
+                                                size={16}
+                                                className={
+                                                    uploadingIdCard
+                                                        ? "animate-spin"
+                                                        : ""
+                                                }
+                                            />
+                                            {uploadingIdCard
+                                                ? t.uploadingVeri
+                                                : t.uploadVeriBtn}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                             {/* BLOCK 2: STUDIO MAIN SERVICE */}
                             <div className={`${cardClass} relative overflow-hidden`}>
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/[0.02] rounded-full blur-3xl pointer-events-none"></div>
@@ -772,11 +1057,45 @@ export default function PhotographerDashboard({
                                         </span>
                                     </label>
 
-                                    <div className="flex items-center gap-3 bg-slate-500/5 dark:bg-white/[0.02] px-4 py-2 rounded-2xl border border-slate-200 dark:border-white/[0.04]">
-                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.verificationLabel}</span>
-                                        <span className={`text-xs font-black tracking-widest uppercase ${photographerData.verificationStatus === "VERIFIED" ? "text-emerald-400" : "text-amber-400"}`}>
-                                            {photographerData.verificationStatus === "VERIFIED" ? t.verified : t.unverified}
-                                        </span>
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-center gap-3 bg-slate-500/5 dark:bg-white/[0.02] px-4 py-2 rounded-2xl border border-slate-200 dark:border-white/[0.04]">
+
+                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                                {t.verificationLabel}
+                                            </span>
+
+                                            <span
+                                                className={`text-xs font-black tracking-widest uppercase ${photographerData.verificationStatus === "VERIFIED"
+                                                    ? "text-emerald-400"
+                                                    : photographerData.verificationStatus === "REJECTED"
+                                                        ? "text-red-400"
+                                                        : photographerData.verificationStatus === "PENDING"
+                                                            ? "text-yellow-400"
+                                                            : "text-amber-400"
+                                                    }`}
+                                            >
+                                                {photographerData.verificationStatus === "VERIFIED"
+                                                    ? t.verified
+                                                    : photographerData.verificationStatus === "REJECTED"
+                                                        ? t.rejected
+                                                        : photographerData.verificationStatus === "PENDING"
+                                                            ? t.unverified
+                                                            : t.unverified}
+                                            </span>
+                                        </div>
+
+                                        {photographerData.verification?.status === "REJECTED" &&
+                                            photographerData.verification?.adminNote && (
+                                                <div className="max-w-md bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+                                                    <p className="text-xs font-bold text-red-400 uppercase mb-1">
+                                                        {t.rejectionReason}
+                                                    </p>
+
+                                                    <p className={`text-sm ${isDark ? "text-slate-300" : "text-slate-700"}`}>
+                                                        {photographerData.verification.adminNote}
+                                                    </p>
+                                                </div>
+                                            )}
                                     </div>
                                 </div>
 
@@ -827,6 +1146,19 @@ export default function PhotographerDashboard({
 
                 </div>
             </div>
+            {zoomImage && (
+                <div
+                    className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-6"
+                    onClick={() => setZoomImage(null)}
+                >
+                    <img
+                        src={zoomImage}
+                        alt="CCCD"
+                        className="max-w-[95vw] max-h-[95vh] object-contain rounded-xl shadow-2xl"
+                    />
+                </div>
+            )}
         </div>
+
     );
 }

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const FavoritePhotographer = require("../models/favoritePhotographe");
+const FavoritePhotographer = require("../models/favoritePhotographer");
 const Customer = require("../../customers/models/customer");
 const Photographer = require("../../photographers/models/photographer");
 const { User } = require("../../auth/models/User");
