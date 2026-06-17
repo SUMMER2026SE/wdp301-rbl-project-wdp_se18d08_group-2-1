@@ -5,8 +5,8 @@ const favoritePhotographerSchema =
     {
       UUID: {
         type: String,
-        required: true,
         unique: true,
+        default: () => new mongoose.Types.ObjectId().toString(),
       },
 
       customer: {
