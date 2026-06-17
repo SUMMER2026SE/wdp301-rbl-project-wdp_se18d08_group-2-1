@@ -36,6 +36,7 @@ import PhotographerRecommendedJobs from "../components/photographers/Photographe
 import PhotographerChat from "../components/photographers/PhotographerChat";
 import PhotographerRevenueDashboard from "../components/photographers/PhotographerRevenueDashboard";
 import WithdrawMoney from "../components/photographers/WithdrawMoney";
+import PhotographerPortfolioManager from "../components/photographers/PhotographerPortfolioManager";
 
 export default function PhotographerDashboard({
     language = "vi",
@@ -153,7 +154,8 @@ export default function PhotographerDashboard({
             uploadVeriBtn: "Gửi yêu cầu xác minh",
             uploadingVeri: "Đang tải hồ sơ xác minh...",
             veriSuccess: "Hồ sơ xác minh đã được gửi, vui lòng chờ hệ thống kiểm duyệt!",
-            veriError: "Không thể upload hồ sơ xác minh."
+            veriError: "Không thể upload hồ sơ xác minh.",
+            portfolio: "Quản lý Portfolio"
         },
         en: {
             dashboard: "Dashboard",
@@ -213,7 +215,8 @@ export default function PhotographerDashboard({
             uploadVeriBtn: "Submit Verification Request",
             uploadingVeri: "Uploading verification profiles...",
             veriSuccess: "Verification profiles submitted successfully! Please wait for approval.",
-            veriError: "Failed to upload verification profiles."
+            veriError: "Failed to upload verification profiles.",
+            portfolio: "Portfolio Management"
         }
     };
 
@@ -661,6 +664,7 @@ export default function PhotographerDashboard({
                         <nav className="space-y-1.5 relative z-10">
                             {[
                                 { id: "profile", label: t.profile, icon: User },
+                                { id: "portfolio", label: "Portfolio", icon: Layers },
                                 { id: "calendar", label: t.calendar, icon: Calendar },
                                 { id: "jobs", label: t.jobs, icon: Briefcase },
                                 { id: "recommendations", label: t.recommendations, icon: TrendingUp },
@@ -1112,6 +1116,15 @@ export default function PhotographerDashboard({
                                 </div>
                             </div>
                         </div>
+                    )}
+
+                    {/* PORTFOLIO TAB */}
+                    {activeTab === "portfolio" && (
+                        <PhotographerPortfolioManager
+                            photographerId={photographerData._id}
+                            language={language}
+                            theme={theme}
+                        />
                     )}
 
                     {/* CALENDAR TAB */}
