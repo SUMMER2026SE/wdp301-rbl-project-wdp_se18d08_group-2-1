@@ -11,6 +11,7 @@ import PhotographerDashboard from "./pages/PhotographerDashboard";
 import FavoritesPage from "./pages/FavoritesPage";
 import PhotographersPage from "./pages/PhotographersPage";
 import AiSearchPage from "./pages/AiSearchPage";
+import CommunityPage from "./pages/CommunityPage";
 
 // Admin Imports
 import AdminLayout from "./components/admin/AdminLayout";
@@ -47,16 +48,14 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem("photohub-theme", theme);
-
-    // Đổi đoạn này để Tailwind nhận diện được class "dark"
+    // Toggle Tailwind dark class
     const root = document.documentElement;
     if (theme === "dark") {
       root.classList.add("dark");
     } else {
       root.classList.remove("dark");
     }
-
-    // Bạn vẫn có thể giữ dòng này nếu có CSS custom chạy bằng data-theme
+    // Keep data-theme for custom CSS
     root.dataset.theme = theme;
   }, [theme]);
 
@@ -75,7 +74,7 @@ export default function App() {
 
   return (
     <div className={`theme-${theme} relative flex min-h-screen w-full flex-col overflow-x-hidden`}>
-      {/* Đã gỡ bỏ !isAuthPage -> Header tổng sẽ hiển thị ở toàn bộ các trang, kể cả /login */}
+      {/* Show global header except admin routes */}
       {!isAdminRoute && (
         <Header
           language={language}
@@ -137,7 +136,7 @@ export default function App() {
 
         <Route path="/auth/google/success" element={<GoogleSuccess />} />
 
-        {/* Phân hệ Admin */}
+        {/* Admin routes */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
@@ -168,11 +167,22 @@ export default function App() {
           }
         />
 
+        <Route
+          path="/community"
+          element={
+            <CommunityPage
+              language={language}
+              theme={theme}
+            />
+          }
+        />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {/* Giữ nguyên ẩn footer ở trang login để giao diện gọn gàng hơn và không hiển thị ở admin */}
+      {/* Hide footer on login and admin routes */}
       {!isAuthPage && !isAdminRoute && <Footer language={language} />}
     </div>
   );
 }
+
