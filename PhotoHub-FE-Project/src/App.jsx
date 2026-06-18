@@ -11,6 +11,7 @@ import PhotographerDashboard from "./pages/PhotographerDashboard";
 import FavoritesPage from "./pages/FavoritesPage";
 import PhotographersPage from "./pages/PhotographersPage";
 import AiSearchPage from "./pages/AiSearchPage";
+import PaymentResult from "./booking/PaymentResult";
 
 // Admin Imports
 import AdminLayout from "./components/admin/AdminLayout";
@@ -133,6 +134,15 @@ export default function App() {
         />
 
         <Route path="/auth/google/success" element={<GoogleSuccess />} />
+        <Route
+          path="/payment/result"
+          element={
+            <PaymentResult
+              language={language}
+              theme={theme}
+            />
+          }
+        />
 
         {/* Phân hệ Admin */}
         <Route path="/admin" element={<AdminLayout />}>

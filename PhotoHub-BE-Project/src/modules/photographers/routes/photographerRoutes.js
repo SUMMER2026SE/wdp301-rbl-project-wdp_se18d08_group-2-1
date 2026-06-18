@@ -2,7 +2,7 @@
 const express = require("express");
 const PhotographerController = require("../controllers/PhotographerController");
 const { authenticate } = require("../../../middlewares/authenticate");
-const bookingRoutes = require("../booking/booking.routes");
+
 const calendarRoutes = require("../calendar/calendar.routes");
 const jobRoutes = require("../job/job.routes");
 const recommendationRoutes = require("../recommendation/recommendation.routes");
@@ -15,7 +15,7 @@ const uploadVerification = require("../../../middlewares/uploadVerification");
 const router = express.Router();
 
 // Mount specific sub-routes first so they don't get intercepted by wildcard parameter /:id
-router.use("/bookings", bookingRoutes);
+// NOTE: /bookings đã chuyển sang module độc lập → /api/bookings
 router.use("/calendar", calendarRoutes);
 router.use("/jobs/recommended", recommendationRoutes); // More specific first
 router.use("/jobs", jobRoutes);

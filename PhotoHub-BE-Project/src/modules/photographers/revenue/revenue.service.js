@@ -1,4 +1,4 @@
-const Booking = require("../booking/booking.model");
+const { Booking } = require("../../bookings/models/booking.model");
 const WithdrawRequest = require("../withdraw/withdrawRequest.model");
 
 class RevenueService {

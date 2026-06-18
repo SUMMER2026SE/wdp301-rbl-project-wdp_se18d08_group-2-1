@@ -20,6 +20,12 @@ router.get(
   controller.getMyPackages
 );
 
+router.get(
+  "/photographer/:photographerId",
+  authenticate,
+  controller.getPhotographerPackages
+);
+
 router.get("/:id", authenticate, controller.getPackageDetail);
 router.put("/:id", authenticate, attachPhotographer, controller.update);
 router.patch("/:id/toggle-status", authenticate, attachPhotographer, controller.toggleStatus);
