@@ -4,8 +4,8 @@ const ApiResponse = require("../../../utils/ApiResponse");
 class JobController {
   async getJobPosts(req, res) {
     try {
-      const jobs = await jobService.listOpenJobs(req.query);
-      return ApiResponse.success(res, jobs, "Marketplace jobs retrieved successfully");
+      const jobs = await jobService.listOpenJobs(req.query, req.user.id);
+      return ApiResponse.success(res, jobs, "Personalized marketplace jobs retrieved successfully");
     } catch (error) {
       console.error("Error retrieving job posts:", error);
       return ApiResponse.error(res, error.message, 400);
