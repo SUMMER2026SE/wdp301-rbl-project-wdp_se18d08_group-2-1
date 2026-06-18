@@ -6,14 +6,19 @@ const registerChatHandlers = (io, socket) => {
     console.log(`Socket ${socket.id} joined conversation room: ${conversationId}`);
   });
 
-  socket.on("sendMessage", async ({ conversationId, senderId, text }) => {
+  socket.on("sendMessage", async ({ conversationId, senderId, text, messageType, attachments, metadata }) => {
     try {
-      if (!conversationId || !senderId || !text) {
-        console.error("Invalid sendMessage arguments:", { conversationId, senderId, text });
+      if (!conversationId || !senderId || (!text && (!attachments || attachments.length === 0))) {
+        console.error("Invalid sendMessage arguments:", { conversationId, senderId, text, attachments });
         return;
       }
 
-      const savedMessage = await chatService.createMessage(conversationId, senderId, text);
+      const savedMessage = await chatService.createMessage(conversationId, senderId, {
+        text,
+        messageType,
+        attachments,
+        metadata,
+      });
       io.to(conversationId).emit("receiveMessage", savedMessage);
     } catch (error) {
       console.error("Error in socket sendMessage:", error.message);

@@ -14,12 +14,36 @@ const messageSchema = new mongoose.Schema(
     },
     text: {
       type: String,
-      required: true,
+      default: "",
+    },
+    messageType: {
+      type: String,
+      enum: ["text", "file", "image", "proposal", "package", "booking_detail"],
+      default: "text",
+    },
+    attachments: [
+      {
+        url: { type: String, required: true },
+        originalName: String,
+        mimetype: String,
+        size: Number,
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+    evidenceLocked: {
+      type: Boolean,
+      default: true,
     },
   },
   {
     timestamps: true,
   }
 );
+
+messageSchema.index({ conversationId: 1, createdAt: 1 });
 
 module.exports = mongoose.models.Message || mongoose.model("Message", messageSchema);
