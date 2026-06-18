@@ -43,7 +43,7 @@ export default function AdminLayout() {
     <div className="flex bg-slate-950 min-h-screen w-full text-slate-100">
       <AdminSidebar />
       <main className="flex-1 p-6 md:p-8 overflow-y-auto h-screen">
-        <div className="max-w-7xl mx-auto pt-16"> {/* Spacer to clear header */}
+        <div className="max-w-7xl mx-auto pt-2">
           <Outlet />
         </div>
       </main>
