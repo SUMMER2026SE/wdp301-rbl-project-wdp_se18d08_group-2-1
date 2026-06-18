@@ -32,6 +32,32 @@ class BidController {
       return ApiResponse.error(res, error.message, 400);
     }
   }
+
+  async assistBid(req, res) {
+    try {
+      const { jobPostId } = req.body;
+      if (!jobPostId) {
+        throw new Error("jobPostId is required");
+      }
+
+      const assistance = await bidService.generateBidAssistance(req.user.id, jobPostId);
+      return ApiResponse.success(res, assistance, "Bid assistance generated successfully");
+    } catch (error) {
+      console.error("Error generating bid assistance:", error);
+      return ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+  async optimizeBid(req, res) {
+    try {
+      const { id } = req.params;
+      const optimization = await bidService.optimizeBid(id, req.user.id);
+      return ApiResponse.success(res, optimization, "Bid optimization suggestions generated successfully");
+    } catch (error) {
+      console.error("Error optimizing bid:", error);
+      return ApiResponse.error(res, error.message, 400);
+    }
+  }
 }
 
 module.exports = new BidController();
