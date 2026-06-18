@@ -40,6 +40,7 @@ export default function App() {
 
   const location = useLocation();
   const isAuthPage = location.pathname === "/login";
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   useEffect(() => {
     localStorage.setItem("photohub-theme", theme);
@@ -72,12 +73,14 @@ export default function App() {
   return (
     <div className={`theme-${theme} relative flex min-h-screen w-full flex-col overflow-x-hidden`}>
       {/* Đã gỡ bỏ !isAuthPage -> Header tổng sẽ hiển thị ở toàn bộ các trang, kể cả /login */}
-      <Header
-        language={language}
-        theme={theme}
-        onToggleLanguage={toggleLanguage}
-        onToggleTheme={toggleTheme}
-      />
+      {!isAdminRoute && (
+        <Header
+          language={language}
+          theme={theme}
+          onToggleLanguage={toggleLanguage}
+          onToggleTheme={toggleTheme}
+        />
+      )}
 
       <Routes>
         <Route path="/" element={<Home language={language} />} />
@@ -136,8 +139,8 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {/* Giữ nguyên ẩn footer ở trang login để giao diện gọn gàng hơn */}
-      {!isAuthPage && <Footer language={language} />}
+      {/* Giữ nguyên ẩn footer ở trang login để giao diện gọn gàng hơn và không hiển thị ở admin */}
+      {!isAuthPage && !isAdminRoute && <Footer language={language} />}
     </div>
   );
 }
