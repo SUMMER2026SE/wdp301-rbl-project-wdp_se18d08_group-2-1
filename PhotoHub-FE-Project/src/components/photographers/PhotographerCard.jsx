@@ -112,7 +112,7 @@ const PhotographerCard = ({ photographer, language, onViewClick, onRequireLogin 
                   key={idx}
                   className="inline-block rounded-xl bg-slate-100 dark:bg-zinc-900 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:text-zinc-400 tracking-wide border border-transparent dark:border-zinc-800/40"
                 >
-                  {style}
+                  {style.name}
                 </span>
               ))}
               {styles.length > 3 && (

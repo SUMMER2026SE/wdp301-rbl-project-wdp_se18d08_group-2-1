@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { Search, SlidersHorizontal, AlignJustify, X, ChevronDown, Star } from "lucide-react";
 import { createPortal } from "react-dom"; // eslint-disable-line no-unused-vars
 
-const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], locations = [], language }) => {
+const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], categories = [], locations = [], language }) => {
   const labels = {
     en: {
       searchPlaceholder: "Search photographer name...",
@@ -65,6 +65,7 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], locati
   const [tempFilters, setTempFilters] = useState({
     experienceRange: "all",
     styles: [],
+    categories: [],
     location: "",
     minRating: 0,
   });
@@ -73,6 +74,7 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], locati
   const [appliedFilters, setAppliedFilters] = useState({
     location: "",
     styles: [],
+    categories: [],
     minRating: 0,
     minExperience: 0,
   });
@@ -136,12 +138,22 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], locati
   }, []);
 
   // ── Helpers ────────────────────────────────────────────────────────────
-  const toggleStyle = (style) => {
-    setTempFilters((prev) => ({
+
+  const toggleStyle = (styleId) => {
+    setTempFilters(prev => ({
       ...prev,
-      styles: prev.styles.includes(style)
-        ? prev.styles.filter((s) => s !== style)
-        : [...prev.styles, style],
+      styles: prev.styles.includes(styleId)
+        ? prev.styles.filter(id => id !== styleId)
+        : [...prev.styles, styleId],
+    }));
+  };
+
+  const toggleCategory = (categoryId) => {
+    setTempFilters(prev => ({
+      ...prev,
+      categories: prev.categories.includes(categoryId)
+        ? prev.categories.filter(id => id !== categoryId)
+        : [...prev.categories, categoryId],
     }));
   };
 
@@ -150,18 +162,20 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], locati
     const newApplied = {
       location: tempFilters.location,
       styles: tempFilters.styles,
+      categories: tempFilters.categories,
       minRating: tempFilters.minRating,
       minExperience: expOption?.minExp || 0,
     };
     setAppliedFilters(newApplied);
+    console.log(newApplied)
     onFilterChange({ search: searchValue, ...newApplied, sortBy: currentSort });
     setFilterOpen(false);
   };
 
   const handleClearFilters = () => {
-    const cleared = { experienceRange: "all", styles: [], location: "", minRating: 0 };
+    const cleared = { experienceRange: "all", styles: [], categories: [], location: "", minRating: 0 };
     setTempFilters(cleared);
-    const newApplied = { location: "", styles: [], minRating: 0, minExperience: 0 };
+    const newApplied = { location: "", styles: [], categories: [], minRating: 0, minExperience: 0 };
     setAppliedFilters(newApplied);
     setSearchValue("");
     setCurrentSort("relevance");
@@ -178,6 +192,7 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], locati
   const activeCount = [
     appliedFilters.location !== "",
     appliedFilters.styles.length > 0,
+    appliedFilters.categories.length > 0,
     appliedFilters.minRating > 0,
     appliedFilters.minExperience > 0,
   ].filter(Boolean).length;
@@ -388,27 +403,54 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], locati
               </div>
 
               {/* ── Thể loại chụp (Styles từ API) ── */}
+
               {styles.length > 0 && (
                 <div>
                   <p className="mb-3 text-sm font-bold text-slate-800 dark:text-zinc-200">{t.stylesLabel}</p>
                   <div className="grid grid-cols-2 gap-y-2.5 gap-x-4">
+                    {/* Thay đổi đoạn này trong PhotographerFilters.jsx */}
                     {styles.map((style) => (
                       <button
-                        key={style}
-                        onClick={() => toggleStyle(style)}
+                        key={style._id} // Dùng ID để làm key
+                        onClick={() => toggleStyle(style._id)} // Lưu tên style (string) vào filter
                         className="flex items-center gap-2.5 text-left group"
                       >
-                        <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all ${tempFilters.styles.includes(style)
+                        <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all ${tempFilters.styles.includes(style._id)
                           ? "border-orange-500 bg-orange-500"
                           : "border-slate-300 dark:border-zinc-600 group-hover:border-orange-400"
                           }`}>
-                          {tempFilters.styles.includes(style) && (
+                          {tempFilters.styles.includes(style._id) && (
                             <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 12 12">
                               <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           )}
                         </div>
-                        <span className="text-sm text-slate-700 dark:text-zinc-300 select-none">{style}</span>
+                        {/* CHỈ RENDER NAME */}
+                        <span className="text-sm text-slate-700 dark:text-zinc-300 select-none">
+                          {style.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {categories && categories.length > 0 && (
+                <div>
+                  <p className="mb-3 text-sm font-bold text-slate-800 dark:text-zinc-200">Categories</p>
+                  <div className="grid grid-cols-2 gap-y-2.5 gap-x-4">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat._id}
+                        onClick={() => toggleCategory(cat._id)}
+                        className="flex items-center gap-2.5 text-left group"
+                      >
+                        <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${tempFilters.categories.includes(cat._id)
+                          ? "bg-orange-500 border-orange-500"
+                          : "border-slate-300"
+                          }`}>
+                          {tempFilters.categories.includes(cat._id) && <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" fill="none" /></svg>}
+                        </div>
+                        <span className="text-sm text-slate-700">{cat.name}</span>
                       </button>
                     ))}
                   </div>

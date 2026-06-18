@@ -449,7 +449,7 @@ export default function PhotographerPackages({
             <div className="space-y-6 mb-8">
                 {/* CATEGORY CHIPS */}
                 <div>
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Categories</h4>
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">{t.categoryTitle}</h4>
                     <div className="flex flex-wrap gap-2">
                         {availableCategories.map((cate) => {
                             const selected = filterCategories.includes(cate._id);
@@ -478,7 +478,7 @@ export default function PhotographerPackages({
 
                 {/* STYLE CHIPS */}
                 <div>
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Styles</h4>
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">{t.styleTitle}</h4>
                     <div className="flex flex-wrap gap-2">
                         {availableStyles.map((style) => {
                             const selected = filterStyles.includes(style._id);

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import Select from 'react-select';
 import {
     Camera,
     User,
@@ -38,7 +39,7 @@ import PhotographerRevenueDashboard from "../components/photographers/Photograph
 import WithdrawMoney from "../components/photographers/WithdrawMoney";
 import PhotographerPortfolioManager from "../components/photographers/PhotographerPortfolioManager";
 import PhotographerPackages from "../components/photographers/PhotographerPackages";
-
+import { getAllCategories, getAllStyleTags } from "../services/categoryAndStyleService";
 export default function PhotographerDashboard({
     language = "vi",
     theme = "dark",
@@ -60,6 +61,8 @@ export default function PhotographerDashboard({
     const [frontPreview, setFrontPreview] = useState(null);
     const [backPreview, setBackPreview] = useState(null);
     const [zoomImage, setZoomImage] = useState(null);
+    const [categories, setCategories] = useState([]);
+    const [styleTags, setStyleTags] = useState([]);
 
 
     // Dùng ref để kích hoạt click vào input file ẩn
@@ -113,6 +116,7 @@ export default function PhotographerDashboard({
             infoService: "Cấu hình dịch vụ & Studio",
             infoPersonal: "Thông tin liên hệ cá nhân",
             stylesLabel: "Phong cách chuyên biệt (Cách nhau bằng dấu phẩy)",
+            categoriesLabel:"Danh mục",
             socialLabel: "Mạng xã hội tích hợp",
             successTitle: "Thành công",
             errorTitle: "Thất bại",
@@ -174,6 +178,7 @@ export default function PhotographerDashboard({
             infoService: "Service & Studio Configurations",
             infoPersonal: "Personal Identity Details",
             stylesLabel: "Specialized Styles (Separated by commas)",
+            categoriesLabel:"Categories",
             socialLabel: "Integrated Social Links",
             successTitle: "Success",
             errorTitle: "Error",
@@ -235,12 +240,27 @@ export default function PhotographerDashboard({
                 if (data && data._id) {
                     setPhotographerData({
                         ...data,
+
                         user: data.user || {},
+
                         styles: data.styles || [],
-                        socialLinks: data.socialLinks || {
-                            instagram: "",
-                            facebook: ""
-                        }
+                        categories: data.categories || [],
+
+                        styleIds:
+                            data.styles?.map(
+                                style => String(style._id)
+                            ) || [],
+
+                        categoryIds:
+                            data.categories?.map(
+                                category => String(category._id)
+                            ) || [],
+
+                        socialLinks:
+                            data.socialLinks || {
+                                instagram: "",
+                                facebook: ""
+                            }
                     });
 
                     const BACKEND_URL = "http://localhost:3000";
@@ -278,6 +298,24 @@ export default function PhotographerDashboard({
 
         fetchProfile();
     }, [language]);
+
+    useEffect(() => {
+        loadMasterData();
+    }, []);
+
+    const loadMasterData = async () => {
+        try {
+            const [cateRes, styleRes] = await Promise.all([
+                getAllCategories(),
+                getAllStyleTags()
+            ]);
+
+            setCategories(cateRes.data.data || []);
+            setStyleTags(styleRes.data.data || []);
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     // --- HÀM XỬ LÝ UPLOAD AVATAR ---
     const handleAvatarClick = () => {
@@ -446,13 +484,6 @@ export default function PhotographerDashboard({
         });
     };
 
-    const handleStylesChange = (e) => {
-        setPhotographerData({
-            ...photographerData,
-            styles: e.target.value.split(",").map(s => s.trim())
-        });
-    };
-
     // --- MAIN API SAVE ACTION ---
     const handleSaveProfile = async () => {
         // ==========================================
@@ -470,7 +501,11 @@ export default function PhotographerDashboard({
         const bio = photographerData.bio?.trim() || "";
         const hourlyRate = photographerData.hourlyRate;
         const experienceYears = photographerData.experienceYears;
-        const styles = photographerData.styles || [];
+        const styleIds =
+            photographerData.styleIds || [];
+
+        const categoryIds =
+            photographerData.categoryIds || [];
 
         // Định nghĩa hàm hiện thông báo lỗi nhanh
         const showValidationError = (message) => {
@@ -500,8 +535,17 @@ export default function PhotographerDashboard({
             return;
         }
 
-        if (styles.length === 0 || styles.every(s => s === "")) {
-            showValidationError("Vui lòng nhập ít nhất một phong cách chụp chuyên biệt.");
+        if (styleIds.length === 0) {
+            showValidationError(
+                "Vui lòng chọn ít nhất một phong cách chụp."
+            );
+            return;
+        }
+
+        if (categoryIds.length === 0) {
+            showValidationError(
+                "Vui lòng chọn ít nhất một danh mục dịch vụ."
+            );
             return;
         }
 
@@ -555,6 +599,10 @@ export default function PhotographerDashboard({
                         phoneNumber: freshUserData?.phoneNumber || freshPhotoData.user?.phoneNumber,
                         address: freshUserData?.address || freshPhotoData.user?.address
                     },
+                    // BỔ SUNG HAI DÒNG NÀY VÀO ĐỂ GIỮ DỮ LIỆU SAU KHI LƯU:
+                    categoryIds: freshPhotoData.categories?.map(c => String(c._id)) || [],
+                    styleIds: freshPhotoData.styles?.map(s => String(s._id)) || [],
+
                     styles: freshPhotoData.styles || [],
                     socialLinks: freshPhotoData.socialLinks || { instagram: "", facebook: "" }
                 });
@@ -592,6 +640,61 @@ export default function PhotographerDashboard({
 
     const canEditVerification =
         photographerData.verificationStatus !== "VERIFIED";
+
+    // Tùy chỉnh màu sắc để hợp với Tailwind
+    const customStyles = {
+        control: (base, state) => ({
+            ...base,
+            width: '100%',
+            minHeight: "50px",
+            borderRadius: "16px",
+            borderColor: state.isFocused ? "#06b6d4" : "transparent",
+            backgroundColor: isDark ? "#18181b" : "#f1f5f9", // Dùng màu xám nhạt thay vì trắng tinh
+            boxShadow: "none",
+            "&:hover": { borderColor: "#06b6d4" },
+            transition: "all 0.2s ease",
+            padding: "0 8px"
+        }),
+        valueContainer: (base) => ({
+            ...base,
+            padding: "2px 8px"
+        }),
+        multiValue: (base) => ({
+            ...base,
+            backgroundColor: "#06b6d4",
+            borderRadius: "8px",
+            padding: "2px 6px"
+        }),
+        multiValueLabel: (base) => ({
+            ...base,
+            color: "#fff",
+            fontSize: "13px",
+            fontWeight: "500"
+        }),
+        multiValueRemove: (base) => ({
+            ...base,
+            color: "#fff",
+            ":hover": { backgroundColor: "#0891b2", color: "#fff" }
+        }),
+        menu: (base) => ({
+            ...base,
+            borderRadius: "16px",
+            marginTop: "8px",
+            padding: "8px",
+            backgroundColor: isDark ? "#18181b" : "#fff",
+            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)"
+        }),
+        option: (base, state) => ({
+            ...base,
+            borderRadius: "8px",
+            padding: "10px 16px",
+            backgroundColor: state.isFocused ? "#e0f2fe" : "transparent",
+            color: state.isFocused ? "#0369a1" : (isDark ? "#fff" : "#334155"),
+            cursor: "pointer",
+            fontWeight: "500"
+        })
+    };
+
     return (
         <div className={`min-h-screen pt-28 pb-16 transition-colors duration-500 ${isDark ? "bg-[#030303] text-white" : "bg-slate-50 text-slate-900"}`}>
             <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-4 gap-8">
@@ -814,7 +917,7 @@ export default function PhotographerDashboard({
 
                                     {photographerData.verificationStatus === "VERIFIED" && (
                                         <span className="ml-auto px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                            VERIFIED
+                                            {t.verified}
                                         </span>
                                     )}
                                 </div>
@@ -1018,18 +1121,49 @@ export default function PhotographerDashboard({
                                         </div>
                                     </div>
 
-                                    <div className="md:col-span-2 group">
-                                        <label className={labelClass}>{t.stylesLabel}</label>
-                                        <div className="relative mt-1.5">
-                                            <Grid className={iconClass} size={18} />
-                                            <input type="text" value={photographerData.styles ? photographerData.styles.join(", ") : ""} onChange={handleStylesChange} className={inputClass} placeholder={t.stylesPlaceholder} />
-                                        </div>
-                                    </div>
 
                                     <div className="md:col-span-2">
                                         <label className={labelClass}>{t.bio}</label>
                                         <textarea name="bio" value={photographerData.bio || ""} onChange={handleChange} rows={5} placeholder={t.bioPlaceholder} className={`w-full rounded-2xl p-4 mt-1.5 outline-none border font-medium transition-all duration-300 ${isDark ? "bg-[#09090b] border-white/5 text-white focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 focus:bg-[#030303]" : "bg-slate-50 border-slate-200 text-slate-900 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/5 focus:bg-white shadow-sm"
                                             }`} />
+                                    </div>
+                                </div>
+
+
+                                {/* Đưa 2 Select ra ngoài grid nhỏ, cho chúng nằm trên cùng 1 hàng bằng grid lớn của cha */}
+                                <div className="grid md:grid-cols-2 gap-6 mt-8">
+                                    {/* Ô Categories */}
+                                    <div className="bg-white dark:bg-[#09090b] p-6 rounded-[2rem] border border-slate-200 dark:border-white/[0.08] shadow-sm">
+                                        <div className="flex items-center gap-3 mb-5">
+                                            <div className="p-2 bg-slate-100 dark:bg-white/[0.05] rounded-xl"><Grid size={16} className="text-cyan-500" /></div>
+                                            <label className="text-xs font-bold tracking-widest text-slate-400">{t.categoriesLabel || "CATEGORIES"}</label>
+                                        </div>
+                                        <Select
+                                            isMulti
+                                            options={categories.map(c => ({ value: String(c._id), label: c.name }))}
+                                            value={categories.filter(c => (photographerData.categoryIds || []).includes(String(c._id))).map(c => ({ value: String(c._id), label: c.name }))}
+                                            onChange={(selected) => setPhotographerData(prev => ({ ...prev, categoryIds: selected.map(s => s.value) }))}
+                                            styles={customStyles}
+                                            classNamePrefix="react-select"
+                                        />
+                                        <p className="text-sm text-slate-400 mt-4 leading-relaxed">Chọn các lĩnh vực dịch vụ bạn đang cung cấp.</p>
+                                    </div>
+
+                                    {/* Ô Styles */}
+                                    <div className="bg-white dark:bg-[#09090b] p-6 rounded-[2rem] border border-slate-200 dark:border-white/[0.08] shadow-sm">
+                                        <div className="flex items-center gap-3 mb-5">
+                                            <div className="p-2 bg-slate-100 dark:bg-white/[0.05] rounded-xl"><Layers size={16} className="text-purple-500" /></div>
+                                            <label className="text-xs font-bold tracking-widest text-slate-400">{t.stylesLabel || "STYLES"}</label>
+                                        </div>
+                                        <Select
+                                            isMulti
+                                            options={styleTags.map(s => ({ value: String(s._id), label: s.name }))}
+                                            value={styleTags.filter(s => (photographerData.styleIds || []).includes(String(s._id))).map(s => ({ value: String(s._id), label: s.name }))}
+                                            onChange={(selected) => setPhotographerData(prev => ({ ...prev, styleIds: selected.map(s => s.value) }))}
+                                            styles={customStyles}
+                                            classNamePrefix="react-select"
+                                        />
+                                        <p className="text-sm text-slate-400 mt-4 leading-relaxed">Chọn phong cách nhiếp ảnh chuyên môn của bạn.</p>
                                     </div>
                                 </div>
 
@@ -1166,19 +1300,21 @@ export default function PhotographerDashboard({
 
                 </div>
             </div>
-            {zoomImage && (
-                <div
-                    className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-6"
-                    onClick={() => setZoomImage(null)}
-                >
-                    <img
-                        src={zoomImage}
-                        alt="CCCD"
-                        className="max-w-[95vw] max-h-[95vh] object-contain rounded-xl shadow-2xl"
-                    />
-                </div>
-            )}
-        </div>
+            {
+                zoomImage && (
+                    <div
+                        className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-6"
+                        onClick={() => setZoomImage(null)}
+                    >
+                        <img
+                            src={zoomImage}
+                            alt="CCCD"
+                            className="max-w-[95vw] max-h-[95vh] object-contain rounded-xl shadow-2xl"
+                        />
+                    </div>
+                )
+            }
+        </div >
 
     );
 }

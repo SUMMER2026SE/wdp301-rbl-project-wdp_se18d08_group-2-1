@@ -44,10 +44,16 @@ export const usePhotographers = () => {
       const response = await fetch(`${API_BASE_URL}/photographers${query ? `?${query}` : ""}`);
       if (!response.ok) throw new Error("Failed to list photographers");
 
-      const data = await response.json();
-      if (data.success) {
-        setPhotographers(data.data?.data || []);
-        setPagination(data.data?.pagination || {});
+      const result = await response.json();
+
+      // Kiểm tra cấu trúc phản hồi từ API
+      if (result.success && result.data) {
+        // Đảm bảo photographers là một mảng trước khi đưa vào state
+        const photographerList = Array.isArray(result.data.data) ? result.data.data : [];
+        setPhotographers(photographerList);
+        setPagination(result.data.pagination || { page: 1, limit: 12, total: 0, totalPages: 0 });
+      } else {
+        setPhotographers([]);
       }
     } catch (err) {
       setError(err.message);
@@ -55,7 +61,6 @@ export const usePhotographers = () => {
       setLoading(false);
     }
   }, []);
-
   // Search & filter photographers
   const searchPhotographers = useCallback(async (filters) => {
     try {
@@ -132,6 +137,18 @@ export const usePhotographers = () => {
     }
   }, []);
 
+  const getCategories = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/photographers/categories`);
+      if (!response.ok) throw new Error("Failed to get categories");
+      const data = await response.json();
+      return data.data || [];
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
+  }, []);
+
   const getLocations = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/photographers/locations`);
@@ -155,6 +172,7 @@ export const usePhotographers = () => {
     getPhotographerDetail,
     getTopPhotographers,
     getStyles,
+    getCategories,
     getLocations
   };
 };

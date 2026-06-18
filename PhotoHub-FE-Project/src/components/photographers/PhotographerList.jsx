@@ -18,16 +18,19 @@ export default function PhotographerList({ language = "en" }) {
     listPhotographers,
     searchPhotographers,
     getStyles,
+    getCategories,
     getLocations,
   } = usePhotographers();
 
   const [viewType, setViewType] = useState("grid");
   const [availableStyles, setAvailableStyles] = useState([]);
+  const [availableCategories, setAvailableCategories] = useState([]);
   const [availableLocations, setAvailableLocations] = useState([]);
   const [currentFilters, setCurrentFilters] = useState({
     search: "",
     location: "",
     styles: [],
+    categories: [],
     minRating: 0,
     maxPrice: 1000,
     minExperience: 0,
@@ -67,12 +70,13 @@ export default function PhotographerList({ language = "en" }) {
   // Load styles & locations một lần khi mount
   useEffect(() => {
     const loadFilterOptions = async () => {
-      const [styles, locations] = await Promise.all([getStyles(), getLocations()]);
+      const [styles, categories, locations] = await Promise.all([getStyles(), getCategories(), getLocations()]);
       setAvailableStyles(styles);
+      setAvailableCategories(categories);
       setAvailableLocations(locations);
     };
     loadFilterOptions();
-  }, [getStyles, getLocations]);
+  }, [getStyles, getCategories, getLocations]);
 
   // Gọi API mỗi khi filter thay đổi
   useEffect(() => {
@@ -80,6 +84,7 @@ export default function PhotographerList({ language = "en" }) {
       currentFilters.search ||
       currentFilters.location ||
       currentFilters.styles.length > 0 ||
+      currentFilters.categories.length > 0 ||
       currentFilters.minRating > 0 ||
       currentFilters.maxPrice < 1000 ||
       currentFilters.minExperience > 0;
@@ -147,6 +152,7 @@ export default function PhotographerList({ language = "en" }) {
           onFilterChange={handleFilterChange}
           onViewChange={setViewType}
           styles={availableStyles}
+          categories={availableCategories}
           locations={availableLocations}
           language={language}
         />
@@ -183,15 +189,22 @@ export default function PhotographerList({ language = "en" }) {
           </div>
         ) : viewType === "grid" ? (
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {photographers.map((p) => (
-              <PhotographerCard
-                key={p._id}
-                photographer={p}
-                language={language}
-                onViewClick={handleViewClick}
-                onRequireLogin={handleRequireLogin}
-              />
-            ))}
+            {photographers.map((p) => {
+              // Thêm log này để thấy chính xác phần tử nào bị lỗi
+              if (typeof p !== 'object') {
+                console.error("Phần tử không phải object:", p);
+              }
+
+              return (
+                <PhotographerCard
+                  key={p._id}
+                  photographer={p}
+                  language={language}
+                  onViewClick={handleViewClick}
+                  onRequireLogin={handleRequireLogin}
+                />
+              );
+            })}
           </div>
         ) : (
           <div className="flex flex-col gap-4">

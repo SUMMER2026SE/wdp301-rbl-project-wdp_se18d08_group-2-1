@@ -1,6 +1,8 @@
 import { Camera, Menu, Moon, ShieldCheck, Sun, X, User, LogOut, Settings, Briefcase, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 
 const iconProps = { strokeWidth: 1.5 };
 
@@ -97,6 +99,10 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
     ? "border-white/10 bg-black/60 shadow-[0_18px_60px_rgba(0,0,0,0.35)]"
     : "border-white/5 bg-slate-950/25";
 
+  const avatarUrl = user?.avatar
+    ? `${BASE_URL}${user.avatar}`
+    : null;
+
   return (
     <header className="fixed inset-x-0 top-0 z-[100] px-4 py-4 sm:px-6 lg:px-8">
       <div
@@ -156,27 +162,25 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
               onMouseEnter={() => setShowDropdown(true)}
               onMouseLeave={() => setShowDropdown(false)}
             >
-              {/* AVATAR */}
-              <div className="flex cursor-pointer items-center gap-3 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/[0.06] px-3 py-2 backdrop-blur-md">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500 text-white font-semibold">
-                  {user.fullName?.charAt(0)?.toUpperCase() || "U"}
-                </div>
-
-                <div className="text-left">
-                  <p className="text-xs text-slate-400 dark:text-slate-400">
-                    Hello,
-                  </p>
-                  <p className="max-w-[120px] truncate text-sm font-semibold text-slate-200 dark:text-slate-100">
-                    {user.fullName}
-                  </p>
-                </div>
+              <div className="h-10 w-10 overflow-hidden rounded-full bg-cyan-500">
+                {user?.avatar ? (
+                  <img
+                    src={avatarUrl}
+                    alt={user.fullName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-white font-semibold">
+                    {user?.fullName?.charAt(0)?.toUpperCase() || "U"}
+                  </div>
+                )}
               </div>
 
               {/* DROPDOWN MENU */}
               {showDropdown && (
                 <div className="absolute right-0 top-full z-50 pt-2">
                   <div className="w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/95">
-                    
+
                     {/* Đường dẫn linh hoạt dựa trên Role */}
                     {user?.role === "admin" && (
                       <Link

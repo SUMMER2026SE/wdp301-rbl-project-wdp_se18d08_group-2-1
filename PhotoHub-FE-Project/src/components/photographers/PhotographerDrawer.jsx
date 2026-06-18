@@ -60,6 +60,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
 
   const labels = {
     en: {
+      up: "Up to",
       title: "Photographer Profile",
       loading: "Loading...",
       experience: "years exp.",
@@ -82,6 +83,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
       noReviews: "No reviews yet",
     },
     vi: {
+      up: "Lên đến",
       title: "Hồ Sơ Nhiếp Ảnh Gia",
       loading: "Đang tải...",
       experience: "năm kinh nghiệm",
@@ -265,7 +267,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                       {experienceYears > 0 && (
                         <span className="flex items-center gap-1">
                           <Award size={11} className="text-emerald-500" />
-                          Trên {experienceYears} {t.experience}
+                          {t.up} {experienceYears} {t.experience}
                         </span>
                       )}
                       {totalReviews > 0 && (
@@ -413,7 +415,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                           key={idx}
                           className="rounded-lg bg-orange-50 dark:bg-orange-500/10 px-3 py-1 text-xs font-bold text-orange-600 dark:text-orange-400 border border-orange-200/60 dark:border-orange-500/20"
                         >
-                          {style}
+                          {style.name}
                         </span>
                       ))}
                     </div>
