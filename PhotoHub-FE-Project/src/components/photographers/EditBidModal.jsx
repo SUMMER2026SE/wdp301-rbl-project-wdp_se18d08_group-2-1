@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import { Send, DollarSign, Clock, FileText, X } from "lucide-react";
+import { Send, DollarSign, Clock, FileText, X, Sparkles, CheckCircle } from "lucide-react";
 import { photographerMarketplaceService } from "../../services/photographerService";
 
 export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", language = "vi" }) {
@@ -9,6 +9,8 @@ export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", 
   const [price, setPrice] = useState("");
   const [estimatedTime, setEstimatedTime] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [optimizing, setOptimizing] = useState(false);
+  const [optimization, setOptimization] = useState(null);
 
   const t = {
     vi: {
@@ -68,6 +70,26 @@ export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", 
     }
   };
 
+  const handleOptimize = async () => {
+    setOptimizing(true);
+    try {
+      const res = await photographerMarketplaceService.optimizeBid(bid._id);
+      setOptimization(res.data || null);
+    } catch (err) {
+      console.error(err);
+      Swal.fire(t.error, err.response?.data?.message || err.message, "error");
+    } finally {
+      setOptimizing(false);
+    }
+  };
+
+  const applyOptimization = () => {
+    if (!optimization) return;
+    setProposal(optimization.suggestedProposal || proposal);
+    setPrice(optimization.suggestedPrice || price);
+    setEstimatedTime(optimization.suggestedEstimatedTime || estimatedTime);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div
@@ -83,6 +105,35 @@ export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", 
         </button>
 
         <h3 className="text-xl font-black mb-6">{t.title}</h3>
+
+        <button
+          type="button"
+          onClick={handleOptimize}
+          disabled={optimizing}
+          className="mb-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm font-bold text-cyan-300 transition hover:bg-cyan-500/15 disabled:opacity-50"
+        >
+          <Sparkles size={16} />
+          {optimizing ? "Analyzing bid..." : "Analyze and optimize before deadline"}
+        </button>
+
+        {optimization && (
+          <div className="mb-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-xs text-amber-200">
+            <div className="mb-2 font-black text-amber-300">Current bid score: {optimization.currentScore}%</div>
+            {(optimization.suggestions || []).map((item, index) => (
+              <div key={index} className="flex gap-2 py-1">
+                <CheckCircle size={13} className="mt-0.5 shrink-0" />
+                <span>{item}</span>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={applyOptimization}
+              className="mt-3 rounded-xl bg-amber-500 px-3 py-2 text-[11px] font-black text-black transition hover:bg-amber-400"
+            >
+              Apply suggested version
+            </button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
