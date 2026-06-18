@@ -6,6 +6,9 @@ import { photographerMarketplaceService } from "../../services/photographerServi
 export default function WithdrawMoney({ theme = "dark", language = "vi" }) {
   const isDark = theme === "dark";
   const [balance, setBalance] = useState(0);
+  const [netBalance, setNetBalance] = useState(0);
+  const [eligibleBookings, setEligibleBookings] = useState([]);
+  const [blockedBookings, setBlockedBookings] = useState([]);
   const [amount, setAmount] = useState("");
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
@@ -72,6 +75,9 @@ export default function WithdrawMoney({ theme = "dark", language = "vi" }) {
       // Fetch balance details from revenue
       const revRes = await photographerMarketplaceService.getRevenue();
       setBalance(revRes.data?.withdrawableAmount || 0);
+      setNetBalance(revRes.data?.netWithdrawableAmount || 0);
+      setEligibleBookings(revRes.data?.eligibleBookings || []);
+      setBlockedBookings(revRes.data?.blockedBookings || []);
 
       // Fetch request history
       const reqRes = await photographerMarketplaceService.getWithdrawRequests();
@@ -161,6 +167,16 @@ export default function WithdrawMoney({ theme = "dark", language = "vi" }) {
           <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/10 mb-6 text-center">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.balance}</p>
             <h2 className="text-3xl font-black text-cyan-400 mt-1">${balance}</h2>
+            <p className="mt-1 text-[10px] font-bold text-slate-500">Net after commission: ${netBalance}</p>
+          </div>
+
+          <div className="mb-6 rounded-2xl border border-white/5 bg-white/[0.02] p-3 text-xs text-slate-500">
+            <div className="font-bold text-emerald-300">{eligibleBookings.length} booking(s) eligible for payout</div>
+            {blockedBookings.length > 0 && (
+              <div className="mt-1 text-amber-300">
+                {blockedBookings.length} completed booking(s) still waiting for payment, approval, or dispute resolution.
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleWithdrawSubmit} className="space-y-4">
@@ -303,7 +319,9 @@ export default function WithdrawMoney({ theme = "dark", language = "vi" }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-white/[0.02]">
-                  {requests.map((r) => (
+                  {requests.map((r) => {
+                    const normalizedStatus = String(r.status || "").toLowerCase();
+                    return (
                     <tr key={r._id} className="text-slate-300">
                       <td className="py-4 text-slate-500">
                         {new Date(r.createdAt).toLocaleDateString()}
@@ -321,9 +339,9 @@ export default function WithdrawMoney({ theme = "dark", language = "vi" }) {
                       <td className="py-4 text-center">
                         <span
                           className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${
-                            r.status === "approved"
+                            normalizedStatus === "approved" || normalizedStatus === "paid"
                               ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                              : r.status === "pending"
+                              : normalizedStatus === "pending"
                               ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
                               : "bg-red-500/10 text-red-400 border-red-500/20"
                           }`}
@@ -332,7 +350,8 @@ export default function WithdrawMoney({ theme = "dark", language = "vi" }) {
                         </span>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

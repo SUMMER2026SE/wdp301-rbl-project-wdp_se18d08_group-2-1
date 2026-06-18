@@ -7,6 +7,10 @@ const withdrawRequestSchema = new mongoose.Schema(
       ref: "Photographer",
       required: true,
     },
+    photographerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     wallet: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Wallet",
@@ -15,6 +19,29 @@ const withdrawRequestSchema = new mongoose.Schema(
     amount: {
       type: Number,
       required: true,
+    },
+    commission: {
+      type: Number,
+      default: 0,
+    },
+    commissionRate: {
+      type: Number,
+      default: 0.1,
+    },
+    finalAmount: {
+      type: Number,
+      default: 0,
+    },
+    eligibleBookingIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Booking",
+      },
+    ],
+    bankInfo: {
+      bankName: String,
+      accountNumber: String,
+      accountName: String,
     },
     bankName: {
       type: String,
@@ -41,6 +68,9 @@ const withdrawRequestSchema = new mongoose.Schema(
       type: Date,
     },
     adminNote: {
+      type: String,
+    },
+    rejectionReason: {
       type: String,
     },
   },
