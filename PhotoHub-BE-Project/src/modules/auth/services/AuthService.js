@@ -9,6 +9,7 @@ const { sendResetPasswordEmail } = require("../../../services/EmailService");
 const JWT_SECRET = process.env.JWT_SECRET || "cinema_secret";
 const JWT_EXPIRE = process.env.JWT_EXPIRE || "7d";
 
+
 /** Tìm user theo email (chuẩn hóa + fallback không phân biệt hoa thụ trong DB cũ) */
 async function findUserByEmail(emailNorm) {
   if (!emailNorm) return null;
