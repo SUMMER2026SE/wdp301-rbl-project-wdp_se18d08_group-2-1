@@ -30,6 +30,7 @@ router.get("/", PhotographerController.listPhotographers);
 router.get("/search", PhotographerController.searchPhotographers);
 router.get("/top", PhotographerController.getTopPhotographers);
 router.get("/styles", PhotographerController.getStyles);
+router.get("/categories", PhotographerController.getCategories);
 router.get("/locations", PhotographerController.getLocations);
 router.get("/:id", PhotographerController.getPhotographerDetail);
 

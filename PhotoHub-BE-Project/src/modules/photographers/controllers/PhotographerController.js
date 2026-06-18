@@ -58,6 +58,17 @@ class PhotographerController {
     }
   }
 
+  // Lấy danh sách categories
+  async getCategories(req, res) {
+    try {
+      const styles = await PhotographerService.getAllPhotographyCategories();
+      return ApiResponse.success(res, styles, "Get categories successful");
+    } catch (error) {
+      return ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+
   // Lấy danh sách locations
   async getLocations(req, res) {
     try {

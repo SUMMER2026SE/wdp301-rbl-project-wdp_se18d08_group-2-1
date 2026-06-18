@@ -33,8 +33,6 @@ const photographerSchema = new mongoose.Schema(
 
     bio: String,
 
-    styles: [String],
-
     socialLinks: {
       facebook: String,
       instagram: String,

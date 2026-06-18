@@ -1,6 +1,10 @@
 // services/PhotographerService.js
 const Photographer = require("../models/photographer");
 const PhotographerVerification = require("../models/photographerVerification");
+const PhotographerStyle = require("../models/photographerStyle.model");
+const PhotographerCategory = require("../models/photographerCategory.model")
+const StyleTag = require("../../common/models/styleTag");
+const ShootingCategory = require("../../common/models/shootingCategory")
 const User = require("../../auth/models/User");
 const mongoose = require("mongoose");
 const path = require("path");
@@ -14,19 +18,57 @@ class PhotographerService {
         search = "",
         location = "",
         styles = [],
+        categories = [],
         minRating = 0,
         minPrice = 0,
         maxPrice = Infinity,
         minExperience = 0,
-        sortBy = "relevance", // relevance, rating, price, experience
+        sortBy = "relevance",
         page = 1,
         limit = 12,
       } = filters;
 
-      // Xây dựng query
-      let query = {};
+      let query = {verificationStatus: "VERIFIED"};
 
-      // Search theo tên
+      // Helper: Hàm kiểm tra và chuyển đổi giá trị sang ObjectId nếu có thể
+      const toObjectId = (val) => {
+        if (mongoose.Types.ObjectId.isValid(val)) {
+          return new mongoose.Types.ObjectId(val);
+        }
+        return val; // Trả về nguyên bản nếu không phải ID (để tránh lỗi cast trực tiếp)
+      };
+
+      // Chuẩn hóa mảng styles/categories (đảm bảo là array)
+      const styleArray = Array.isArray(styles) ? styles : [styles].filter(Boolean);
+      const categoryArray = Array.isArray(categories) ? categories : [categories].filter(Boolean);
+
+      // Xử lý Categories và Styles
+      if (categoryArray.length > 0 || styleArray.length > 0) {
+        let intersectionIds = null;
+
+        if (categoryArray.length > 0) {
+          const catIds = await PhotographerCategory.find({
+            category: { $in: categoryArray.map(toObjectId) }
+          }).distinct("photographer");
+          intersectionIds = catIds;
+        }
+
+        if (styleArray.length > 0) {
+          const styIds = await PhotographerStyle.find({
+            styleTag: { $in: styleArray.map(toObjectId) }
+          }).distinct("photographer");
+
+          intersectionIds = intersectionIds
+            ? intersectionIds.filter(id => styIds.some(s => s.toString() === id.toString()))
+            : styIds;
+        }
+
+        if (intersectionIds !== null) {
+          query._id = { $in: intersectionIds };
+        }
+      }
+
+      // --- CÁC PHẦN CÒN LẠI GIỮ NGUYÊN ---
       if (search) {
         query.$or = [
           { displayName: { $regex: search, $options: "i" } },
@@ -34,63 +76,36 @@ class PhotographerService {
         ];
       }
 
-      // Filter theo địa điểm
       if (location) {
         query.location = { $regex: location, $options: "i" };
       }
 
-      // Filter theo phong cách
-      if (styles && styles.length > 0) {
-        query.styles = { $in: styles };
+      if (minRating > 0) query.averageRating = { $gte: parseFloat(minRating) };
+
+      if (maxPrice !== Infinity || minPrice > 0) {
+        query.hourlyRate = {};
+        if (maxPrice !== Infinity) query.hourlyRate.$lte = parseFloat(maxPrice);
+        if (minPrice > 0) query.hourlyRate.$gte = parseFloat(minPrice);
       }
 
-      // Filter theo rating
-      if (minRating > 0) {
-        query.averageRating = { $gte: minRating };
-      }
-
-      // Filter theo giá (hourlyRate)
-      if (maxPrice !== Infinity) {
-        query.hourlyRate = { $lte: maxPrice };
-      }
-      // filter min price
-      if (minPrice > 0) {
-        query.hourlyRate = { ...query.hourlyRate, $gte: minPrice };
-      }
-      // Filter theo kinh nghiệm
-      if (minExperience > 0) {
-        query.experienceYears = { $gte: minExperience };
-      }
+      if (minExperience > 0) query.experienceYears = { $gte: parseInt(minExperience) };
 
       // Sắp xếp
-      let sortOptions = {};
+      let sortOptions = { completedBookings: -1, averageRating: -1 };
       switch (sortBy) {
-        case "rating":
-          sortOptions = { averageRating: -1, totalReviews: -1 };
-          break;
-        case "price":
-          sortOptions = { hourlyRate: 1 };
-          break;
-        case "experience":
-          sortOptions = { experienceYears: -1 };
-          break;
-        case "relevance":
-        default:
-          sortOptions = { completedBookings: -1, averageRating: -1 };
-          break;
+        case "rating": sortOptions = { averageRating: -1, totalReviews: -1 }; break;
+        case "price": sortOptions = { hourlyRate: 1 }; break;
+        case "experience": sortOptions = { experienceYears: -1 }; break;
       }
 
-      // Phân trang
-      const skip = (page - 1) * limit;
-
-      // Thực hiện query
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      console.log("query =", query);
       const photographers = await Photographer.find(query)
         .populate("user", "avatar email fullName")
         .sort(sortOptions)
         .skip(skip)
         .limit(parseInt(limit));
 
-      // Tổng số kết quả
       const total = await Photographer.countDocuments(query);
 
       return {
@@ -103,6 +118,7 @@ class PhotographerService {
         },
       };
     } catch (error) {
+      console.error("Lỗi chi tiết:", error);
       throw new Error(`Search photographers failed: ${error.message}`);
     }
   }
@@ -136,11 +152,50 @@ class PhotographerService {
         .skip(skip)
         .limit(parseInt(limit));
 
+      const photographerIds =
+        photographers.map(p => p._id);
+
+      const styles =
+        await PhotographerStyle.find({
+          photographer: {
+            $in: photographerIds
+          }
+        }).populate("styleTag");
+
+      const categories =
+        await PhotographerCategory.find({
+          photographer: {
+            $in: photographerIds
+          }
+        }).populate("category");
+
       const total = await Photographer.countDocuments({
         verificationStatus: "VERIFIED",
       });
+
+      const photographersWithRelations =
+        photographers.map(photo => ({
+          ...photo.toObject(),
+
+          styles: styles
+            .filter(
+              s =>
+                s.photographer.toString() ===
+                photo._id.toString()
+            )
+            .map(s => s.styleTag),
+
+          categories: categories
+            .filter(
+              c =>
+                c.photographer.toString() ===
+                photo._id.toString()
+            )
+            .map(c => c.category),
+        }));
       return {
-        data: photographers,
+        data: photographersWithRelations,
+
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
@@ -156,14 +211,32 @@ class PhotographerService {
   // Lấy chi tiết photographer
   async getPhotographerDetail(photographerId) {
     try {
-      const photographer = await Photographer.findById(photographerId)
-        .populate("user", "avatar email fullName phoneNumber")
+      const photographer =
+        await Photographer.findById(photographerId)
+          .populate(
+            "user",
+            "avatar email fullName phoneNumber"
+          );
 
       if (!photographer) {
         throw new Error("Photographer not found");
       }
 
-      return photographer;
+      const styles =
+        await PhotographerStyle.find({
+          photographer: photographerId,
+        }).populate("styleTag");
+
+      const categories =
+        await PhotographerCategory.find({
+          photographer: photographerId,
+        }).populate("category");
+
+      return {
+        ...photographer.toObject(),
+        styles: styles.map(s => s.styleTag),
+        categories: categories.map(c => c.category),
+      };
     } catch (error) {
       throw new Error(`Get photographer detail failed: ${error.message}`);
     }
@@ -182,6 +255,15 @@ class PhotographerService {
       if (!photographer) {
         return null;
       }
+      const styles =
+        await PhotographerStyle.find({
+          photographer: photographer._id,
+        }).populate("styleTag");
+
+      const categories =
+        await PhotographerCategory.find({
+          photographer: photographer._id,
+        }).populate("category");
 
       const verification =
         await PhotographerVerification.findOne({
@@ -192,6 +274,8 @@ class PhotographerService {
 
       return {
         ...photographer.toObject(),
+        styles: styles.map(s => s.styleTag),
+        categories: categories.map(c => c.category),
         verification,
       };
     } catch (error) {
@@ -200,53 +284,179 @@ class PhotographerService {
       );
     }
   }
-  // Tạo photographer profile (khi user đăng ký là photographer)
-  async createPhotographerProfile(userId, profileData) {
+  async createPhotographerProfile(
+    userId,
+    profileData
+  ) {
     try {
-      const existingPhotographer = await Photographer.findOne({ user: userId });
+      const existingPhotographer =
+        await Photographer.findOne({
+          user: userId,
+        });
+
       if (existingPhotographer) {
-        throw new Error("Photographer profile already exists");
+        throw new Error(
+          "Photographer profile already exists"
+        );
       }
 
-      const photographer = new Photographer({
-        ...profileData,
-        user: userId,
-        UUID: require("uuid").v4(),
-      });
+      const {
+        styleIds,
+        categoryIds,
+        ...photographerData
+      } = profileData;
 
-      await photographer.save();
+      const photographer =
+        await Photographer.create({
+          ...photographerData,
+          user: userId,
+          UUID: require("uuid").v4(),
+        });
+
+      // tạo styles
+      if (
+        Array.isArray(styleIds) &&
+        styleIds.length > 0
+      ) {
+        await PhotographerStyle.insertMany(
+          styleIds.map(styleId => ({
+            photographer: photographer._id,
+            styleTag: styleId,
+          }))
+        );
+      }
+
+      // tạo categories
+      if (
+        Array.isArray(categoryIds) &&
+        categoryIds.length > 0
+      ) {
+        await PhotographerCategory.insertMany(
+          categoryIds.map(categoryId => ({
+            photographer: photographer._id,
+            category: categoryId,
+          }))
+        );
+      }
+
       return photographer;
     } catch (error) {
-      throw new Error(`Create photographer profile failed: ${error.message}`);
+      throw new Error(
+        `Create photographer profile failed: ${error.message}`
+      );
     }
   }
 
-  // Cập nhật photographer profile
-  async updatePhotographerProfile(photographerId, updateData) {
+  async updatePhotographerProfile(
+    photographerId,
+    updateData
+  ) {
     try {
-      const photographer = await Photographer.findByIdAndUpdate(
-        photographerId,
-        updateData,
-        { new: true, runValidators: true }
-      ).populate("user", "avatar email fullName");
+      const {
+        styleIds,
+        categoryIds,
+        ...photographerData
+      } = updateData;
+
+      const photographer =
+        await Photographer.findByIdAndUpdate(
+          photographerId,
+          photographerData,
+          {
+            new: true,
+            runValidators: true,
+          }
+        ).populate(
+          "user",
+          "avatar email fullName"
+        );
 
       if (!photographer) {
         throw new Error("Photographer not found");
       }
 
-      return photographer;
+      // update styles
+      if (Array.isArray(styleIds)) {
+        await PhotographerStyle.deleteMany({
+          photographer: photographerId,
+        });
+
+        if (styleIds.length > 0) {
+          await PhotographerStyle.insertMany(
+            styleIds.map(styleId => ({
+              photographer: photographerId,
+              styleTag: styleId,
+            }))
+          );
+        }
+      }
+
+      // update categories
+      if (Array.isArray(categoryIds)) {
+        await PhotographerCategory.deleteMany({
+          photographer: photographerId,
+        });
+
+        if (categoryIds.length > 0) {
+          await PhotographerCategory.insertMany(
+            categoryIds.map(categoryId => ({
+              photographer: photographerId,
+              category: categoryId,
+            }))
+          );
+        }
+      }
+
+      // ===== LOAD LẠI STYLES =====
+      const styles = await PhotographerStyle.find({
+        photographer: photographerId,
+      }).populate("styleTag");
+
+      // ===== LOAD LẠI CATEGORIES =====
+      const categories =
+        await PhotographerCategory.find({
+          photographer: photographerId,
+        }).populate("category");
+
+      const result = photographer.toObject();
+
+      result.styles = styles.map(item => item.styleTag);
+      result.categories = categories.map(
+        item => item.category
+      );
+
+      return result;
+
     } catch (error) {
-      throw new Error(`Update photographer profile failed: ${error.message}`);
+      throw new Error(
+        `Update photographer profile failed: ${error.message}`
+      );
     }
   }
 
   // Lấy danh sách styles có sẵn
   async getAllPhotographyStyles() {
     try {
-      const styles = await Photographer.distinct("styles");
+      const styles =
+        await StyleTag.find({
+          status: "ACTIVE",
+        });
       return styles.filter(Boolean).sort();
     } catch (error) {
       throw new Error(`Get photography styles failed: ${error.message}`);
+    }
+  }
+
+  // Lấy danh sách categories có sẵn
+  async getAllPhotographyCategories() {
+    try {
+      const categories =
+        await ShootingCategory.find({
+          status: "ACTIVE",
+        });
+      return categories.filter(Boolean).sort();
+    } catch (error) {
+      throw new Error(`Get photography categories failed: ${error.message}`);
     }
   }
 
@@ -390,10 +600,21 @@ class PhotographerService {
       if (!photographer.equipment)
         missingFields.push("equipment");
 
-      if (
-        !photographer.styles ||
-        photographer.styles.length === 0
-      ) {
+      const categoriesCount =
+        await PhotographerCategory.countDocuments({
+          photographer: photographer._id,
+        });
+
+      if (categoriesCount === 0) {
+        missingFields.push("categories");
+      }
+
+      const stylesCount =
+        await PhotographerStyle.countDocuments({
+          photographer: photographer._id,
+        });
+
+      if (stylesCount === 0) {
         missingFields.push("styles");
       }
 
