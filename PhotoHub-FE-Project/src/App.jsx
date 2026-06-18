@@ -12,6 +12,7 @@ import FavoritesPage from "./pages/FavoritesPage";
 import PhotographersPage from "./pages/PhotographersPage";
 import AiSearchPage from "./pages/AiSearchPage";
 import CommunityPage from "./pages/CommunityPage";
+import PaymentResult from "./booking/PaymentResult";
 
 // Admin Imports
 import AdminLayout from "./components/admin/AdminLayout";
@@ -135,6 +136,15 @@ export default function App() {
         />
 
         <Route path="/auth/google/success" element={<GoogleSuccess />} />
+        <Route
+          path="/payment/result"
+          element={
+            <PaymentResult
+              language={language}
+              theme={theme}
+            />
+          }
+        />
 
         {/* Admin routes */}
         <Route path="/admin" element={<AdminLayout />}>

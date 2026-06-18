@@ -14,6 +14,7 @@ import {
 
 import Swal from "sweetalert2";
 import { profileService } from "../services/profileService";
+import CustomerBookingList from "../booking/CustomerBookingList";
 
 export default function ProfilePage({
     language = "vi",
@@ -73,6 +74,8 @@ export default function ProfilePage({
         gender: "",
         dateOfBirth: "",
     });
+
+    const [activeTab, setActiveTab] = useState("info");
 
     const [passwordData, setPasswordData] = useState({
         currentPassword: "",
@@ -335,14 +338,46 @@ export default function ProfilePage({
                                 <span className="text-sm capitalize">{user?.role || t.notUpdated}</span>
                             </div>
                         </div>
+
+                        <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/10 w-full space-y-2">
+                            <button
+                                onClick={() => setActiveTab("info")}
+                                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition ${
+                                    activeTab === "info"
+                                        ? "bg-cyan-500 text-white shadow-lg shadow-cyan-500/20"
+                                        : isDark
+                                        ? "hover:bg-white/5 text-slate-400 hover:text-white"
+                                        : "hover:bg-slate-100 text-slate-600 hover:text-slate-900"
+                                }`}
+                            >
+                                <User size={18} />
+                                {language === "vi" ? "Thông tin cá nhân" : "Personal Profile"}
+                            </button>
+                            
+                            <button
+                                onClick={() => setActiveTab("bookings")}
+                                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition ${
+                                    activeTab === "bookings"
+                                        ? "bg-cyan-500 text-white shadow-lg shadow-cyan-500/20"
+                                        : isDark
+                                        ? "hover:bg-white/5 text-slate-400 hover:text-white"
+                                        : "hover:bg-slate-100 text-slate-600 hover:text-slate-900"
+                                }`}
+                            >
+                                <Calendar size={18} />
+                                {language === "vi" ? "Lịch sử đặt lịch" : "My Bookings"}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 {/* RIGHT CONTENT */}
                 <div className="lg:col-span-2 space-y-8">
-                    {/* PROFILE FORM */}
-                    <div className={`border rounded-3xl p-8 transition-all ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50/50 border-slate-200/80 shadow-sm"
-                        }`}>
+                    {activeTab === "info" ? (
+                        <>
+                            {/* PROFILE FORM */}
+                            <div className={`border rounded-3xl p-8 transition-all ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50/50 border-slate-200/80 shadow-sm"
+                                }`}>
                         <h2 className="text-2xl font-bold mb-6 transition-colors">
                             {t.personalInfo}
                         </h2>
@@ -482,6 +517,12 @@ export default function ProfilePage({
                             {t.updatePassword}
                         </button>
                     </div>
+                        </>
+                    ) : (
+                        <div className="animate-fadeIn">
+                            <CustomerBookingList theme={theme} language={language} />
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

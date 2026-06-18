@@ -1,4 +1,4 @@
-const Booking = require("../booking/booking.model");
+const { Booking } = require("../../bookings/models/booking.model");
 const { ACTIVE_BOOKING_STATUSES, rangesOverlap } = require("../utils/jobFitScoring");
 const { getPhotographerIdentity, normalizeBookingTime } = require("../utils/photographerIdentity");
 
