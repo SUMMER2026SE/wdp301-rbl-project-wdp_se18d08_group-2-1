@@ -19,7 +19,32 @@ const bookingSchema = new mongoose.Schema(
     },
     bookingDate: {
       type: Date,
-      required: true,
+    },
+    start: {
+      type: Date,
+    },
+    end: {
+      type: Date,
+    },
+    title: {
+      type: String,
+      default: "Photo session",
+    },
+    location: {
+      type: String,
+      default: "",
+    },
+    price: {
+      type: Number,
+      default: 0,
+    },
+    style: {
+      type: String,
+      default: "",
+    },
+    packageName: {
+      type: String,
+      default: "",
     },
     durationHours: {
       type: Number,
@@ -27,11 +52,11 @@ const bookingSchema = new mongoose.Schema(
     },
     totalPrice: {
       type: Number,
-      required: true,
+      default: 0,
     },
     depositAmount: {
       type: Number,
-      required: true,
+      default: 0,
     },
     commissionRate: {
       type: Number,
@@ -55,6 +80,64 @@ const bookingSchema = new mongoose.Schema(
         note: { type: String },
       },
     ],
+    rejectReason: {
+      type: String,
+      default: null,
+    },
+    suggestedSlots: [
+      {
+        start: Date,
+        end: Date,
+        score: Number,
+        reason: String,
+      },
+    ],
+    finalAlbum: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Album",
+      default: null,
+    },
+    deliveryDeadline: {
+      type: Date,
+      default: null,
+    },
+    completionStatus: {
+      type: String,
+      enum: [
+        "not_started",
+        "album_uploaded",
+        "photographer_completed",
+        "customer_approved",
+        "auto_completed",
+        "disputed",
+      ],
+      default: "not_started",
+    },
+    completedAt: {
+      type: Date,
+      default: null,
+    },
+    submittedForApprovalAt: {
+      type: Date,
+      default: null,
+    },
+    customerApprovedAt: {
+      type: Date,
+      default: null,
+    },
+    autoCompleteAt: {
+      type: Date,
+      default: null,
+    },
+    payoutEligibleAt: {
+      type: Date,
+      default: null,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "deposit_paid", "paid", "refunded"],
+      default: "unpaid",
+    },
   },
   {
     timestamps: true,
