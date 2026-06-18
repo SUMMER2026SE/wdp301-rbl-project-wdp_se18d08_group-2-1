@@ -32,8 +32,8 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import PhotographerGallery from "../photographers/PhotographerGallery";
-import PhotographerList from "../photographers/PhotographerList";
+import { useNavigate } from "react-router-dom";
+import TopPhotographerSection from "../photographers/TopPhotographerSection";
 
 const ease = [0.22, 1, 0.36, 1];
 
@@ -84,6 +84,8 @@ const landingCopy = {
         "PhotoHub matches clients with verified photographers, protects every transaction with escrow, and turns creative booking into a calm, premium workflow.",
       primary: "Start secure booking",
       secondary: "Explore creators",
+      searchPrompt: "Search photographer by your style image...",
+      searchBtn: "Try AI Search",
     },
     friction: {
       eyebrow: "Market friction",
@@ -311,6 +313,8 @@ const landingCopy = {
         "PhotoHub ghép khách hàng với nhiếp ảnh gia đã xác thực, bảo vệ giao dịch bằng ký quỹ và biến việc đặt lịch sáng tạo thành một quy trình cao cấp, yên tâm.",
       primary: "Đặt lịch an toàn",
       secondary: "Khám phá creator",
+      searchPrompt: "Tìm kiếm nhiếp ảnh gia bằng hình ảnh phong cách của bạn...",
+      searchBtn: "Tìm bằng AI",
     },
     friction: {
       eyebrow: "Nút thắt thị trường",
@@ -729,6 +733,7 @@ function HeroImageAtmosphere() {
 }
 
 function HeroSection({ copy }) {
+  const navigate = useNavigate();
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -779,6 +784,24 @@ function HeroSection({ copy }) {
         >
           {copy.copy}
         </motion.p>
+
+        {/* Visual AI Search Bar Capsule */}
+        <motion.div
+          variants={fadeUp}
+          onClick={() => navigate("/ai-search")}
+          className="mx-auto mt-10 max-w-xl group relative flex items-center justify-between gap-3 rounded-[22px] border border-white/10 bg-white/[0.04] p-2 pl-5 backdrop-blur-md transition-all duration-300 hover:border-cyan-400/40 hover:bg-white/[0.08] cursor-pointer shadow-[0_0_50px_rgba(34,211,238,0.03)] hover:shadow-[0_0_50px_rgba(34,211,238,0.12)] select-none"
+        >
+          <div className="flex items-center gap-3 truncate text-left">
+            <WandSparkles className="h-5 w-5 text-cyan-300 animate-pulse shrink-0" />
+            <span className="text-sm font-semibold text-slate-300 truncate">
+              {copy.searchPrompt}
+            </span>
+          </div>
+          <div className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-cyan-500/20 group-hover:scale-[1.02] active:scale-95 shrink-0 transition-transform">
+            {copy.searchBtn}
+          </div>
+        </motion.div>
+
         <motion.div
           variants={fadeUp}
           className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
@@ -1297,31 +1320,8 @@ export default function PhotoHubLanding({ language = "en" }) {
       <WorkflowSection copy={copy.workflow} />
       <SocialProofSection copy={copy.social} />
       
-      {/* Photographer Gallery Section */}
-      <section className="relative bg-slate-950 px-4 py-24 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="mb-12 text-center"
-          >
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-200">
-              Discover Talent
-            </p>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-              Find Your Perfect Photographer
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-slate-300">
-              {language === "vi"
-                ? "Tìm kiếm các nhiếp ảnh gia chuyên nghiệp được xác thực, so sánh giá, đánh giá và phong cách chụp"
-                : "Search verified professional photographers, compare prices, ratings, and photography styles"}
-            </p>
-          </motion.div>
-          <PhotographerList language={language} />
-        </div>
-      </section>
+      {/* Top Photographer Section — chỉ top 6 đánh giá cao */}
+      <TopPhotographerSection language={language} limit={6} />
 
       <PricingSection copy={copy.pricing} />
       <FinalCTASection copy={copy.finalCta} />

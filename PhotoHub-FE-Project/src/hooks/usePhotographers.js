@@ -150,12 +150,12 @@ export const usePhotographers = () => {
     loading,
     error,
     pagination,
-     listPhotographers,
+    listPhotographers,
     searchPhotographers,
     getPhotographerDetail,
     getTopPhotographers,
     getStyles,
-    getLocations,
+    getLocations
   };
 };
 

@@ -68,8 +68,8 @@ const photographerSchema = new mongoose.Schema(
 
     verificationStatus: {
       type: String,
-      enum: ["UNVERIFIED", "PENDING", "VERIFIED", "REJECTED"],
-      default: "UNVERIFIED",
+      enum: ["PENDING", "VERIFIED", "REJECTED"],
+      default: "PENDING",
     },
 
     isFeatured: {

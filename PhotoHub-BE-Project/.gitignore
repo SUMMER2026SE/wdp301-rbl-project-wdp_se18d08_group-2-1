@@ -59,3 +59,7 @@ README_GUIDE.md
 Cinema_API_Postman_Collection.json
 test_failures.log
 setup_db.ts
+#AI Search
+.model_cache/
+**/.model_cache/
+*.onnx

@@ -8,6 +8,9 @@ import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
 import GoogleSuccess from "./pages/GoogleSuccess";
 import PhotographerDashboard from "./pages/PhotographerDashboard";
+import FavoritesPage from "./pages/FavoritesPage";
+import PhotographersPage from "./pages/PhotographersPage";
+import AiSearchPage from "./pages/AiSearchPage";
 
 // Admin Imports
 import AdminLayout from "./components/admin/AdminLayout";
@@ -122,6 +125,16 @@ export default function App() {
           }
         />
 
+        <Route
+          path="/photographers"
+          element={
+            <PhotographersPage
+              language={language}
+              theme={theme}
+            />
+          }
+        />
+
         <Route path="/auth/google/success" element={<GoogleSuccess />} />
 
         {/* Phân hệ Admin */}
@@ -135,6 +148,25 @@ export default function App() {
           <Route path="reports-chats" element={<AdminReportsChats />} />
           <Route path="settings-packages" element={<AdminSettingsPackages />} />
         </Route>
+        <Route
+          path="/favorites"
+          element={
+            <FavoritesPage
+              language={language}
+              theme={theme}
+            />
+          }
+        />
+
+        <Route
+          path="/ai-search"
+          element={
+            <AiSearchPage
+              language={language}
+              theme={theme}
+            />
+          }
+        />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
