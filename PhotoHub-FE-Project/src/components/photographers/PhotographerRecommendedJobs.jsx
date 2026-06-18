@@ -247,6 +247,18 @@ export default function PhotographerRecommendedJobs({ theme = "dark", language =
                     </div>
                   </div>
 
+                  {selectedJob.matchBreakdown && (
+                    <div className="rounded-2xl border border-cyan-500/15 bg-cyan-500/5 p-3 text-xs">
+                      <h4 className="mb-2 font-black uppercase tracking-wider text-cyan-300">Fit breakdown</h4>
+                      {Object.entries(selectedJob.matchBreakdown).map(([key, value]) => (
+                        <div key={key} className="flex justify-between gap-3 py-1 text-slate-400">
+                          <span className="capitalize">{key}</span>
+                          <span className="font-bold text-slate-200">{value.score ?? "-"} pts</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                       {t.description}

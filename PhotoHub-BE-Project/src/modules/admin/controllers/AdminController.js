@@ -1679,6 +1679,8 @@ class AdminController {
       wallet.balance -= request.amount;
       await wallet.save();
 
+      const payoutAmount = request.finalAmount || request.amount;
+
       // Cập nhật trạng thái yêu cầu rút
       request.status = "PAID";
       request.processedBy = req.user.id;
@@ -1691,7 +1693,7 @@ class AdminController {
         booking: null,
         sender: request.photographer?.user,
         receiver: null, // Rút ra ngoài ngân hàng
-        amount: request.amount,
+        amount: payoutAmount,
         paymentType: "WITHDRAW",
         paymentMethod: "WALLET",
         status: "SUCCESS",
@@ -1710,7 +1712,7 @@ class AdminController {
       });
 
       // Ghi log AdminAction
-      await logAdminAction(req.user.id, "PAY_WITHDRAW", "WithdrawRequest", request._id, { amount: request.amount }, req);
+      await logAdminAction(req.user.id, "PAY_WITHDRAW", "WithdrawRequest", request._id, { amount: request.amount, payoutAmount }, req);
 
       return ApiResponse.success(res, { request, wallet }, "Xác nhận đã chuyển khoản thành công và khấu trừ ví");
     } catch (error) {

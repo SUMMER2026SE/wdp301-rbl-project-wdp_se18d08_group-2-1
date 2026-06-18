@@ -15,7 +15,13 @@ class AlbumController {
 
       const images = req.files.map((file) => ({
         url: `/uploads/albums/${file.filename}`,
+        previewUrl: `/uploads/albums/${file.filename}`,
+        watermarkUrl: `/uploads/albums/${file.filename}`,
+        downloadUrl: `/uploads/albums/${file.filename}`,
         publicId: file.filename,
+        originalName: file.originalname,
+        size: file.size,
+        mimetype: file.mimetype,
         uploadedAt: new Date(),
       }));
 
@@ -30,7 +36,7 @@ class AlbumController {
   async getAlbum(req, res) {
     try {
       const { bookingId } = req.params;
-      const album = await albumService.getAlbumByBookingId(bookingId);
+      const album = await albumService.getAlbumByBookingId(bookingId, req.user);
       return ApiResponse.success(res, album, "Album retrieved successfully");
     } catch (error) {
       console.error("Error retrieving album:", error);

@@ -1,5 +1,7 @@
 const WithdrawRequest = require("./withdrawRequest.model");
 const revenueService = require("../revenue/revenue.service");
+const Photographer = require("../models/photographer");
+const Wallet = require("../../admin/models/Wallet");
 
 class WithdrawService {
   async createWithdrawRequest(photographerUserId, requestData) {
@@ -13,29 +15,58 @@ class WithdrawService {
       throw new Error("Missing bank information");
     }
 
+    const photographer = await Photographer.findOne({ user: photographerUserId });
+    if (!photographer) {
+      throw new Error("Photographer profile not found");
+    }
+
     const stats = await revenueService.getRevenueData(photographerUserId);
     if (Number(amount) > stats.withdrawableAmount) {
       throw new Error("Insufficient withdrawable balance. Please note pending withdrawal requests.");
     }
 
-    const commissionRate = 0.1;
+    if (!stats.eligibleBookingIds || stats.eligibleBookingIds.length === 0) {
+      throw new Error("No completed, paid, dispute-free bookings are eligible for payout yet.");
+    }
+
+    const commissionRate = stats.commissionRate || 0.1;
     const commission = Number(amount) * commissionRate;
     const finalAmount = Number(amount) - commission;
+    const wallet = await Wallet.findOneAndUpdate(
+      { user: photographerUserId },
+      {
+        $setOnInsert: { user: photographerUserId, currency: "VND", holdBalance: 0 },
+        $max: { balance: stats.withdrawableAmount },
+      },
+      { new: true, upsert: true }
+    );
 
     const request = new WithdrawRequest({
       photographerId: photographerUserId,
+      photographer: photographer._id,
+      wallet: wallet._id,
       amount: Number(amount),
       commission,
+      commissionRate,
       finalAmount,
+      eligibleBookingIds: stats.eligibleBookingIds,
       bankInfo,
-      status: "pending",
+      bankName: bankInfo.bankName,
+      bankAccountNumber: bankInfo.accountNumber,
+      bankAccountName: bankInfo.accountName,
+      status: "PENDING",
     });
 
     return await request.save();
   }
 
   async getRequests(photographerUserId) {
-    return await WithdrawRequest.find({ photographerId: photographerUserId }).sort({ createdAt: -1 });
+    const photographer = await Photographer.findOne({ user: photographerUserId }).select("_id");
+    const query = photographer
+      ? { $or: [{ photographerId: photographerUserId }, { photographer: photographer._id }] }
+      : { photographerId: photographerUserId };
+
+    return await WithdrawRequest.find(query).sort({ createdAt: -1 });
   }
 }
 

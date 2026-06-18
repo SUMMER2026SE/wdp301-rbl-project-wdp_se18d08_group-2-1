@@ -228,6 +228,17 @@ export default function PhotographerJobPosts({ theme = "dark", language = "vi" }
                   <span className="font-black text-emerald-400 text-lg">${job.budget}</span>
                 </div>
 
+                {job.matchScore !== undefined && (
+                  <div className="mb-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider">
+                    <span className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1 text-cyan-300">
+                      {job.matchScore}% fit
+                    </span>
+                    <span className={`rounded-full border px-2.5 py-1 ${job.availability?.available ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300" : "border-red-500/20 bg-red-500/10 text-red-300"}`}>
+                      {job.availability?.available ? "Available" : "Conflict"}
+                    </span>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs text-slate-500 mb-4">
                   <div className="flex items-center gap-2">
                     <MapPin size={13} className="text-cyan-500" />
@@ -263,6 +274,12 @@ export default function PhotographerJobPosts({ theme = "dark", language = "vi" }
                   <div className="h-[2px] bg-slate-200 dark:bg-white/[0.04]" />
 
                   <div className="space-y-3 text-sm text-slate-500">
+                    {selectedJob.matchScore !== undefined && (
+                      <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-3 text-xs text-cyan-200">
+                        <div className="font-black text-cyan-300">{selectedJob.matchScore}% personalized fit</div>
+                        <div className="mt-1">{selectedJob.availability?.reason}</div>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2.5">
                       <User size={16} className="text-cyan-500" />
                       <span>

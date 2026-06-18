@@ -177,11 +177,16 @@ export const photographerService = {
 
 const getAuthConfig = (isMultipart = false) => {
     const token = localStorage.getItem("token");
+    const headers = {
+        Authorization: `Bearer ${token}`,
+    };
+
+    if (!isMultipart) {
+        headers["Content-Type"] = "application/json";
+    }
+
     return {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": isMultipart ? "multipart/form-data" : "application/json",
-        },
+        headers,
     };
 };
 
@@ -199,6 +204,15 @@ export const photographerMarketplaceService = {
     completeBooking: async (bookingId) => {
         const response = await axios.put(
             `${MARKETPLACE_BASE_URL}/bookings/${bookingId}/complete`,
+            {},
+            getAuthConfig()
+        );
+        return response.data;
+    },
+
+    approveCompletion: async (bookingId) => {
+        const response = await axios.put(
+            `${MARKETPLACE_BASE_URL}/bookings/${bookingId}/approve`,
             {},
             getAuthConfig()
         );
@@ -240,6 +254,24 @@ export const photographerMarketplaceService = {
         return response.data;
     },
 
+    assistBid: async (jobPostId) => {
+        const response = await axios.post(
+            `${MARKETPLACE_BASE_URL}/bids/assist`,
+            { jobPostId },
+            getAuthConfig()
+        );
+        return response.data;
+    },
+
+    optimizeBid: async (bidId) => {
+        const response = await axios.post(
+            `${MARKETPLACE_BASE_URL}/bids/${bidId}/optimize`,
+            {},
+            getAuthConfig()
+        );
+        return response.data;
+    },
+
     updateBid: async (bidId, bidData) => {
         const response = await axios.put(`${MARKETPLACE_BASE_URL}/bids/${bidId}`, bidData, getAuthConfig());
         return response.data;
@@ -268,6 +300,33 @@ export const photographerMarketplaceService = {
         const response = await axios.post(
             `${MARKETPLACE_BASE_URL}/chat/conversations`,
             { recipientId, bookingId, jobPostId },
+            getAuthConfig()
+        );
+        return response.data;
+    },
+
+    sendChatMessage: async (conversationId, messageData = {}) => {
+        const { text = "", messageType = "text", attachments = [], metadata = {} } = messageData;
+        const hasAttachments = attachments && attachments.length > 0;
+
+        if (hasAttachments) {
+            const formData = new FormData();
+            formData.append("text", text);
+            formData.append("messageType", messageType);
+            formData.append("metadata", JSON.stringify(metadata));
+            attachments.forEach((file) => formData.append("attachments", file));
+
+            const response = await axios.post(
+                `${MARKETPLACE_BASE_URL}/chat/messages/${conversationId}`,
+                formData,
+                getAuthConfig(true)
+            );
+            return response.data;
+        }
+
+        const response = await axios.post(
+            `${MARKETPLACE_BASE_URL}/chat/messages/${conversationId}`,
+            { text, messageType, metadata },
             getAuthConfig()
         );
         return response.data;

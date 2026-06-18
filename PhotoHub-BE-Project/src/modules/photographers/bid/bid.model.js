@@ -30,6 +30,29 @@ const bidSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    packageName: {
+      type: String,
+      default: "",
+    },
+    deliverables: {
+      type: [String],
+      default: [],
+    },
+    deadlineAt: {
+      type: Date,
+      default: null,
+    },
+    aiAssistance: {
+      used: { type: Boolean, default: false },
+      suggestedPrice: Number,
+      suggestedEstimatedTime: String,
+      notes: [String],
+    },
+    optimization: {
+      lastScore: Number,
+      suggestions: [String],
+      optimizedAt: Date,
+    },
     status: {
       type: String,
       enum: ["pending", "accepted", "rejected"],

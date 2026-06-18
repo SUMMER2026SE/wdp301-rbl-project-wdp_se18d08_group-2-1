@@ -114,6 +114,8 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
     });
   };
 
+  const isCompletedStatus = (status) => String(status).toLowerCase() === "completed";
+
   const handleDayClick = (day) => {
     const dayBookings = getBookingsForDay(day);
     setSelectedDayBookings(dayBookings);
@@ -137,8 +139,31 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
     if (reason === undefined) return; // user cancelled
 
     try {
-      await photographerMarketplaceService.rejectBooking(bookingId, reason);
-      Swal.fire("Success", t.rejectSuccess, "success");
+      const res = await photographerMarketplaceService.rejectBooking(bookingId, reason);
+      const alternativeSlots = res.data?.alternativeSlots || [];
+      if (alternativeSlots.length > 0) {
+        const slotHtml = alternativeSlots
+          .map((slot) => {
+            const start = new Date(slot.start).toLocaleString(language === "vi" ? "vi-VN" : "en-US");
+            const end = new Date(slot.end).toLocaleTimeString(language === "vi" ? "vi-VN" : "en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            return `<li><strong>${start} - ${end}</strong><br/><small>${slot.reason}</small></li>`;
+          })
+          .join("");
+
+        Swal.fire({
+          icon: "success",
+          title: t.rejectSuccess,
+          html: `<p>Suggested replacement slots:</p><ul style="text-align:left">${slotHtml}</ul>`,
+          background: isDark ? "#121214" : "#fff",
+          color: isDark ? "#fff" : "#000",
+          confirmButtonColor: "#06b6d4",
+        });
+      } else {
+        Swal.fire("Success", t.rejectSuccess, "success");
+      }
       fetchCalendar();
       setSelectedDayBookings([]);
     } catch (err) {
@@ -161,6 +186,34 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
     setShowUploadModal(false);
     fetchCalendar();
     setSelectedDayBookings([]);
+  };
+
+  const handleViewAlbum = async (bookingId) => {
+    try {
+      const res = await photographerMarketplaceService.getAlbum(bookingId);
+      const album = res.data || {};
+      const imagesHtml = (album.images || [])
+        .slice(0, 8)
+        .map((image) => {
+          const src = `http://localhost:3000${image.previewUrl || image.url}`;
+          const download = image.downloadUrl ? `http://localhost:3000${image.downloadUrl}` : "";
+          return `<div style="display:inline-block;margin:4px;text-align:center"><img src="${src}" style="width:90px;height:70px;object-fit:cover;border-radius:8px"/><br/>${
+            download ? `<a href="${download}" target="_blank">Full HD</a>` : `<small>Watermark preview</small>`
+          }</div>`;
+        })
+        .join("");
+
+      Swal.fire({
+        title: album.canDownloadFullHD ? "Album unlocked" : "Secure album preview",
+        html: `<p>${album.lockedReason || "Full-HD downloads are available."}</p><div>${imagesHtml}</div>`,
+        width: 720,
+        background: isDark ? "#121214" : "#fff",
+        color: isDark ? "#fff" : "#000",
+        confirmButtonColor: "#06b6d4",
+      });
+    } catch (err) {
+      Swal.fire(t.error, err.response?.data?.message || err.message, "error");
+    }
   };
 
   // Build grid days
@@ -229,6 +282,7 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
               {daysGrid.map((cell, idx) => {
                 const dayBookings = cell.isCurrentMonth ? getBookingsForDay(cell.day) : [];
                 const hasBookings = dayBookings.length > 0;
+                const hasConflict = dayBookings.some((b) => b.hasConflict);
 
                 return (
                   <div
@@ -239,6 +293,8 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
                         ? isDark
                           ? "bg-transparent border-transparent text-slate-700 pointer-events-none"
                           : "bg-transparent border-transparent text-slate-300 pointer-events-none"
+                        : hasConflict
+                        ? "border-red-500 bg-red-500/10"
                         : isToday(cell.day)
                         ? "border-cyan-500 bg-cyan-500/10"
                         : isDark
@@ -333,7 +389,9 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
                           <strong>{t.status}</strong>
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                              b.status === "completed"
+                              b.hasConflict
+                                ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                                : isCompletedStatus(b.status)
                                 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                                 : b.status === "confirmed"
                                 ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
@@ -343,11 +401,21 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
                             {b.status}
                           </span>
                         </div>
+                        {b.deliveryDeadline && (
+                          <div className={`rounded-xl border px-3 py-2 ${b.isDeliveryOverdue ? "border-red-500/20 bg-red-500/10 text-red-400" : "border-amber-500/20 bg-amber-500/10 text-amber-300"}`}>
+                            Delivery deadline: {new Date(b.deliveryDeadline).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US")}
+                          </div>
+                        )}
+                        {b.hasConflict && (
+                          <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-red-400">
+                            Calendar conflict detected with {b.conflictWith?.length || 0} booking(s).
+                          </div>
+                        )}
                       </div>
 
                       {/* Actions */}
                       <div className="flex flex-col gap-2 pt-2 border-t border-slate-200 dark:border-white/[0.04]">
-                        {b.status !== "completed" && (
+                        {!isCompletedStatus(b.status) && (
                           <button
                             onClick={() => handleReject(b.id)}
                             className="w-full py-2.5 rounded-xl text-xs font-bold border border-red-500/30 text-red-500 bg-red-500/5 hover:bg-red-500/10 transition"
@@ -356,7 +424,7 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
                           </button>
                         )}
 
-                        {b.status !== "completed" && (
+                        {!isCompletedStatus(b.status) && (
                           <button
                             onClick={() => {
                               setActiveUploadBookingId(b.id);
@@ -368,7 +436,16 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
                           </button>
                         )}
 
-                        {b.status !== "completed" && (
+                        {b.finalAlbum && (
+                          <button
+                            onClick={() => handleViewAlbum(b.id)}
+                            className="w-full py-2.5 rounded-xl text-xs font-bold border border-cyan-500/30 text-cyan-300 bg-cyan-500/5 hover:bg-cyan-500/10 transition"
+                          >
+                            {t.viewAlbumBtn}
+                          </button>
+                        )}
+
+                        {!isCompletedStatus(b.status) && (
                           <button
                             onClick={() => handleComplete(b.id)}
                             className="w-full py-2.5 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition shadow-md shadow-emerald-500/10"
