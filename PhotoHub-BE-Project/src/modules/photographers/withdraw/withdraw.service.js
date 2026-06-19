@@ -32,16 +32,29 @@ class WithdrawService {
     const commissionRate = stats.commissionRate || 0.1;
     const commission = Number(amount) * commissionRate;
     const finalAmount = Number(amount) - commission;
-    const wallet = await Wallet.findOneAndUpdate(
+    await Wallet.findOneAndUpdate(
       { user: photographerUserId },
-      {
-        $setOnInsert: { user: photographerUserId, currency: "VND", holdBalance: 0 },
-        $max: { balance: stats.withdrawableAmount },
-      },
+      { $setOnInsert: { user: photographerUserId, currency: "VND", balance: stats.withdrawableAmount, holdBalance: stats.escrowAmount || 0 } },
       { new: true, upsert: true }
     );
 
-    const request = new WithdrawRequest({
+    const wallet = await Wallet.findOneAndUpdate(
+      { user: photographerUserId, balance: { $gte: Number(amount) } },
+      {
+        $inc: {
+          balance: -Number(amount),
+          holdBalance: Number(amount),
+        },
+      },
+      { new: true }
+    );
+
+    if (!wallet) {
+      throw new Error("Insufficient wallet balance. Please refresh revenue data and try again.");
+    }
+
+    try {
+      const request = new WithdrawRequest({
       photographerId: photographerUserId,
       photographer: photographer._id,
       wallet: wallet._id,
@@ -55,9 +68,21 @@ class WithdrawService {
       bankAccountNumber: bankInfo.accountNumber,
       bankAccountName: bankInfo.accountName,
       status: "PENDING",
-    });
+      });
 
-    return await request.save();
+      return await request.save();
+    } catch (error) {
+      await Wallet.findOneAndUpdate(
+        { _id: wallet._id },
+        {
+          $inc: {
+            balance: Number(amount),
+            holdBalance: -Number(amount),
+          },
+        }
+      );
+      throw error;
+    }
   }
 
   async getRequests(photographerUserId) {

@@ -149,8 +149,28 @@ const bookingSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["unpaid", "deposit_paid", "paid", "refunded"],
+      enum: ["unpaid", "pending", "deposit_paid", "paid", "refunded", "cancelled", "expired"],
       default: "unpaid",
+    },
+    payosOrderCode: {
+      type: Number,
+      default: null,
+    },
+    paymentLinkId: {
+      type: String,
+      default: null,
+    },
+    paymentLink: {
+      type: String,
+      default: null,
+    },
+    paidAmount: {
+      type: Number,
+      default: 0,
+    },
+    paidAt: {
+      type: Date,
+      default: null,
     },
   },
   {

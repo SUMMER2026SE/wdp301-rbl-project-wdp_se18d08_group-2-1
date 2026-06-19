@@ -12,10 +12,10 @@ const copy = {
       { label: "About Us", href: "/#ecosystem" },
       { label: "Photographer", href: "/photographers", isRoute: true },
       { label: "Booking", href: "/#workflow" },
-      { label: "Forum", href: "/#pricing" },
+      { label: "Community", href: "/community", isRoute: true },
     ],
     cta: "Login",
-    languageLabel: "Chuyển sang tiếng Việt",
+    languageLabel: "Chuy\u1ec3n sang ti\u1ebfng Vi\u1ec7t",
     themeLabel: {
       dark: "Light mode",
       light: "Dark mode",
@@ -26,23 +26,22 @@ const copy = {
   },
   vi: {
     navItems: [
-      { label: "Về PhotoHub", href: "/#ecosystem" },
-      { label: "Nhiếp Ảnh Gia", href: "/photographers", isRoute: true },
-      { label: "Đặt Lịch", href: "/#workflow" },
-      { label: "Diễn Đàn", href: "/#pricing" },
+      { label: "V\u1ec1 PhotoHub", href: "/#ecosystem" },
+      { label: "Nhi\u1ebfp \u1ea2nh Gia", href: "/photographers", isRoute: true },
+      { label: "\u0110\u1eb7t L\u1ecbch", href: "/#workflow" },
+      { label: "Di\u1ec5n \u0110\u00e0n", href: "/community", isRoute: true },
     ],
-    cta: "Đăng nhập",
+    cta: "\u0110\u0103ng nh\u1eadp",
     languageLabel: "Switch to English",
     themeLabel: {
-      dark: "Giao diện sáng",
-      light: "Giao diện tối",
+      dark: "Giao di\u1ec7n s\u00e1ng",
+      light: "Giao di\u1ec7n t\u1ed1i",
     },
-    profileLabel: "Hồ sơ cá nhân",
-    dashboardLabel: "Không gian Nhiếp ảnh",
-    favoritesLabel: "Nhiếp ảnh gia yêu thích",
+    profileLabel: "H\u1ed3 s\u01a1 c\u00e1 nh\u00e2n",
+    dashboardLabel: "Kh\u00f4ng gian Nhi\u1ebfp \u1ea3nh",
+    favoritesLabel: "Nhi\u1ebfp \u1ea3nh gia y\u00eau th\u00edch",
   },
 };
-
 function BrandMark() {
   return (
     <Link to="/" className="group flex items-center gap-3">
@@ -90,8 +89,7 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  // Xác định tuyến đường Profile dựa vào role của user
+  // Resolve profile route from user role
   const isPhotographer = user?.role === "photographer";
   const profileTargetRoute = isPhotographer ? "/photographerProfile" : "/profile";
 
@@ -199,7 +197,7 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
                       {isPhotographer ? t.dashboardLabel : t.profileLabel}
                     </Link>
 
-                    {/* Mục yêu thích — chỉ hiện với customer */}
+                    {/* Customer favorites */}
                     {!isPhotographer && (
                       <Link
                         to="/favorites"
@@ -260,21 +258,33 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
       {showMobileNav && (
         <div className="mx-auto mt-3 max-w-7xl rounded-3xl border border-white/10 bg-slate-950/90 p-3 backdrop-blur-xl lg:hidden">
           {t.navItems.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              onClick={() => setShowMobileNav(false)}
-              className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-white/[0.06] hover:text-white"
-            >
-              {item.label}
-              <ShieldCheck className="h-4 w-4 text-cyan-200" {...iconProps} />
-            </a>
+            item.isRoute ? (
+              <Link
+                key={item.label}
+                to={item.href}
+                onClick={() => setShowMobileNav(false)}
+                className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-white/[0.06] hover:text-white"
+              >
+                {item.label}
+                <ShieldCheck className="h-4 w-4 text-cyan-200" {...iconProps} />
+              </Link>
+            ) : (
+              <a
+                key={item.label}
+                href={item.href}
+                onClick={() => setShowMobileNav(false)}
+                className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-white/[0.06] hover:text-white"
+              >
+                {item.label}
+                <ShieldCheck className="h-4 w-4 text-cyan-200" {...iconProps} />
+              </a>
+            )
           ))}
 
-          {/* Khu vực thao tác User trên Mobile */}
+          {/* Mobile user actions */}
           {user ? (
             <>
-              {/* Mục điều hướng nhanh đến Profile/Dashboard ngay trên Mobile */}
+              {/* Mobile user actions */}
               <Link
                 to={profileTargetRoute}
                 onClick={() => setShowMobileNav(false)}
@@ -287,7 +297,7 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
                 <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full capitalize">{user.role}</span>
               </Link>
 
-              {/* Yêu thích trên mobile — chỉ hiện với customer */}
+              {/* Customer favorites */}
               {!isPhotographer && (
                 <Link
                   to="/favorites"
@@ -328,3 +338,5 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
     </header>
   );
 }
+
+
