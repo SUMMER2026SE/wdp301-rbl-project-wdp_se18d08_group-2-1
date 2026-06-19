@@ -1,4 +1,7 @@
 // controllers/PhotographerController.js
+const fs = require("fs");
+const path = require("path");
+
 const PhotographerService = require("../services/PhotographerService");
 const ApiResponse = require("../../../utils/ApiResponse");
 
@@ -102,6 +105,51 @@ class PhotographerController {
       return ApiResponse.error(res, error.message, 400);
     }
   }
+
+  async uploadVerification(req, res) {
+    try {
+      const result =
+        await PhotographerService.uploadVerification(
+          req.user.id,
+          req.files
+        );
+
+      return ApiResponse.success(
+        res,
+        result,
+        "Upload verification successful"
+      );
+    } catch (error) {
+      return ApiResponse.error(
+        res,
+        error.message,
+        400
+      );
+    }
+  }
+
+  async getProfileStatus(req, res) {
+    try {
+      const result =
+        await PhotographerService.getProfileStatus(
+          req.user.id
+        );
+
+      return ApiResponse.success(
+        res,
+        result,
+        "Get profile status successful"
+      );
+    } catch (error) {
+      return ApiResponse.error(
+        res,
+        error.message,
+        400
+      );
+    }
+  }
 }
+
+
 
 module.exports = new PhotographerController();

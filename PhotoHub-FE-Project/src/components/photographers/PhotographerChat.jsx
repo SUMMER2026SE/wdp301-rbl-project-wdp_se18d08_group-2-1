@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import Swal from "sweetalert2";
-import { Send, User, MessageSquare, AlertCircle, Smile } from "lucide-react";
+import { Send, User, MessageSquare, AlertCircle, Paperclip, X } from "lucide-react";
 import { photographerMarketplaceService } from "../../services/photographerService";
 
 export default function PhotographerChat({ theme = "dark", language = "vi" }) {
@@ -10,11 +10,14 @@ export default function PhotographerChat({ theme = "dark", language = "vi" }) {
   const [activeConv, setActiveConv] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
+  const [messageType, setMessageType] = useState("text");
+  const [attachments, setAttachments] = useState([]);
   const [loadingConv, setLoadingConv] = useState(false);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const currentUserId = localStorage.getItem("userId") || ""; // Assuming userId is stored in localStorage
 
@@ -110,22 +113,31 @@ export default function PhotographerChat({ theme = "dark", language = "vi" }) {
   };
 
   // 4. Send Message
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!inputText.trim() || !activeConv) return;
+    if ((!inputText.trim() && attachments.length === 0) || !activeConv) return;
 
-    const messagePayload = {
-      conversationId: activeConv._id,
-      senderId: currentUserId,
-      text: inputText.trim(),
-    };
+    try {
+      const res = await photographerMarketplaceService.sendChatMessage(activeConv._id, {
+        text: inputText.trim(),
+        messageType,
+        attachments,
+        metadata: {
+          bookingId: activeConv.bookingId,
+          jobPostId: activeConv.jobPostId,
+        },
+      });
 
-    // Emit over socket
-    if (socketRef.current) {
-      socketRef.current.emit("sendMessage", messagePayload);
+      const savedMessage = res.data;
+      setMessages((prev) => (prev.some((m) => m._id === savedMessage._id) ? prev : [...prev, savedMessage]));
+      setInputText("");
+      setAttachments([]);
+      setMessageType("text");
+      scrollToBottom();
+      fetchConversations();
+    } catch (err) {
+      Swal.fire(t.error, err.response?.data?.message || err.message, "error");
     }
-
-    setInputText("");
   };
 
   const scrollToBottom = () => {
@@ -247,7 +259,22 @@ export default function PhotographerChat({ theme = "dark", language = "vi" }) {
                               : "bg-slate-100 text-slate-900 rounded-tl-none"
                           }`}
                         >
-                          <p>{m.text}</p>
+                          {m.text && <p>{m.text}</p>}
+                          {m.attachments?.length > 0 && (
+                            <div className="mt-2 space-y-1">
+                              {m.attachments.map((file, index) => (
+                                <a
+                                  key={`${file.url}-${index}`}
+                                  href={`http://localhost:3000${file.url}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="block rounded-lg bg-black/10 px-2 py-1 text-[10px] underline"
+                                >
+                                  {file.originalName || file.url}
+                                </a>
+                              ))}
+                            </div>
+                          )}
                           <span className="text-[8px] opacity-60 block text-right mt-1.5 font-normal">
                             {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
@@ -261,6 +288,37 @@ export default function PhotographerChat({ theme = "dark", language = "vi" }) {
 
               {/* Input Footer */}
               <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => setAttachments(Array.from(e.target.files || []))}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`p-3.5 rounded-2xl border transition ${isDark ? "border-white/5 hover:bg-white/5 text-slate-400" : "border-slate-200 hover:bg-slate-100 text-slate-500"}`}
+                  title="Attach evidence file"
+                >
+                  <Paperclip size={16} />
+                </button>
+                <select
+                  value={messageType}
+                  onChange={(e) => setMessageType(e.target.value)}
+                  className={`rounded-2xl px-3 py-3.5 text-xs outline-none border font-bold transition-all ${
+                    isDark
+                      ? "bg-[#09090b] border-white/5 focus:border-cyan-500 text-white"
+                      : "bg-slate-50 border-slate-200 focus:border-cyan-500 text-slate-900"
+                  }`}
+                >
+                  <option value="text">Text</option>
+                  <option value="image">Image</option>
+                  <option value="file">File</option>
+                  <option value="proposal">Proposal</option>
+                  <option value="package">Package</option>
+                  <option value="booking_detail">Booking</option>
+                </select>
                 <input
                   type="text"
                   value={inputText}
@@ -279,6 +337,22 @@ export default function PhotographerChat({ theme = "dark", language = "vi" }) {
                   <Send size={16} />
                 </button>
               </form>
+              {attachments.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {attachments.map((file, index) => (
+                    <span key={`${file.name}-${index}`} className="flex items-center gap-1 rounded-xl bg-cyan-500/10 px-2 py-1 text-[10px] font-bold text-cyan-300">
+                      {file.name}
+                      <button
+                        type="button"
+                        onClick={() => setAttachments((prev) => prev.filter((_, i) => i !== index))}
+                        className="text-cyan-200 hover:text-red-300"
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center text-slate-500">

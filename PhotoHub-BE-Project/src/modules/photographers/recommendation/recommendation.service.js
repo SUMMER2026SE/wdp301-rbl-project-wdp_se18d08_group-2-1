@@ -1,5 +1,8 @@
 const JobPost = require("../job/jobPost.model");
+const Booking = require("../booking/booking.model");
 const Photographer = require("../models/photographer");
+const { ACTIVE_BOOKING_STATUSES, calculateFitScore } = require("../utils/jobFitScoring");
+const { getPhotographerIdentity, normalizeBookingTime } = require("../utils/photographerIdentity");
 
 class RecommendationService {
   async recommendJobsForPhotographer(photographerUserId) {
@@ -10,46 +13,22 @@ class RecommendationService {
 
     const openJobs = await JobPost.find({ status: "open" }).populate("customer", "fullName email avatar");
 
+    const identity = await getPhotographerIdentity(photographerUserId);
+    const busyBookings = await Booking.find({
+      photographer: { $in: identity.ids },
+      status: { $in: ACTIVE_BOOKING_STATUSES },
+    }).select("start end bookingDate durationHours status title");
+    const normalizedBusyBookings = busyBookings.map((booking) => ({
+      ...booking.toObject(),
+      ...normalizeBookingTime(booking),
+    }));
+
     const recommendedJobs = openJobs.map((job) => {
-      let styleScore = 0;
-      let locationScore = 0;
-      let budgetScore = 0;
-      let ratingScore = (photographer.averageRating || 0) / 5 * 10;
-
-      const pStyles = photographer.styles || [];
-      const jobStyle = job.style ? job.style.toLowerCase().trim() : "";
-      const hasStyleMatch = pStyles.some(
-        (s) => s.toLowerCase().trim() === jobStyle || jobStyle.includes(s.toLowerCase().trim())
-      );
-      if (hasStyleMatch) {
-        styleScore = 40;
-      }
-
-      const pLocation = photographer.location ? photographer.location.toLowerCase().trim() : "";
-      const jobLocation = job.location ? job.location.toLowerCase().trim() : "";
-      if (pLocation && jobLocation && (pLocation.includes(jobLocation) || jobLocation.includes(pLocation))) {
-        locationScore = 30;
-      }
-
-      const pRate = photographer.hourlyRate || 0;
-      const expectedSessionPrice = pRate * 3;
-      if (expectedSessionPrice <= 0) {
-        budgetScore = 20;
-      } else {
-        const ratio = job.budget / expectedSessionPrice;
-        if (ratio >= 1) {
-          budgetScore = 20;
-        } else {
-          budgetScore = Math.max(0, ratio * 20);
-        }
-      }
-
-      const matchScore = Math.round(styleScore + locationScore + budgetScore + ratingScore);
-
       const jobObj = job.toObject();
-      jobObj.matchScore = matchScore;
-
-      return jobObj;
+      return {
+        ...jobObj,
+        ...calculateFitScore(jobObj, photographer, normalizedBusyBookings),
+      };
     });
 
     recommendedJobs.sort((a, b) => b.matchScore - a.matchScore);

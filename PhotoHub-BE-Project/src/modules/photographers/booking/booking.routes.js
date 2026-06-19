@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const bookingController = require("./booking.controller");
 const { authenticate } = require("../../../middlewares/authenticate");
 const authorize = require("../../../middlewares/roleMiddlewares");

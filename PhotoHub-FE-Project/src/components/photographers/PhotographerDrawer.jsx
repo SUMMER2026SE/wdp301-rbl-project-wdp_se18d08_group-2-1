@@ -1,5 +1,7 @@
 // src/components/photographers/PhotographerDrawer.jsx
 import { useEffect, useState } from "react";
+import { aiRecommendService } from "../../services/aiRecommendService";
+
 import {
   X,
   MapPin,
@@ -43,6 +45,10 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
   const [showMoreBio, setShowMoreBio] = useState(false);
   const [lightboxImg, setLightboxImg] = useState(null);
   const navigate = useNavigate();
+  const [realPortfolios, setRealPortfolios] = useState([]);
+  const [albums, setAlbums] = useState([]);
+  const [selectedAlbumImages, setSelectedAlbumImages] = useState(null); // null | { album, images }
+
 
   // Hook yêu thích — dùng photographerId từ props
   const {
@@ -104,19 +110,30 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
   useEffect(() => {
     if (isOpen && photographerId) {
       setPhotographer(null);
-      setLoading(true);
+      setLoading(false); // Cập nhật lại logic loading để tránh conflict
       setActiveTab("photos");
       setShowMoreBio(false);
+
       const load = async () => {
+        setLoading(true);
         const data = await getPhotographerDetail(photographerId);
         setPhotographer(data);
+
+        try {
+          const albumRes = await aiRecommendService.getAlbumsByPhotographer(photographerId);
+          if (albumRes.success) {
+            setAlbums(albumRes.data?.albums || []);
+          }
+        } catch (err) {
+          console.error("Lỗi tải albums drawer:", err);
+        }
         setLoading(false);
       };
       load();
-      // Kiểm tra trạng thái yêu thích khi mở
       checkStatus();
     }
   }, [isOpen, photographerId, getPhotographerDetail, checkStatus]);
+
 
   // Khóa scroll khi drawer mở
   useEffect(() => {
@@ -147,7 +164,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
 
   if (!isOpen) return null;
 
-    return createPortal(
+  return createPortal(
     <>
       {/* Overlay */}
       <div
@@ -187,7 +204,6 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
             hourlyRate,
             verificationStatus,
             isAvailable,
-            portfolio = dummyGallery,
           } = photographer;
 
           const avatarUrl = getAvatarUrl(user?.avatar);
@@ -314,11 +330,10 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                       }
                     }}
                     disabled={favLoading}
-                    className={`flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-bold transition-all duration-200 ${
-                      isFavorited
+                    className={`flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-bold transition-all duration-200 ${isFavorited
                         ? "border-pink-500 bg-pink-50 text-pink-600 dark:bg-pink-500/10 dark:text-pink-400"
                         : "border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:border-pink-400 hover:text-pink-500"
-                    } ${favLoading ? "animate-pulse cursor-not-allowed opacity-70" : ""}`}
+                      } ${favLoading ? "animate-pulse cursor-not-allowed opacity-70" : ""}`}
                   >
                     <Heart
                       size={16}
@@ -329,11 +344,10 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
 
                   {/* Đặt lịch */}
                   <button
-                    className={`flex flex-[2] items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition-all duration-200 shadow-md active:scale-[0.98] ${
-                      isAvailable
+                    className={`flex flex-[2] items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition-all duration-200 shadow-md active:scale-[0.98] ${isAvailable
                         ? "bg-orange-500 hover:bg-orange-600 shadow-orange-400/30"
                         : "bg-slate-400 cursor-not-allowed"
-                    }`}
+                      }`}
                     disabled={!isAvailable}
                   >
                     <CalendarCheck size={16} />
@@ -342,11 +356,10 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                 </div>
 
                 {/* Availability badge */}
-                <div className={`mb-5 flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold w-fit ${
-                  isAvailable
+                <div className={`mb-5 flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold w-fit ${isAvailable
                     ? "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-500/20"
                     : "bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 border border-slate-200 dark:border-zinc-700"
-                }`}>
+                  }`}>
                   <span className={`h-2 w-2 rounded-full ${isAvailable ? "bg-green-500 animate-pulse" : "bg-slate-400"}`} />
                   {isAvailable ? t.available : t.unavailable}
                 </div>
@@ -453,23 +466,21 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
               {/* --- TABS --- */}
               <div className="sticky top-0 z-10 flex border-b border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5">
                 <button
-                  onClick={() => setActiveTab("photos")}
-                  className={`flex items-center gap-1.5 py-3 mr-6 text-sm font-bold border-b-2 transition-all ${
-                    activeTab === "photos"
+                  onClick={() => { setActiveTab("photos"); setSelectedAlbumImages(null); }}
+                  className={`flex items-center gap-1.5 py-3 mr-6 text-sm font-bold border-b-2 transition-all ${activeTab === "photos"
                       ? "border-orange-500 text-orange-500"
                       : "border-transparent text-slate-400 dark:text-zinc-500 hover:text-slate-600"
-                  }`}
+                    }`}
                 >
                   <Camera size={14} />
                   {t.tabPhotos}
                 </button>
                 <button
                   onClick={() => setActiveTab("reviews")}
-                  className={`flex items-center gap-1.5 py-3 text-sm font-bold border-b-2 transition-all ${
-                    activeTab === "reviews"
+                  className={`flex items-center gap-1.5 py-3 text-sm font-bold border-b-2 transition-all ${activeTab === "reviews"
                       ? "border-orange-500 text-orange-500"
                       : "border-transparent text-slate-400 dark:text-zinc-500 hover:text-slate-600"
-                  }`}
+                    }`}
                 >
                   <Star size={14} />
                   {t.tabReviews}
@@ -479,26 +490,72 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
               {/* --- TAB CONTENT --- */}
               <div className="px-5 py-5 pb-10">
                 {activeTab === "photos" && (
-                  portfolio.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      {portfolio.map((imgUrl, idx) => (
-                        <div
-                          key={idx}
-                          onClick={() => setLightboxImg(imgUrl)}
-                          className="group relative aspect-square overflow-hidden rounded-xl bg-slate-100 dark:bg-zinc-800 cursor-pointer"
-                        >
-                          <img
-                            src={imgUrl}
-                            alt={`Photo ${idx + 1}`}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            loading="lazy"
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <Eye size={20} className="text-white" />
+                  albums.length > 0 ? (
+                    selectedAlbumImages ? (
+                      /* Album detail in drawer */
+                      <div>
+                        <button onClick={() => setSelectedAlbumImages(null)}
+                          className="flex items-center gap-1.5 mb-4 text-xs font-bold text-orange-500 hover:text-orange-600 transition-colors">
+                          <ChevronDown size={13} className="rotate-90" /> Quay lại Albums
+                        </button>
+                        <p className="font-black text-sm mb-1">{selectedAlbumImages.album?.title}</p>
+                        {selectedAlbumImages.album?.price_package && (
+                          <p className="text-xs font-bold text-cyan-500 mb-3">{selectedAlbumImages.album.price_package.toLocaleString()} VNĐ</p>
+                        )}
+                        {selectedAlbumImages.images?.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                            {selectedAlbumImages.images.map((img, idx) => (
+                              <div key={img._id || idx} onClick={() => setLightboxImg(getAvatarUrl(img.image_url) || img.image_url)}
+                                className="group relative aspect-square overflow-hidden rounded-xl bg-slate-100 dark:bg-zinc-800 cursor-pointer">
+                                <img
+                                  src={img.image_url?.startsWith("http") ? img.image_url : `http://localhost:3000${img.image_url}`}
+                                  alt={img.caption || `Photo ${idx+1}`}
+                                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Eye size={18} className="text-white" />
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ) : (
+                          <p className="text-center py-6 text-sm text-slate-400">Album chưa có ảnh</p>
+                        )}
+                      </div>
+                    ) : (
+                      /* Album list in drawer */
+                      <div className="grid grid-cols-2 gap-2">
+                        {albums.map(album => (
+                          <div key={album._id}
+                            onClick={async () => {
+                              try {
+                                const res = await aiRecommendService.getAlbumDetail(album._id);
+                                if (res.success) setSelectedAlbumImages(res.data);
+                              } catch(e) { console.error(e); }
+                            }}
+                            className="group cursor-pointer rounded-xl overflow-hidden border border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 hover:shadow-md transition-all">
+                            <div className="relative aspect-square overflow-hidden bg-slate-200 dark:bg-zinc-800">
+                              {album.coverImageUrl ? (
+                                <img
+                                  src={album.coverImageUrl?.startsWith("http") ? album.coverImageUrl : `http://localhost:3000${album.coverImageUrl}`}
+                                  alt={album.title}
+                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+                              ) : (
+                                <div className="flex items-center justify-center h-full">
+                                  <Camera size={20} className="text-slate-300 dark:text-zinc-700" />
+                                </div>
+                              )}
+                              <div className="absolute bottom-1 right-1 bg-black/60 rounded-full px-1.5 py-0.5 text-white text-[9px] font-bold">
+                                {album.imageCount || 0}
+                              </div>
+                            </div>
+                            <div className="p-2">
+                              <p className="text-[11px] font-black truncate text-slate-800 dark:text-zinc-100">{album.title}</p>
+                              <p className="text-[9px] font-bold text-cyan-500 mt-0.5">{album.price_package?.toLocaleString()} VNĐ</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )
                   ) : (
                     <p className="text-center py-10 text-sm text-slate-400 dark:text-zinc-500">{t.noPhotos}</p>
                   )
@@ -516,7 +573,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
         })()}
       </div>
 
-            {/* Lightbox */}
+      {/* Lightbox */}
       {lightboxImg && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm"

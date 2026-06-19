@@ -1,16 +1,23 @@
 import React, { useState } from "react";
-import { X, Send, Clock, DollarSign, FileText } from "lucide-react";
+import { X, Send, Clock, DollarSign, FileText, Sparkles, CheckCircle } from "lucide-react";
 import Swal from "sweetalert2";
 import { photographerMarketplaceService } from "../../services/photographerService";
 
-export default function SubmitBidModal({ jobPostId, onClose, onSuccess, theme = "dark" }) {
+export default function SubmitBidModal({ job, jobPostId, onClose, onSuccess, theme = "dark" }) {
   const isDark = theme === "dark";
   const [loading, setLoading] = useState(false);
+  const [assistLoading, setAssistLoading] = useState(false);
+  const [assistNotes, setAssistNotes] = useState([]);
   const [formData, setFormData] = useState({
     proposal: "",
     price: "",
     estimatedTime: "",
+    packageName: "",
+    deliverables: [],
+    aiAssistance: null,
   });
+
+  const resolvedJobPostId = jobPostId || job?._id;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,6 +27,18 @@ export default function SubmitBidModal({ jobPostId, onClose, onSuccess, theme = 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { proposal, price, estimatedTime } = formData;
+
+    if (!resolvedJobPostId) {
+      Swal.fire({
+        icon: "error",
+        title: "Missing job",
+        text: "Cannot find job id for this bid.",
+        background: isDark ? "#121214" : "#fff",
+        color: isDark ? "#fff" : "#000",
+        confirmButtonColor: "#ef4444",
+      });
+      return;
+    }
 
     if (!proposal.trim() || !price || !estimatedTime.trim()) {
       Swal.fire({
@@ -49,10 +68,13 @@ export default function SubmitBidModal({ jobPostId, onClose, onSuccess, theme = 
     try {
       setLoading(true);
       await photographerMarketplaceService.submitBid({
-        jobPostId,
+        jobPostId: resolvedJobPostId,
         proposal: proposal.trim(),
         price: Number(price),
         estimatedTime: estimatedTime.trim(),
+        packageName: formData.packageName,
+        deliverables: formData.deliverables,
+        aiAssistance: formData.aiAssistance,
       });
 
       Swal.fire({
@@ -78,6 +100,42 @@ export default function SubmitBidModal({ jobPostId, onClose, onSuccess, theme = 
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAssist = async () => {
+    if (!resolvedJobPostId) return;
+
+    setAssistLoading(true);
+    try {
+      const res = await photographerMarketplaceService.assistBid(resolvedJobPostId);
+      const data = res.data || {};
+      setFormData((prev) => ({
+        ...prev,
+        proposal: data.proposal || prev.proposal,
+        price: data.price || prev.price,
+        estimatedTime: data.estimatedTime || prev.estimatedTime,
+        packageName: data.packageName || prev.packageName,
+        deliverables: data.deliverables || prev.deliverables,
+        aiAssistance: {
+          used: true,
+          suggestedPrice: data.price,
+          suggestedEstimatedTime: data.estimatedTime,
+          notes: data.notes || [],
+        },
+      }));
+      setAssistNotes(data.notes || []);
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Smart Assist failed",
+        text: error.response?.data?.message || error.message,
+        background: isDark ? "#121214" : "#fff",
+        color: isDark ? "#fff" : "#000",
+        confirmButtonColor: "#ef4444",
+      });
+    } finally {
+      setAssistLoading(false);
     }
   };
 
@@ -117,6 +175,27 @@ export default function SubmitBidModal({ jobPostId, onClose, onSuccess, theme = 
             Điền các chi tiết và mức chi phí mong muốn để gửi cho khách hàng.
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={handleAssist}
+          disabled={assistLoading || !resolvedJobPostId}
+          className="mb-5 flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm font-bold text-cyan-300 transition hover:bg-cyan-500/15 disabled:opacity-50"
+        >
+          <Sparkles size={16} />
+          {assistLoading ? "Generating smart proposal..." : "Generate smart proposal, price, and delivery time"}
+        </button>
+
+        {assistNotes.length > 0 && (
+          <div className="mb-5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-300">
+            {assistNotes.map((note, index) => (
+              <div key={index} className="flex gap-2 py-1">
+                <CheckCircle size={13} className="mt-0.5 shrink-0" />
+                <span>{note}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Proposal / Cover Letter */}
@@ -172,6 +251,27 @@ export default function SubmitBidModal({ jobPostId, onClose, onSuccess, theme = 
               </div>
             </div>
           </div>
+
+          {formData.packageName && (
+            <div
+              className={`rounded-xl border p-3 text-xs ${
+                isDark
+                  ? "border-white/5 bg-white/[0.03] text-slate-300"
+                  : "border-slate-200 bg-slate-50 text-slate-600"
+              }`}
+            >
+              <div className="font-bold text-cyan-400">{formData.packageName}</div>
+              {formData.deliverables?.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {formData.deliverables.map((item) => (
+                    <span key={item} className="rounded-lg bg-cyan-500/10 px-2 py-1 text-[10px] font-bold text-cyan-300">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Form Actions */}
           <div className="flex gap-3 justify-end pt-4 border-t border-white/5 mt-4">

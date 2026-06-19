@@ -42,12 +42,12 @@ const resolvePhotographerUserId = async (photographerRef) => {
 };
 
 class AdminController {
-  
+
   // ================= 1. AUTH & ROLE MIDDLEWARE CHECK =================
   // Đã được xử lý ở verifyAdmin middleware.
 
   // ================= 2. MANAGE USERS =================
-  
+
   // GET /api/admin/users - Xem danh sách user kèm phân trang, tìm kiếm, lọc
   async getUsers(req, res) {
     try {
@@ -211,31 +211,58 @@ class AdminController {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const skip = (page - 1) * limit;
-      const { status } = req.query;
+
+      const { verificationStatus } = req.query;
 
       const query = {};
-      if (status) {
-        query.status = status;
+
+      if (verificationStatus) {
+        query.verificationStatus = verificationStatus;
       }
 
-      const verifications = await PhotographerVerification.find(query)
+      const photographers = await Photographer.find(query)
         .populate("user", "fullName email avatar phoneNumber")
-        .populate("photographer", "displayName styles hourlyRate location")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);
 
-      const total = await PhotographerVerification.countDocuments(query);
+      const photographerIds = photographers.map(
+        (p) => p._id
+      );
 
-      return ApiResponse.success(res, {
-        verifications,
-        pagination: {
-          total,
-          page,
-          limit,
-          pages: Math.ceil(total / limit)
-        }
-      }, "Lấy danh sách xác minh thành công");
+      const verifications =
+        await PhotographerVerification.find({
+          photographer: { $in: photographerIds },
+        });
+
+      const result = photographers.map((photographer) => {
+        const verification = verifications.find(
+          (v) =>
+            v.photographer.toString() ===
+            photographer._id.toString()
+        );
+
+        return {
+          ...photographer.toObject(),
+          verification: verification || null,
+        };
+      });
+
+      const total = await Photographer.countDocuments(query);
+
+      return ApiResponse.success(
+        res,
+        {
+          photographers: result,
+          pagination: {
+            total,
+            page,
+            limit,
+            pages: Math.ceil(total / limit),
+          },
+        },
+        "Lấy danh sách photographer thành công"
+      );
     } catch (error) {
       return ApiResponse.error(res, error.message, 500);
     }
@@ -246,7 +273,8 @@ class AdminController {
     try {
       const verification = await PhotographerVerification.findById(req.params.id)
         .populate("user", "fullName email avatar phoneNumber")
-        .populate("photographer");
+        .populate("photographer")
+        .populate("PhotographerVerification");
 
       if (!verification) {
         return ApiResponse.error(res, "Không tìm thấy yêu cầu xác minh", 404);
@@ -263,7 +291,7 @@ class AdminController {
     try {
       const { adminNote } = req.body;
       const verification = await PhotographerVerification.findById(req.params.id);
-      
+
       if (!verification) {
         return ApiResponse.error(res, "Không tìm thấy yêu cầu xác minh", 404);
       }
@@ -273,7 +301,7 @@ class AdminController {
       }
 
       // Cập nhật trạng thái xác minh
-      verification.status = "APPROVED";
+      verification.status = "VERIFIED";
       verification.reviewedBy = req.user.id;
       verification.reviewedAt = new Date();
       verification.adminNote = adminNote || "Hồ sơ hợp lệ";
@@ -546,7 +574,7 @@ class AdminController {
     try {
       const { adminNote } = req.body;
       const payment = await Payment.findById(req.params.id);
-      
+
       if (!payment) {
         return ApiResponse.error(res, "Không tìm thấy giao dịch", 404);
       }
@@ -641,7 +669,7 @@ class AdminController {
     try {
       const { adminNote, refundAmount } = req.body;
       const payment = await Payment.findById(req.params.id);
-      
+
       if (!payment) {
         return ApiResponse.error(res, "Không tìm thấy giao dịch", 404);
       }
@@ -948,7 +976,7 @@ class AdminController {
   async resolveDispute(req, res) {
     try {
       const { resolutionType, refundAmount, releaseAmount, resolutionNote } = req.body;
-      
+
       if (!resolutionType || !["REFUND_FULL", "REFUND_PARTIAL", "RELEASE_PAYMENT"].includes(resolutionType)) {
         return ApiResponse.error(res, "resolutionType không hợp lệ (REFUND_FULL, REFUND_PARTIAL, RELEASE_PAYMENT)", 400);
       }
@@ -1020,7 +1048,7 @@ class AdminController {
         if (!photoWallet) {
           photoWallet = await Wallet.create({ user: dispute.photographer?.user, balance: 0, holdBalance: 0 });
         }
-        
+
         // Trừ hold balance và cộng vào balance khả dụng
         photoWallet.holdBalance = Math.max(0, photoWallet.holdBalance - escrowAmount);
         photoWallet.balance += finalRelease;
@@ -1489,7 +1517,7 @@ class AdminController {
       const totalCustomers = await User.countDocuments({ role: "customer", isDeleted: { $ne: true } });
       const totalPhotographers = await User.countDocuments({ role: "photographer", isDeleted: { $ne: true } });
       const totalVerifiedPhotographers = await Photographer.countDocuments({ verificationStatus: "VERIFIED" });
-      
+
       const totalBookings = await Booking.countDocuments();
       const completedBookings = await Booking.countDocuments({ status: "COMPLETED" });
       const cancelledBookings = await Booking.countDocuments({ status: "CANCELLED" });

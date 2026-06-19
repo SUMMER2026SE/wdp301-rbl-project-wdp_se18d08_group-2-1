@@ -9,24 +9,48 @@ class ChatService {
       .sort({ updatedAt: -1 });
   }
 
-  async getMessages(conversationId) {
-    return await Message.find({ conversationId }).sort({ createdAt: 1 });
-  }
-
-  async createMessage(conversationId, senderId, text) {
+  async getMessages(conversationId, userId = null) {
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) {
       throw new Error("Conversation not found");
     }
 
-    if (!conversation.participants.map(id => id.toString()).includes(senderId.toString())) {
+    if (userId && !conversation.participants.map((id) => id.toString()).includes(userId.toString())) {
       throw new Error("You are not part of this conversation");
+    }
+
+    return await Message.find({ conversationId }).sort({ createdAt: 1 });
+  }
+
+  async createMessage(conversationId, senderId, payload = {}) {
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+      throw new Error("Conversation not found");
+    }
+
+    if (!conversation.participants.map((id) => id.toString()).includes(senderId.toString())) {
+      throw new Error("You are not part of this conversation");
+    }
+
+    const {
+      text = "",
+      messageType = "text",
+      attachments = [],
+      metadata = {},
+    } = typeof payload === "string" ? { text: payload } : payload;
+
+    if (!String(text).trim() && attachments.length === 0) {
+      throw new Error("Message text or attachment is required");
     }
 
     const message = new Message({
       conversationId,
       senderId,
-      text,
+      text: String(text || "").trim(),
+      messageType,
+      attachments,
+      metadata,
+      evidenceLocked: true,
     });
 
     const savedMessage = await message.save();

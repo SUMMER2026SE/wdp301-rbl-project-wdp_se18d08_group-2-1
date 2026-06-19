@@ -16,10 +16,20 @@ const albumSchema = new mongoose.Schema(
     images: [
       {
         url: { type: String, required: true },
+        previewUrl: { type: String },
+        watermarkUrl: { type: String },
+        downloadUrl: { type: String },
         publicId: { type: String, required: true },
+        originalName: String,
+        size: Number,
+        mimetype: String,
         uploadedAt: { type: Date, default: Date.now },
       },
     ],
+    accessPolicy: {
+      watermarkPreview: { type: Boolean, default: true },
+      fullHdLockedUntilPaid: { type: Boolean, default: true },
+    },
   },
   {
     timestamps: true,
