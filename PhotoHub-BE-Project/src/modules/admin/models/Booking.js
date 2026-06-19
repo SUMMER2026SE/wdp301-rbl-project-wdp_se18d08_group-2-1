@@ -45,6 +45,7 @@ const bookingSchema = new mongoose.Schema(
     packageName: {
       type: String,
       default: "",
+      required: true,
     },
     durationHours: {
       type: Number,
@@ -57,6 +58,11 @@ const bookingSchema = new mongoose.Schema(
     depositAmount: {
       type: Number,
       default: 0,
+      required: true,
+    },
+    depositAmount: {
+      type: Number,
+      required: true,
     },
     commissionRate: {
       type: Number,

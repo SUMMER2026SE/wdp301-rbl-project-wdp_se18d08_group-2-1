@@ -180,7 +180,6 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
               {showDropdown && (
                 <div className="absolute right-0 top-full z-50 pt-2">
                   <div className="w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/95">
-
                     {/* Đường dẫn linh hoạt dựa trên Role */}
                     {user?.role === "admin" && (
                       <Link

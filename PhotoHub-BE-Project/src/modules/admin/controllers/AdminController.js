@@ -17,6 +17,7 @@ const Notification = require("../models/Notification");
 
 const logAdminAction = require("../utils/adminActionLogger");
 const ApiResponse = require("../../../utils/ApiResponse");
+const { sendApprovalEmail, sendRejectionEmail } = require("../../../utils/emailService");
 
 class AdminController {
 
@@ -267,7 +268,7 @@ class AdminController {
   async approvePhotographerVerification(req, res) {
     try {
       const { adminNote } = req.body;
-      const verification = await PhotographerVerification.findById(req.params.id);
+      const verification = await PhotographerVerification.findById(req.params.id).populate("user");
 
       if (!verification) {
         return ApiResponse.error(res, "Không tìm thấy yêu cầu xác minh", 404);
@@ -294,17 +295,23 @@ class AdminController {
       // Tạo thông báo hệ thống gửi photographer
       await Notification.create({
         recipientType: "SPECIFIC",
-        recipient: verification.user,
+        recipient: verification.user ? verification.user._id : null,
         title: "Hồ sơ Nhiếp ảnh gia đã được duyệt!",
         message: `Chúc mừng bạn! Hồ sơ đăng ký hoạt động nhiếp ảnh gia của bạn đã được Admin phê duyệt. Ghi chú: ${verification.adminNote}`,
         type: "VERIFICATION"
       });
 
+      // Gửi email thông báo
+      if (verification.user && verification.user.email) {
+        sendApprovalEmail(verification.user.email, verification.user.fullName, verification.adminNote)
+          .catch((err) => console.error("Lỗi gửi email duyệt:", err.message));
+      }
+
       // Tạo ví Wallet cho photographer nếu chưa có
-      const existingWallet = await Wallet.findOne({ user: verification.user });
+      const existingWallet = await Wallet.findOne({ user: verification.user ? verification.user._id : null });
       if (!existingWallet) {
         await Wallet.create({
-          user: verification.user,
+          user: verification.user ? verification.user._id : null,
           balance: 0,
           holdBalance: 0
         });
@@ -334,7 +341,7 @@ class AdminController {
         return ApiResponse.error(res, "Cần nhập lý do từ chối (adminNote)", 400);
       }
 
-      const verification = await PhotographerVerification.findById(req.params.id);
+      const verification = await PhotographerVerification.findById(req.params.id).populate("user");
       if (!verification) {
         return ApiResponse.error(res, "Không tìm thấy yêu cầu xác minh", 404);
       }
@@ -360,11 +367,17 @@ class AdminController {
       // Gửi thông báo từ chối
       await Notification.create({
         recipientType: "SPECIFIC",
-        recipient: verification.user,
+        recipient: verification.user ? verification.user._id : null,
         title: "Yêu cầu xác minh nhiếp ảnh gia bị từ chối",
         message: `Rất tiếc, hồ sơ đăng ký của bạn không được phê duyệt. Lý do: ${adminNote}. Vui lòng cập nhật hồ sơ và gửi lại yêu cầu.`,
         type: "VERIFICATION"
       });
+
+      // Gửi email thông báo
+      if (verification.user && verification.user.email) {
+        sendRejectionEmail(verification.user.email, verification.user.fullName, verification.adminNote)
+          .catch((err) => console.error("Lỗi gửi email từ chối:", err.message));
+      }
 
       // Ghi log
       await logAdminAction(

@@ -403,7 +403,6 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], catego
               </div>
 
               {/* ── Thể loại chụp (Styles từ API) ── */}
-
               {styles.length > 0 && (
                 <div>
                   <p className="mb-3 text-sm font-bold text-slate-800 dark:text-zinc-200">{t.stylesLabel}</p>
