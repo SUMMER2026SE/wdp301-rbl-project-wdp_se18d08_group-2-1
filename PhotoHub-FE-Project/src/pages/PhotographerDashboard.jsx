@@ -267,6 +267,17 @@ export default function PhotographerDashboard({
             const newAvatarUrl = responseData?.avatar || responseData?.user?.avatar || responseData?.url;
 
             if (newAvatarUrl) {
+                const storedUser = localStorage.getItem("user");
+                if (storedUser) {
+                    try {
+                        const parsedUser = JSON.parse(storedUser);
+                        localStorage.setItem("user", JSON.stringify({ ...parsedUser, avatar: newAvatarUrl }));
+                        window.dispatchEvent(new Event("storage_user_changed"));
+                    } catch {
+                        localStorage.removeItem("user");
+                    }
+                }
+
                 setPhotographerData(prev => ({
                     ...prev,
                     user: typeof prev.user === "object" && prev.user !== null

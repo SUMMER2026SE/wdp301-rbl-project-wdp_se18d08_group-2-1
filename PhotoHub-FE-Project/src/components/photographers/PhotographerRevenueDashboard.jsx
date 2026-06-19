@@ -11,6 +11,12 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
     totalWithdrawn: 0,
     pendingWithdrawn: 0,
     withdrawableAmount: 0,
+    netWithdrawableAmount: 0,
+    bidWinRate: 0,
+    completionRate: 0,
+    pendingPayout: 0,
+    topStyles: [],
+    topPackages: [],
     monthlyRevenue: [],
   });
   const [loading, setLoading] = useState(false);
@@ -54,6 +60,12 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
         totalWithdrawn: 0,
         pendingWithdrawn: 0,
         withdrawableAmount: 0,
+        netWithdrawableAmount: 0,
+        bidWinRate: 0,
+        completionRate: 0,
+        pendingPayout: 0,
+        topStyles: [],
+        topPackages: [],
         monthlyRevenue: [],
       });
     } catch (err) {
@@ -172,6 +184,41 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
                     <ArrowUpRight size={14} />
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+
+          <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 rounded-3xl border p-5 ${isDark ? "bg-[#121214]/60 border-white/[0.06]" : "bg-white border-slate-200 shadow-sm"}`}>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Bid win rate</p>
+              <p className="mt-1 text-2xl font-black text-emerald-400">{stats.bidWinRate || 0}%</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Completion rate</p>
+              <p className="mt-1 text-2xl font-black text-cyan-400">{stats.completionRate || 0}%</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Net payout after commission</p>
+              <p className="mt-1 text-2xl font-black text-amber-300">${stats.netWithdrawableAmount || 0}</p>
+            </div>
+            <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-200 pt-4 dark:border-white/[0.04]">
+              <div>
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Top revenue styles</p>
+                {(stats.topStyles || []).slice(0, 3).map((item) => (
+                  <div key={item.name} className="flex justify-between text-xs font-bold text-slate-400">
+                    <span>{item.name}</span>
+                    <span>${item.revenue}</span>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Top packages</p>
+                {(stats.topPackages || []).slice(0, 3).map((item) => (
+                  <div key={item.name} className="flex justify-between text-xs font-bold text-slate-400">
+                    <span>{item.name}</span>
+                    <span>${item.revenue}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

@@ -10,6 +10,8 @@ import GoogleSuccess from "./pages/GoogleSuccess";
 import PhotographerDashboard from "./pages/PhotographerDashboard";
 import FavoritesPage from "./pages/FavoritesPage";
 import PhotographersPage from "./pages/PhotographersPage";
+import PaymentResult from "./pages/PaymentResult";
+import ChatPage from "./pages/ChatPage";
 
 // Admin Imports
 import AdminLayout from "./components/admin/AdminLayout";
@@ -132,6 +134,9 @@ export default function App() {
         />
 
         <Route path="/auth/google/success" element={<GoogleSuccess />} />
+        <Route path="/chat" element={<ChatPage language={language} theme={theme} />} />
+        <Route path="/payment-result" element={<PaymentResult language={language} theme={theme} />} />
+        <Route path="/payment/result" element={<PaymentResult language={language} theme={theme} />} />
 
         {/* Phân hệ Admin */}
         <Route path="/admin" element={<AdminLayout />}>
