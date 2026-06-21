@@ -10,12 +10,10 @@ import GoogleSuccess from "./pages/GoogleSuccess";
 import PhotographerDashboard from "./pages/PhotographerDashboard";
 import FavoritesPage from "./pages/FavoritesPage";
 import PhotographersPage from "./pages/PhotographersPage";
-import PaymentResult from "./pages/PaymentResult";
+import PaymentResult from "./booking/PaymentResult";
 import ChatPage from "./pages/ChatPage";
 import AiSearchPage from "./pages/AiSearchPage";
 import CommunityPage from "./pages/CommunityPage";
-import PaymentResult from "./booking/PaymentResult";
-import ChatPage from "./pages/ChatPage";
 
 // Admin Imports
 import AdminLayout from "./components/admin/AdminLayout";
