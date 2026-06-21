@@ -1,17 +1,25 @@
-const mongoose = require("mongoose");
+﻿const mongoose = require("mongoose");
 
 const BOOKING_STATUS = {
   PENDING: "pending",
   ACCEPTED: "accepted",
-  CONFIRMED: "confirmed", // Đã thanh toán
-  COMPLETED: "completed", // Đã chụp xong + upload album
+  CONFIRMED: "confirmed",
+  COMPLETED: "completed",
   REJECTED: "rejected",
   CANCELLED: "cancelled",
 };
 
+const PAYMENT_STATUS = {
+  UNPAID: "unpaid",
+  PENDING: "pending",
+  PAID: "paid",
+  REFUNDED: "refunded",
+  CANCELLED: "cancelled",
+  EXPIRED: "expired",
+};
+
 const bookingSchema = new mongoose.Schema(
   {
-    // ─── Actors ────────────────────────────────────────────────────
     customer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -24,15 +32,11 @@ const bookingSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-
-    // ─── Gói dịch vụ (tuỳ chọn) ───────────────────────────────────
     package: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "PhotographerPackage",
       default: null,
     },
-
-    // ─── Thông tin buổi chụp ───────────────────────────────────────
     title: {
       type: String,
       required: true,
@@ -61,8 +65,6 @@ const bookingSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
-
-    // ─── Trạng thái ────────────────────────────────────────────────
     status: {
       type: String,
       enum: Object.values(BOOKING_STATUS),
@@ -72,29 +74,51 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-
-    // ─── PayOS Payment ─────────────────────────────────────────────
+    paymentStatus: {
+      type: String,
+      enum: Object.values(PAYMENT_STATUS),
+      default: PAYMENT_STATUS.UNPAID,
+    },
     payosOrderCode: {
       type: Number,
       default: null,
-      sparse: true, // cho phép nhiều null cùng tồn tại
+      sparse: true,
+    },
+    paymentLinkId: {
+      type: String,
+      default: null,
     },
     paymentLink: {
       type: String,
       default: null,
     },
+    paidAmount: {
+      type: Number,
+      default: 0,
+    },
     paidAt: {
       type: Date,
       default: null,
     },
-
-    // ─── Album & Completion ─────────────────────────────────────────
     finalAlbum: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Album",
       default: null,
     },
+    completionStatus: {
+      type: String,
+      enum: ["pending", "album_uploaded", "completed"],
+      default: "pending",
+    },
+    deliveryDeadline: {
+      type: Date,
+      default: null,
+    },
     completedAt: {
+      type: Date,
+      default: null,
+    },
+    payoutEligibleAt: {
       type: Date,
       default: null,
     },
@@ -104,13 +128,14 @@ const bookingSchema = new mongoose.Schema(
   }
 );
 
-// ─── Indexes ──────────────────────────────────────────────────────
 bookingSchema.index({ photographer: 1, status: 1 });
 bookingSchema.index({ customer: 1, status: 1 });
 bookingSchema.index({ payosOrderCode: 1 }, { unique: true, sparse: true });
 bookingSchema.index({ start: 1, end: 1 });
+bookingSchema.index({ paymentStatus: 1, status: 1 });
 
 module.exports = {
   Booking: mongoose.models.Booking || mongoose.model("Booking", bookingSchema),
   BOOKING_STATUS,
+  PAYMENT_STATUS,
 };

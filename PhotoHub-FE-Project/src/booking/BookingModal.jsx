@@ -15,6 +15,26 @@ const formatDateTimeLocal = (date) => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
+const getAuthPayload = () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+    const base64Url = token.split(".")[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(window.atob(base64));
+  } catch (error) {
+    return null;
+  }
+};
+
+const getStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem("user") || "{}");
+  } catch (error) {
+    return {};
+  }
+};
 export default function BookingModal({ isOpen, onClose, photographer, theme = "dark", language = "vi" }) {
   const isDark = theme === "dark";
   const [packages, setPackages] = useState([]);
@@ -58,6 +78,10 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
       invalidDates: "Ngày kết thúc phải sau ngày bắt đầu và buổi chụp phải kéo dài ít nhất 30 phút",
       pastStartDate: "Ngày bắt đầu phải ở thời điểm tương lai",
       requiredFields: "Vui lòng điền đầy đủ các thông tin bắt buộc!",
+
+      loginRequired: "B\u1ea1n c\u1ea7n \u0111\u0103ng nh\u1eadp b\u1eb1ng t\u00e0i kho\u1ea3n customer \u0111\u1ec3 \u0111\u1eb7t l\u1ecbch.",
+      customerOnly: "Ch\u1ec9 t\u00e0i kho\u1ea3n customer m\u1edbi c\u00f3 th\u1ec3 \u0111\u1eb7t l\u1ecbch v\u00e0 thanh to\u00e1n. H\u00e3y \u0111\u0103ng xu\u1ea5t r\u1ed3i \u0111\u0103ng nh\u1eadp t\u00e0i kho\u1ea3n customer.",
+      cannotBookSelf: "B\u1ea1n kh\u00f4ng th\u1ec3 \u0111\u1eb7t l\u1ecbch v\u1edbi ch\u00ednh m\u00ecnh.",
     },
     en: {
       bookTitle: "Book Photography Session",
@@ -84,6 +108,9 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
       invalidDates: "End date must be after start date and shoot duration must be at least 30 minutes",
       pastStartDate: "Start date must be in the future",
       requiredFields: "Please fill in all required fields!",
+      loginRequired: "Please sign in with a customer account to book this photographer.",
+      customerOnly: "Only customer accounts can create bookings and pay. Please sign out and sign in with a customer account.",
+      cannotBookSelf: "You cannot book yourself.",
     },
   }[language];
 
@@ -183,6 +210,44 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
     e.preventDefault();
 
     const { title, start, end, location, price } = formData;
+    const authPayload = getAuthPayload();
+    const storedUser = getStoredUser();
+    const currentRole = authPayload?.role || storedUser?.role;
+    const currentUserId = authPayload?.id || storedUser?._id || storedUser?.id;
+    const photographerUserId = photographer?.user?._id || photographer?.user;
+
+    if (!localStorage.getItem("token")) {
+      Swal.fire({
+        icon: "warning",
+        title: t.error,
+        text: t.loginRequired,
+        background: isDark ? "#0f172a" : "#fff",
+        color: isDark ? "#fff" : "#000",
+      });
+      return;
+    }
+
+    if (currentRole !== "customer") {
+      Swal.fire({
+        icon: "warning",
+        title: t.error,
+        text: t.customerOnly,
+        background: isDark ? "#0f172a" : "#fff",
+        color: isDark ? "#fff" : "#000",
+      });
+      return;
+    }
+
+    if (currentUserId && photographerUserId && String(currentUserId) === String(photographerUserId)) {
+      Swal.fire({
+        icon: "warning",
+        title: t.error,
+        text: t.cannotBookSelf,
+        background: isDark ? "#0f172a" : "#fff",
+        color: isDark ? "#fff" : "#000",
+      });
+      return;
+    }
 
     if (!title || !start || !end || !location) {
       Swal.fire({
@@ -224,7 +289,7 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
     setLoading(true);
     try {
       const payload = {
-        photographerUserId: photographer.user?._id || photographer.user,
+        photographerUserId,
         packageId: selectedPackageId || null,
         title,
         note: formData.note,
@@ -261,7 +326,7 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
       Swal.fire({
         icon: "error",
         title: t.error,
-        text: err.response?.data?.message || err.message,
+        text: err.response?.status === 403 ? t.customerOnly : (err.response?.data?.message || err.message),
         background: isDark ? "#0f172a" : "#fff",
         color: isDark ? "#fff" : "#000",
       });
@@ -283,7 +348,7 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200/50 dark:border-white/[0.06]">
           <div>
             <h2 className="text-2xl font-black tracking-tight">{t.bookTitle}</h2>
-            <p className={`text-xs mt-1 ${isDark ? "text-cyan-400" : "text-indigo-600"} font-semibold`}>
+            <p className={`text-xs mt-1 ${isDark ? "text-orange-400" : "text-orange-600"} font-semibold`}>
               @ {photographer?.displayName}
             </p>
           </div>
@@ -305,7 +370,7 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
               <select
                 value={selectedPackageId}
                 onChange={(e) => setSelectedPackageId(e.target.value)}
-                className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-cyan-500 appearance-none font-semibold ${inputBgClass}`}
+                className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-orange-500 appearance-none font-semibold ${inputBgClass}`}
                 disabled={packagesLoading}
               >
                 <option value="">✨ {t.customBooking}</option>
@@ -329,7 +394,7 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
                 placeholder={t.sessionTitlePlaceholder}
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-cyan-500 ${inputBgClass}`}
+                className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-orange-500 ${inputBgClass}`}
                 disabled={!!selectedPackageId} // locked if using package
                 required
               />
@@ -346,7 +411,7 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
                   type="datetime-local"
                   value={formData.start}
                   onChange={(e) => handleDateChange("start", e.target.value)}
-                  className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-cyan-500 ${inputBgClass}`}
+                  className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-orange-500 ${inputBgClass}`}
                   required
                 />
               </div>
@@ -360,7 +425,7 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
                   type="datetime-local"
                   value={formData.end}
                   onChange={(e) => handleDateChange("end", e.target.value)}
-                  className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-cyan-500 ${inputBgClass} ${
+                  className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-orange-500 ${inputBgClass} ${
                     selectedPackageId ? "opacity-60 cursor-not-allowed" : ""
                   }`}
                   required
@@ -380,7 +445,7 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
                 placeholder={t.locationPlaceholder}
                 value={formData.location}
                 onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-cyan-500 ${inputBgClass}`}
+                className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-orange-500 ${inputBgClass}`}
                 required
               />
             </div>
@@ -394,13 +459,13 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
               value={formData.note}
               onChange={(e) => setFormData(prev => ({ ...prev, note: e.target.value }))}
               rows={3}
-              className={`w-full rounded-2xl p-4 outline-none border transition focus:border-cyan-500 ${inputBgClass}`}
+              className={`w-full rounded-2xl p-4 outline-none border transition focus:border-orange-500 ${inputBgClass}`}
             />
           </div>
 
           {/* Hourly Rate Guidance (if custom) */}
           {!selectedPackageId && photographer?.hourlyRate && (
-            <div className={`flex items-start gap-3 p-4 rounded-2xl border text-xs font-semibold ${isDark ? "bg-cyan-500/5 border-cyan-500/20 text-cyan-300" : "bg-cyan-50/50 border-cyan-200 text-cyan-700"
+            <div className={`flex items-start gap-3 p-4 rounded-2xl border text-xs font-semibold ${isDark ? "bg-orange-500/5 border-orange-500/20 text-orange-300" : "bg-orange-50/50 border-orange-200 text-orange-700"
               }`}>
               <Info size={16} className="shrink-0 mt-0.5" />
               <div>
@@ -412,7 +477,7 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
 
           {/* Package Fixed Duration Notice */}
           {selectedPackageId && (
-            <div className={`flex items-start gap-3 p-4 rounded-2xl border text-xs font-semibold ${isDark ? "bg-indigo-500/5 border-indigo-500/20 text-indigo-300" : "bg-indigo-50/50 border-indigo-200 text-indigo-700"
+            <div className={`flex items-start gap-3 p-4 rounded-2xl border text-xs font-semibold ${isDark ? "bg-orange-500/5 border-orange-500/20 text-orange-300" : "bg-orange-50/50 border-orange-200 text-orange-700"
               }`}>
               <Info size={16} className="shrink-0 mt-0.5" />
               <div>
@@ -440,7 +505,7 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
             <button
               type="submit"
               disabled={loading || formData.price <= 0}
-              className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 hover:brightness-110 active:scale-[0.98] text-white font-bold rounded-2xl shadow-lg transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-orange-500 via-orange-500 to-amber-600 hover:brightness-110 active:scale-[0.98] text-white font-bold rounded-2xl shadow-lg transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? t.submitting : t.submitBtn}
             </button>

@@ -10,13 +10,13 @@ const getHeaders = () => ({
 });
 
 export const bookingService = {
-  // 1. Tạo booking mới (Customer)
+  // 1. Táº¡o booking má»›i (Customer)
   createBooking: async (bookingData) => {
     const res = await axios.post(`${API_BASE}/bookings`, bookingData, getHeaders());
     return res.data;
   },
 
-  // 2. Lấy danh sách booking của chính mình (Customer)
+  // 2. Láº¥y danh sĂ¡ch booking cá»§a chĂ­nh mĂ¬nh (Customer)
   getMyBookings: async (params = {}) => {
     const res = await axios.get(`${API_BASE}/bookings/my`, {
       ...getHeaders(),
@@ -25,7 +25,7 @@ export const bookingService = {
     return res.data;
   },
 
-  // 3. Lấy danh sách booking được đặt (Photographer)
+  // 3. Láº¥y danh sĂ¡ch booking Ä‘Æ°á»£c Ä‘áº·t (Photographer)
   getPhotographerBookings: async (params = {}) => {
     const res = await axios.get(`${API_BASE}/bookings/photographer/my`, {
       ...getHeaders(),
@@ -34,25 +34,41 @@ export const bookingService = {
     return res.data;
   },
 
-  // 4. Hủy booking (Customer)
+  // 4. Há»§y booking (Customer)
   cancelBooking: async (bookingId) => {
     const res = await axios.put(`${API_BASE}/bookings/${bookingId}/cancel`, {}, getHeaders());
     return res.data;
   },
 
-  // 5. Tạo link thanh toán PayOS (Customer)
+  // 5. Táº¡o link thanh toĂ¡n PayOS (Customer)
   createPaymentLink: async (bookingId) => {
     const res = await axios.post(`${API_BASE}/bookings/${bookingId}/payment`, {}, getHeaders());
     return res.data;
   },
 
-  // 6. Chấp nhận booking (Photographer)
+  syncPaymentStatus: async (bookingId, orderCode) => {
+    const res = await axios.get(`${API_BASE}/bookings/${bookingId}/payment/status`, {
+      ...getHeaders(),
+      params: { orderCode },
+    });
+    return res.data;
+  },
+
+  syncPaymentStatusByOrderCode: async (orderCode) => {
+    const res = await axios.get(`${API_BASE}/bookings/payment/status`, {
+      ...getHeaders(),
+      params: { orderCode },
+    });
+    return res.data;
+  },
+
+  // 6. Cháº¥p nháº­n booking (Photographer)
   acceptBooking: async (bookingId) => {
     const res = await axios.put(`${API_BASE}/bookings/${bookingId}/accept`, {}, getHeaders());
     return res.data;
   },
 
-  // 7. Từ chối booking với lý do (Photographer)
+  // 7. Tá»« chá»‘i booking vá»›i lĂ½ do (Photographer)
   rejectBooking: async (bookingId, reason) => {
     const res = await axios.put(
       `${API_BASE}/bookings/${bookingId}/reject`,
@@ -62,19 +78,19 @@ export const bookingService = {
     return res.data;
   },
 
-  // 8. Đánh dấu hoàn thành booking (Photographer)
+  // 8. ÄĂ¡nh dáº¥u hoĂ n thĂ nh booking (Photographer)
   completeBooking: async (bookingId) => {
     const res = await axios.put(`${API_BASE}/bookings/${bookingId}/complete`, {}, getHeaders());
     return res.data;
   },
 
-  // 9. Lấy chi tiết một booking
+  // 9. Láº¥y chi tiáº¿t má»™t booking
   getBookingDetail: async (bookingId) => {
     const res = await axios.get(`${API_BASE}/bookings/${bookingId}`, getHeaders());
     return res.data;
   },
 
-  // 10. Lấy danh sách packages của một photographer (Customer xem)
+  // 10. Láº¥y danh sĂ¡ch packages cá»§a má»™t photographer (Customer xem)
   getPhotographerPackages: async (photographerId) => {
     const res = await axios.get(`${API_BASE}/packages/photographer/${photographerId}`, getHeaders());
     return res.data;
