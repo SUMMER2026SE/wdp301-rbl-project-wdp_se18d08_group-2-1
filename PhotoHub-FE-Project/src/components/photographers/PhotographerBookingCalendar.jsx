@@ -554,24 +554,13 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
 
       {/* Upload Album Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className={`relative max-w-xl w-full rounded-3xl p-6 border ${
-            isDark ? "bg-[#121214] border-white/5 text-white" : "bg-white border-slate-200 text-slate-900"
-          }`}>
-            <button
-              onClick={() => setShowUploadModal(false)}
-              className="absolute top-4 right-4 text-slate-500 hover:text-white"
-            >
-              ×
-            </button>
-            <UploadFinalAlbum
-              bookingId={activeUploadBookingId}
-              theme={theme}
-              language={language}
-              onSuccess={handleUploadAlbumSuccess}
-            />
-          </div>
-        </div>
+        <UploadFinalAlbum
+          bookingId={activeUploadBookingId}
+          theme={theme}
+          language={language}
+          onSuccess={handleUploadAlbumSuccess}
+          onClose={() => setShowUploadModal(false)}
+        />
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { ArrowUp } from "lucide-react";
 import Footer from "./components/landingPage/Footer";
 import Header from "./components/landingPage/Header";
 import Home from "./pages/Home";
@@ -47,6 +48,20 @@ export default function App() {
   const location = useLocation();
   const isAuthPage = location.pathname === "/login";
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const isHomePage = location.pathname === "/";
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   useEffect(() => {
     localStorage.setItem("photohub-theme", theme);
@@ -229,6 +244,17 @@ export default function App() {
 
       {/* Hide footer on login and admin routes */}
       {!isAuthPage && !isAdminRoute && <Footer language={language} />}
+
+      {/* Scroll to Top button for Home Page */}
+      {isHomePage && showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-[99] flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg shadow-orange-500/20 transition-all duration-300 hover:-translate-y-1 hover:brightness-110 active:scale-95 animate-fadeIn"
+          aria-label="Scroll to top"
+        >
+          <ArrowUp size={20} className="stroke-[3px]" />
+        </button>
+      )}
     </div>
   );
 }

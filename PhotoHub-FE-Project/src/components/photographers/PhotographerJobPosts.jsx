@@ -225,7 +225,7 @@ export default function PhotographerJobPosts({ theme = "dark", language = "vi" }
                   <h3 className="font-extrabold text-base tracking-tight group-hover:text-orange-500 transition">
                     {job.title}
                   </h3>
-                  <span className="font-black text-emerald-500 text-base">${job.budget}</span>
+                  <span className="font-black text-emerald-500 text-base">{Number(job.budget || 0).toLocaleString('vi-VN')} đ</span>
                 </div>
 
                 {job.matchScore !== undefined && (
@@ -308,7 +308,7 @@ export default function PhotographerJobPosts({ theme = "dark", language = "vi" }
                       <DollarSign size={15} className="text-emerald-400 font-extrabold" />
                       <span>
                         <strong>{t.budgetLabel}</strong>{" "}
-                        <span className="font-bold text-emerald-400">${selectedJob.budget}</span>
+                        <span className="font-bold text-emerald-400">{Number(selectedJob.budget || 0).toLocaleString('vi-VN')} đ</span>
                       </span>
                     </div>
                   </div>

@@ -71,7 +71,7 @@ const landingCopy = {
       stages: ["RAW sync", "Watermark", "Client picks"],
       stageLabel: "Stage",
       metrics: [
-        ["Booked value", "$48k", CircleDollarSign],
+        ["Booked value", "1.2B đ", CircleDollarSign],
         ["Trust score", "98.4", Fingerprint],
         ["Avg reply", "7 min", Clock3],
       ],
@@ -300,7 +300,7 @@ const landingCopy = {
       stages: ["Đồng bộ RAW", "Watermark", "Khách chọn ảnh"],
       stageLabel: "Bước",
       metrics: [
-        ["Giá trị đã đặt", "$48k", CircleDollarSign],
+        ["Giá trị đã đặt", "1.2 tỷ đ", CircleDollarSign],
         ["Điểm tin cậy", "98.4", Fingerprint],
         ["Phản hồi TB", "7 phút", Clock3],
       ],
@@ -653,7 +653,7 @@ function DashboardMockup({ copy, scale, y, opacity }) {
                 <ShieldCheck className="h-5 w-5 text-orange-200" {...iconProps} />
               </div>
               <p className="text-3xl font-semibold tracking-tight text-white">
-                $12,840
+                321.000.000 đ
               </p>
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-orange-500 via-amber-200 to-orange-400" />

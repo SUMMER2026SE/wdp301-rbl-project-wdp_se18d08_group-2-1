@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Send, Clock, DollarSign, FileText, Sparkles, CheckCircle } from "lucide-react";
+import { X, Send, Clock, FileText, Sparkles, CheckCircle } from "lucide-react";
 import Swal from "sweetalert2";
 import { photographerMarketplaceService } from "../../services/photographerService";
 
@@ -150,7 +150,7 @@ export default function SubmitBidModal({ job, jobPostId, onClose, onSuccess, the
   }`;
 
   return (
-    <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+    <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-[110] animate-fadeIn">
       <div
         className={`w-full max-w-lg rounded-2xl p-5 relative border transition-colors duration-300 ${
           isDark
@@ -221,9 +221,9 @@ export default function SubmitBidModal({ job, jobPostId, onClose, onSuccess, the
           <div className="grid grid-cols-2 gap-4">
             {/* Price Proposal */}
             <div>
-              <label className={labelClass}>Mức Chi Phí ($)</label>
+              <label className={labelClass}>Mức Chi Phí (VNĐ)</label>
               <div className="relative">
-                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">đ</span>
                 <input
                   type="number"
                   name="price"

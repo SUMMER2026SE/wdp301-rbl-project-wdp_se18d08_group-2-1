@@ -124,6 +124,10 @@ html {
   animation: fadeIn 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards;
 }
 
+.animate-fadeIn {
+  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 @keyframes marquee {
   from {
     transform: translateX(0);

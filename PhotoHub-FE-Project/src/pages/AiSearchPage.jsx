@@ -58,7 +58,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
       botWelcome:
         "Hello! I am your **PhotoHub AI Assistant**. Send me a reference image of the photography style you desire, and (optional) set a maximum budget. I will scan thousands of photographer portfolios to find the perfect match for you!",
       imagePrompt: "Upload your style",
-      budgetPrompt: "Maximum Budget (USD/VNĐ)",
+      budgetPrompt: "Maximum Budget (VNĐ)",
       budgetPlaceholder: "Unlimited",
       limitLabel: "Results",
       btnSend: "Search",
