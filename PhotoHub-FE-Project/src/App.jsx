@@ -13,6 +13,7 @@ import PhotographersPage from "./pages/PhotographersPage";
 import AiSearchPage from "./pages/AiSearchPage";
 import CommunityPage from "./pages/CommunityPage";
 import PaymentResult from "./booking/PaymentResult";
+import ChatPage from "./pages/ChatPage";
 
 // Admin Imports
 import AdminLayout from "./components/admin/AdminLayout";
@@ -51,19 +52,36 @@ export default function App() {
     localStorage.setItem("photohub-theme", theme);
     // Toggle Tailwind dark class
     const root = document.documentElement;
-    if (theme === "dark") {
+    const isDark = theme === "dark" || location.pathname.startsWith("/admin");
+    if (isDark) {
       root.classList.add("dark");
     } else {
       root.classList.remove("dark");
     }
     // Keep data-theme for custom CSS
-    root.dataset.theme = theme;
-  }, [theme]);
+    root.dataset.theme = location.pathname.startsWith("/admin") ? "dark" : theme;
+  }, [theme, location.pathname]);
 
   useEffect(() => {
     localStorage.setItem("photohub-language", language);
     document.documentElement.lang = language === "vi" ? "vi" : "en";
   }, [language]);
+
+  // Scroll to top or target hash on route changes
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.replace("#", "");
+      const element = document.getElementById(id);
+      if (element) {
+        // Wait a brief moment for DOM to finish rendering
+        const timer = setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+    }
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [location.pathname, location.search, location.hash]);
 
   const toggleTheme = () => {
     setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
@@ -74,7 +92,7 @@ export default function App() {
   };
 
   return (
-    <div className={`theme-${theme} relative flex min-h-screen w-full flex-col overflow-x-hidden`}>
+    <div className={`theme-${isAdminRoute ? "dark" : theme} relative flex min-h-screen w-full flex-col overflow-x-hidden`}>
       {/* Show global header except admin routes */}
       {!isAdminRoute && (
         <Header
@@ -129,6 +147,16 @@ export default function App() {
           path="/photographers"
           element={
             <PhotographersPage
+              language={language}
+              theme={theme}
+            />
+          }
+        />
+
+        <Route
+          path="/chat"
+          element={
+            <ChatPage
               language={language}
               theme={theme}
             />

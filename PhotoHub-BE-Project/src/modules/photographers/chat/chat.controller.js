@@ -1,6 +1,60 @@
 const chatService = require("./chat.service");
 const ApiResponse = require("../../../utils/ApiResponse");
 
+const normalizeId = (value) => String(value?._id || value?.id || value || "");
+
+const emitConversationUpdate = (conversation, payload = {}) => {
+  try {
+    const { getIO } = require("../../../socket");
+    const io = getIO();
+    const conversationId = normalizeId(conversation?._id || payload.conversationId);
+    if (!conversationId) return;
+
+    const eventPayload = {
+      conversationId,
+      conversation,
+      ...payload,
+    };
+
+    io.to(conversationId).emit("conversationUpdated", eventPayload);
+    (conversation?.participants || []).forEach((participant) => {
+      const participantId = normalizeId(participant);
+      if (participantId) {
+        io.to(`user:${participantId}`).emit("conversationUpdated", eventPayload);
+      }
+    });
+  } catch (_socketError) {
+    // REST delivery still succeeds when socket server is not initialized in tests.
+  }
+};
+
+const emitMessage = (conversation, message) => {
+  try {
+    const { getIO } = require("../../../socket");
+    const io = getIO();
+    const conversationId = normalizeId(conversation?._id || message?.conversationId);
+    if (!conversationId) return;
+
+    const messagePayload = typeof message?.toObject === "function" ? message.toObject() : { ...message };
+    messagePayload.conversationId = normalizeId(messagePayload.conversationId || conversationId);
+
+    io.to(conversationId).emit("receiveMessage", messagePayload);
+    (conversation?.participants || []).forEach((participant) => {
+      const participantId = normalizeId(participant);
+      if (participantId) {
+        io.to(`user:${participantId}`).emit("receiveMessage", messagePayload);
+        io.to(`user:${participantId}`).emit("conversationUpdated", {
+          conversationId,
+          conversation,
+          message: messagePayload,
+        });
+      }
+    });
+  } catch (_socketError) {
+    // REST delivery still succeeds when socket server is not initialized in tests.
+  }
+};
+
 class ChatController {
   async getConversations(req, res) {
     try {
@@ -34,6 +88,7 @@ class ChatController {
         bookingId,
         jobPostId
       );
+      emitConversationUpdate(conversation, { conversation });
       return ApiResponse.success(res, conversation, "Conversation established successfully");
     } catch (error) {
       console.error("Error creating conversation:", error);
@@ -63,12 +118,8 @@ class ChatController {
         metadata,
       });
 
-      try {
-        const { getIO } = require("../../../socket");
-        getIO().to(conversationId).emit("receiveMessage", message);
-      } catch (_socketError) {
-        // REST delivery still succeeds when socket server is not initialized in tests.
-      }
+      const conversation = await chatService.getConversationById(conversationId);
+      emitMessage(conversation, message);
 
       return ApiResponse.success(res, message, "Message sent successfully", 201);
     } catch (error) {
