@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
     Plus,
     Image as ImageIcon,
-    DollarSign,
     Clock,
     AlertCircle,
     X,
@@ -23,6 +22,21 @@ import {
 } from "../../services/photographerPackageService";
 
 import { getAllCategories, getAllStyleTags } from "../../services/categoryAndStyleService";
+
+const BACKEND_ORIGIN = "http://localhost:3000";
+
+const resolveImageUrl = (image) => {
+    if (!image) return "";
+    const rawUrl = typeof image === "string"
+        ? image
+        : image.imageUrl || image.secure_url || image.url || "";
+
+    if (!rawUrl) return "";
+    if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
+    if (rawUrl.startsWith("/uploads/")) return `${BACKEND_ORIGIN}${rawUrl}`;
+    if (rawUrl.startsWith("/")) return `${BACKEND_ORIGIN}${rawUrl}`;
+    return `${BACKEND_ORIGIN}/uploads/packages/${rawUrl}`;
+};
 
 export default function PhotographerPackages({
     theme = "light",
@@ -77,7 +91,7 @@ export default function PhotographerPackages({
             placeholderDesc: "Mô tả chi tiết về dịch vụ, số lượng ảnh, địa điểm...",
             labelCategories: "DANH MỤC HỆ THỐNG",
             labelStyles: "PHONG CÁCH HỆ THỐNG",
-            labelPrice: "GIÁ DỊCH VỤ ($)",
+            labelPrice: "GIÁ DỊCH VỤ (VNĐ)",
             labelDuration: "THỜI GIAN CHỤP (GIỜ)",
             labelFiles: "HÌNH ẢNH MINH HỌA",
             cancel: "Hủy bỏ",
@@ -105,7 +119,7 @@ export default function PhotographerPackages({
             placeholderDesc: "Detailed description of services, photos count, locations...",
             labelCategories: "SYSTEM CATEGORIES",
             labelStyles: "SYSTEM STYLES",
-            labelPrice: "PRICE ($)",
+            labelPrice: "PRICE (VND)",
             labelDuration: "DURATION (HOURS)",
             labelFiles: "GALLERY IMAGES",
             cancel: "Cancel",
@@ -160,7 +174,8 @@ export default function PhotographerPackages({
             setAvailableStyles(styleData);
 
         } catch (err) {
-            Swal.fire("Error", err.message, "error");
+            const errMsg = err.response?.data?.message || err.response?.data || err.message;
+            Swal.fire("Error", typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg, "error");
         } finally {
             setLoading(false);
         }
@@ -206,7 +221,8 @@ export default function PhotographerPackages({
             // refresh list
             initData();
         } catch (err) {
-            Swal.fire("Error", err.message, "error");
+            const errMsg = err.response?.data?.message || err.response?.data || err.message;
+            Swal.fire("Error", typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg, "error");
         }
     };
 
@@ -229,7 +245,8 @@ export default function PhotographerPackages({
             setOpenDrawer(false);
             initData();
         } catch (err) {
-            Swal.fire("Error", err.message, "error");
+            const errMsg = err.response?.data?.message || err.response?.data || err.message;
+            Swal.fire("Error", typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg, "error");
         }
     };
 
@@ -301,7 +318,7 @@ export default function PhotographerPackages({
 
             setUploading(true);
 
-            let imageUrls = existingImages.map(img => img.imageUrl || img);
+            let imageUrls = existingImages.map(resolveImageUrl);
             let newImageUrls = [];
 
             if (files.length > 0) {
@@ -345,7 +362,9 @@ export default function PhotographerPackages({
             initData();
 
         } catch (err) {
-            Swal.fire("Error", err.message, "error");
+            console.error("Error during submit package:", err);
+            const errMsg = err.response?.data?.message || err.response?.data || err.message;
+            Swal.fire("Error", typeof errMsg === 'object' ? JSON.stringify(errMsg) : errMsg, "error");
         } finally {
             setUploading(false);
         }
@@ -367,11 +386,15 @@ export default function PhotographerPackages({
         setDuration(pkg.durationHours || "");
 
         setSelectedCategories(
-            (pkg.categories || []).map(c => String(c._id))
+            (pkg.categories || [])
+                .map(c => (c && typeof c === "object" ? String(c._id || "") : String(c)))
+                .filter(id => id && id !== "undefined" && id !== "null")
         );
 
         setSelectedStyles(
-            (pkg.styles || []).map(s => String(s._id))
+            (pkg.styles || [])
+                .map(s => (s && typeof s === "object" ? String(s._id || "") : String(s)))
+                .filter(id => id && id !== "undefined" && id !== "null")
         );
 
         setExistingImages(pkg.images || []);
@@ -564,8 +587,7 @@ export default function PhotographerPackages({
                                             <span>{p.durationHours}h</span>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <DollarSign size={13} className="text-emerald-500" />
-                                            <span className="text-emerald-500 dark:text-emerald-400 font-bold text-sm">${p.price}</span>
+                                            <span className="text-emerald-500 dark:text-emerald-400 font-bold text-sm">{Number(p.price || 0).toLocaleString('vi-VN')} đ</span>
                                         </div>
                                     </div>
 
@@ -581,7 +603,7 @@ export default function PhotographerPackages({
                                         (p.images || []).slice(0, 3).map((img, i) => (
                                             <img
                                                 key={i}
-                                                src={img.imageUrl || img}
+                                                src={resolveImageUrl(img)}
                                                 alt="preview"
                                                 className="w-11 h-11 rounded-lg object-cover ring-1 ring-slate-100 dark:ring-slate-800 bg-slate-100"
                                             />
@@ -679,7 +701,7 @@ export default function PhotographerPackages({
                                     <div className="space-y-0.5">
                                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t.labelPrice}</span>
                                         <span className="text-xl font-black text-emerald-500 dark:text-emerald-400 flex items-center">
-                                            <DollarSign size={18} className="inline -mt-0.5" />{detailData.price}
+                                            {Number(detailData.price || 0).toLocaleString('vi-VN')} đ
                                         </span>
                                     </div>
                                     <div className="space-y-0.5 border-l border-slate-200 dark:border-slate-800 pl-4">
@@ -745,7 +767,7 @@ export default function PhotographerPackages({
                                             {(detailData.images || []).map((img, idx) => (
                                                 <div key={idx} className="group relative aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 border border-slate-200 dark:border-slate-800 shadow-sm">
                                                     <img
-                                                        src={img.imageUrl || img}
+                                                        src={resolveImageUrl(img)}
                                                         alt={`Gói chụp ${idx + 1}`}
                                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                                     />
@@ -855,7 +877,7 @@ export default function PhotographerPackages({
                                         {t.labelPrice} <span className="text-rose-500">*</span>
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-3.5 top-3 text-sm text-slate-400 font-medium">$</span>
+                                        <span className="absolute left-3.5 top-3 text-sm text-slate-400 font-semibold">đ</span>
                                         <input
                                             type="number"
                                             required
@@ -1064,7 +1086,7 @@ export default function PhotographerPackages({
                                         {existingImages.map((img, index) => (
                                             <div key={`old-${index}`} className="relative">
                                                 <img
-                                                    src={img.imageUrl || img}
+                                                    src={resolveImageUrl(img)}
                                                     alt={`existing preview ${index}`}
                                                     className="w-full h-24 rounded-lg object-cover"
                                                 />
