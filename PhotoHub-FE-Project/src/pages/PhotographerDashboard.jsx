@@ -40,6 +40,8 @@ import WithdrawMoney from "../components/photographers/WithdrawMoney";
 import PhotographerPortfolioManager from "../components/photographers/PhotographerPortfolioManager";
 import PhotographerPackages from "../components/photographers/PhotographerPackages";
 import { getAllCategories, getAllStyleTags } from "../services/categoryAndStyleService";
+import PhotographerBookingList from "../booking/PhotographerBookingList";
+
 export default function PhotographerDashboard({
     language = "vi",
     theme = "dark",
@@ -781,6 +783,7 @@ export default function PhotographerDashboard({
                                 { id: "profile", label: t.profile, icon: User },
                                 { id: "portfolio", label: "Portfolio", icon: Layers },
                                 { id: "packages", label: "Packages", icon: CreditCard },
+                                { id: "bookings", label: language === "vi" ? "Yêu cầu đặt lịch" : "Booking Requests", icon: CheckCircle },
                                 { id: "calendar", label: t.calendar, icon: Calendar },
                                 { id: "jobs", label: t.jobs, icon: Briefcase },
                                 { id: "recommendations", label: t.recommendations, icon: TrendingUp },
@@ -1282,6 +1285,11 @@ export default function PhotographerDashboard({
                     {/* CALENDAR TAB */}
                     {activeTab === "calendar" && (
                         <PhotographerBookingCalendar theme={theme} />
+                    )}
+
+                    {/* BOOKINGS TAB */}
+                    {activeTab === "bookings" && (
+                        <PhotographerBookingList theme={theme} language={language} />
                     )}
 
                     {/* JOBS TAB */}

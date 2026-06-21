@@ -14,6 +14,7 @@ import PaymentResult from "./pages/PaymentResult";
 import ChatPage from "./pages/ChatPage";
 import AiSearchPage from "./pages/AiSearchPage";
 import CommunityPage from "./pages/CommunityPage";
+// import PaymentResult from "./booking/PaymentResult";
 
 // Admin Imports
 import AdminLayout from "./components/admin/AdminLayout";
@@ -140,6 +141,15 @@ export default function App() {
         <Route path="/chat" element={<ChatPage language={language} theme={theme} />} />
         <Route path="/payment-result" element={<PaymentResult language={language} theme={theme} />} />
         <Route path="/payment/result" element={<PaymentResult language={language} theme={theme} />} />
+        <Route
+          path="/payment/result"
+          element={
+            <PaymentResult
+              language={language}
+              theme={theme}
+            />
+          }
+        />
 
         {/* Admin routes */}
         <Route path="/admin" element={<AdminLayout />}>

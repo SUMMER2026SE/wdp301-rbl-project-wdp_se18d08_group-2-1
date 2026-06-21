@@ -20,6 +20,7 @@ const shootingCategoryRoutes = require("./modules/common/routes/shootingCategory
 const styleTagRoutes = require("./modules/common/routes/styleTag.routes");
 const packageRoutes = require("./modules/packages/routes/photographerPackage.routes");
 const communityRoutes = require("./modules/community/community.routes");
+const bookingRoutes = require("./modules/bookings/routes/booking.routes");
 // Middlewares
 app.use(express.json({ limit: "50mb" }));
 
@@ -56,6 +57,7 @@ app.use("/api/shooting-categories", shootingCategoryRoutes);
 app.use("/api/style-tags", styleTagRoutes);
 app.use("/api/packages", packageRoutes);
 app.use("/api/community", communityRoutes);
+app.use("/api/bookings", bookingRoutes);
 app.use("/api/upload", require("./utils/upload.routes"));
 
 // Health check

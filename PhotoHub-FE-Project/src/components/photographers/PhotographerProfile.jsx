@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import usePhotographers from "../../hooks/usePhotographers";
 import { aiRecommendService } from "../../services/aiRecommendService";
+import BookingModal from "../../booking/BookingModal";
 
 import {
   Star,
@@ -35,6 +36,7 @@ const PhotographerProfile = ({ language = "en" }) => {
   const [selectedImg, setSelectedImg] = useState(null);
   const [albums, setAlbums] = useState([]);
   const [selectedAlbumDetail, setSelectedAlbumDetail] = useState(null); // { album, images }
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
 
   // Giả lập danh sách ảnh portfolio nếu DB chưa có (Thay bằng data thật từ photographer.portfolio sau này)
@@ -582,7 +584,10 @@ const PhotographerProfile = ({ language = "en" }) => {
             </div>
           )}
 
-          <button className="w-full rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 px-6 py-4 font-bold text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:brightness-110 active:scale-[0.98] transition-all duration-300 tracking-wide text-base">
+          <button 
+            onClick={() => setIsBookingModalOpen(true)}
+            className="w-full rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 px-6 py-4 font-bold text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:brightness-110 active:scale-[0.98] transition-all duration-300 tracking-wide text-base"
+          >
             {t.bookNow}
           </button>
         </div>
@@ -605,6 +610,13 @@ const PhotographerProfile = ({ language = "en" }) => {
           </div>
         </div>
       )}
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+        photographer={photographer}
+        theme={localStorage.getItem("photohub-theme") || "dark"}
+        language={language}
+      />
     </div>
   );
 };
