@@ -377,7 +377,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                   </div>
                   <div className="flex flex-col items-center py-3">
                     <span className="font-black text-base text-orange-700 dark:text-orange-200">
-                      {hourlyRate ? `$${hourlyRate}` : "--"}
+                      {hourlyRate ? `${Number(hourlyRate).toLocaleString('vi-VN')} đ/h` : "--"}
                     </span>
                     <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wide mt-0.5">{t.hourlyRate}</span>
                   </div>

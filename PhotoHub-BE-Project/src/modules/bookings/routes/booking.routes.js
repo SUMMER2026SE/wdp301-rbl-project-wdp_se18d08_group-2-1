@@ -38,6 +38,18 @@ router.get(
   customerCtrl.getMyBookings
 );
 
+/**
+ * GET /api/bookings/payment/status
+ * Customer đồng bộ trạng thái thanh toán bằng orderCode của PayOS
+ */
+router.get(
+  "/payment/status",
+  authenticate,
+  authorize(["customer"]),
+  customerCtrl.syncPaymentStatusByOrderCode
+);
+
+
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  [3] PHOTOGRAPHER â€” Static routes (GET /photographer/my)
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
