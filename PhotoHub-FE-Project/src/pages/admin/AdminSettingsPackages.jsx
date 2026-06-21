@@ -203,7 +203,7 @@ export default function AdminSettingsPackages() {
           {/* Commission configurations */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-md">
             <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-              <Percent className="h-4.5 w-4.5 text-cyan-400" />
+              <Percent className="h-4.5 w-4.5 text-orange-400" />
               Tỷ lệ hoa hồng
             </h2>
             <p className="text-xs text-slate-400 mb-4">
@@ -217,13 +217,13 @@ export default function AdminSettingsPackages() {
                   max="30"
                   value={commissionRateInput}
                   onChange={(e) => setCommissionRateInput(parseInt(e.target.value) || 0)}
-                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-cyan-500"
+                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-orange-500"
                 />
                 <span className="flex items-center text-slate-400 text-sm font-bold bg-slate-800 border border-slate-700 px-3.5 rounded-xl">%</span>
               </div>
               <button
                 type="submit"
-                className="w-full bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl py-2.5 font-bold transition text-xs flex items-center justify-center gap-1.5"
+                className="w-full bg-orange-600 hover:bg-orange-500 text-white rounded-xl py-2.5 font-bold transition text-xs flex items-center justify-center gap-1.5"
               >
                 <Check className="h-4 w-4" />
                 Cập nhật Tỷ lệ
@@ -234,7 +234,7 @@ export default function AdminSettingsPackages() {
           {/* System announcements */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-md">
             <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-              <Bell className="h-4.5 w-4.5 text-cyan-400" />
+              <Bell className="h-4.5 w-4.5 text-orange-400" />
               Gửi thông báo hệ thống
             </h2>
             <form onSubmit={handleSendNotification} className="space-y-3">
@@ -288,7 +288,7 @@ export default function AdminSettingsPackages() {
 
               <button
                 type="submit"
-                className="w-full bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl py-2.5 font-bold transition text-xs flex items-center justify-center gap-1.5"
+                className="w-full bg-orange-600 hover:bg-orange-500 text-white rounded-xl py-2.5 font-bold transition text-xs flex items-center justify-center gap-1.5"
               >
                 Gửi thông báo
               </button>
@@ -303,7 +303,7 @@ export default function AdminSettingsPackages() {
           {/* Packages lists */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-md space-y-4">
             <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Tag className="h-4.5 w-4.5 text-cyan-400" />
+              <Tag className="h-4.5 w-4.5 text-orange-400" />
               Gói dịch vụ quảng bá
             </h2>
 
@@ -320,7 +320,7 @@ export default function AdminSettingsPackages() {
                         }
                       </h3>
                       <p className="text-xs text-slate-500 mt-1">{pkg.description || "Không có mô tả"}</p>
-                      <p className="text-xs text-cyan-400 font-bold mt-2">
+                      <p className="text-xs text-orange-400 font-bold mt-2">
                         {formatCurrency(pkg.price)} <span className="text-slate-400 font-normal">/ {pkg.durationDays} ngày</span>
                       </p>
                     </div>
@@ -352,7 +352,7 @@ export default function AdminSettingsPackages() {
           {/* Create / Edit package form */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-md">
             <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-              <Settings className="h-4.5 w-4.5 text-cyan-400" />
+              <Settings className="h-4.5 w-4.5 text-orange-400" />
               {editingPackageId ? "Chỉnh sửa Gói" : "Thêm Gói mới"}
             </h2>
 
@@ -415,7 +415,7 @@ export default function AdminSettingsPackages() {
               <div className="grid grid-cols-2 gap-2 pt-3">
                 <button
                   type="submit"
-                  className="bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl py-2.5 font-bold transition text-xs flex items-center justify-center gap-1"
+                  className="bg-orange-600 hover:bg-orange-500 text-white rounded-xl py-2.5 font-bold transition text-xs flex items-center justify-center gap-1"
                 >
                   {editingPackageId ? "Cập nhật" : "Tạo gói"}
                 </button>

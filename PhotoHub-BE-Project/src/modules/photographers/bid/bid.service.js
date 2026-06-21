@@ -1,7 +1,7 @@
 const Bid = require("./bid.model");
 const JobPost = require("../job/jobPost.model");
 const Photographer = require("../models/photographer");
-const Booking = require("../booking/booking.model");
+const { Booking } = require("../../bookings/models/booking.model");
 const { ACTIVE_BOOKING_STATUSES, calculateFitScore } = require("../utils/jobFitScoring");
 const { getPhotographerIdentity, normalizeBookingTime } = require("../utils/photographerIdentity");
 

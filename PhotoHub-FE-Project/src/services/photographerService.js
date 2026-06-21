@@ -2,6 +2,7 @@ import axios from "axios";
 
 const BASE_URL = "http://localhost:3000/api/photographers";
 const MARKETPLACE_BASE_URL = "http://localhost:3000/api/photographer";
+const BOOKING_BASE_URL = "http://localhost:3000/api/bookings";
 
 export const photographerService = {
 
@@ -126,10 +127,51 @@ export const photographerService = {
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Lỗi hệ thống: ${response.status}`);
+            throw new Error(errorData.message || "L\u1ed7i h\u1ec7 th\u1ed1ng: " + response.status);
         }
 
         return response.json();
+    },
+    // Upload CCCD xac minh
+    uploadVerification: async (frontImage, backImage) => {
+        const token = localStorage.getItem("token");
+
+        const formData = new FormData();
+
+        formData.append("frontImage", frontImage);
+
+        if (backImage) {
+            formData.append("backImage", backImage);
+        }
+
+        const response = await axios.post(
+            `${BASE_URL}/me/verification`,
+            formData,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+        );
+
+        return response.data;
+    },
+
+    // Kiểm tra trạng thái hồ sơ photographer
+    getProfileStatus: async () => {
+        const token = localStorage.getItem("token");
+
+        const response = await axios.get(
+            `${BASE_URL}/me/profile-status`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        return response.data;
     },
 };
 
@@ -152,16 +194,15 @@ export const photographerMarketplaceService = {
     // --- BOOKINGS ---
     acceptBooking: async (bookingId) => {
         const response = await axios.put(
-            `${MARKETPLACE_BASE_URL}/bookings/${bookingId}/accept`,
+            `${BOOKING_BASE_URL}/${bookingId}/accept`,
             {},
             getAuthConfig()
         );
         return response.data;
     },
-
     rejectBooking: async (bookingId, reason) => {
         const response = await axios.put(
-            `${MARKETPLACE_BASE_URL}/bookings/${bookingId}/reject`,
+            `${BOOKING_BASE_URL}/${bookingId}/reject`,
             { reason },
             getAuthConfig()
         );
@@ -170,7 +211,7 @@ export const photographerMarketplaceService = {
 
     completeBooking: async (bookingId) => {
         const response = await axios.put(
-            `${MARKETPLACE_BASE_URL}/bookings/${bookingId}/complete`,
+            `${BOOKING_BASE_URL}/${bookingId}/complete`,
             {},
             getAuthConfig()
         );
@@ -179,7 +220,7 @@ export const photographerMarketplaceService = {
 
     approveCompletion: async (bookingId) => {
         const response = await axios.put(
-            `${MARKETPLACE_BASE_URL}/bookings/${bookingId}/approve`,
+            `${BOOKING_BASE_URL}/${bookingId}/approve`,
             {},
             getAuthConfig()
         );
@@ -351,3 +392,4 @@ export const photographerMarketplaceService = {
         return response.data;
     },
 };
+

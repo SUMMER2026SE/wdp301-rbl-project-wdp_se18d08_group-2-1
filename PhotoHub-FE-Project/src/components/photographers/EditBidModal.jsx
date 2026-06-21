@@ -91,9 +91,9 @@ export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fadeIn">
       <div
-        className={`relative max-w-xl w-full rounded-3xl p-6 border ${
+        className={`relative max-w-lg w-full rounded-2xl p-5 border ${
           isDark ? "bg-[#121214] border-white/5 text-white" : "bg-white border-slate-200 text-slate-900"
         } shadow-2xl`}
       >
@@ -101,34 +101,34 @@ export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", 
           onClick={onClose}
           className="absolute top-4 right-4 text-slate-500 hover:text-red-500 transition-colors"
         >
-          <X size={20} />
+          <X size={18} />
         </button>
 
-        <h3 className="text-xl font-black mb-6">{t.title}</h3>
+        <h3 className="text-lg font-black mb-4">{t.title}</h3>
 
         <button
           type="button"
           onClick={handleOptimize}
           disabled={optimizing}
-          className="mb-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm font-bold text-cyan-300 transition hover:bg-cyan-500/15 disabled:opacity-50"
+          className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-2.5 text-xs font-bold text-orange-600 dark:text-orange-400 transition hover:bg-orange-500/15 disabled:opacity-50"
         >
-          <Sparkles size={16} />
+          <Sparkles size={14} />
           {optimizing ? "Analyzing bid..." : "Analyze and optimize before deadline"}
         </button>
 
         {optimization && (
-          <div className="mb-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-xs text-amber-200">
+          <div className="mb-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-[11px] text-amber-200">
             <div className="mb-2 font-black text-amber-300">Current bid score: {optimization.currentScore}%</div>
             {(optimization.suggestions || []).map((item, index) => (
-              <div key={index} className="flex gap-2 py-1">
-                <CheckCircle size={13} className="mt-0.5 shrink-0" />
+              <div key={index} className="flex gap-2 py-0.5">
+                <CheckCircle size={12} className="mt-0.5 shrink-0" />
                 <span>{item}</span>
               </div>
             ))}
             <button
               type="button"
               onClick={applyOptimization}
-              className="mt-3 rounded-xl bg-amber-500 px-3 py-2 text-[11px] font-black text-black transition hover:bg-amber-400"
+              className="mt-2.5 rounded bg-amber-500 px-2.5 py-1.5 text-[10px] font-black text-black transition hover:bg-amber-400"
             >
               Apply suggested version
             </button>
@@ -137,19 +137,19 @@ export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", 
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 block">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1 block">
               {t.proposalLabel}
             </label>
             <div className="relative">
-              <FileText className="absolute left-4 top-4 text-slate-500" size={18} />
+              <FileText className="absolute left-3.5 top-3 text-slate-500" size={16} />
               <textarea
                 value={proposal}
                 onChange={(e) => setProposal(e.target.value)}
-                rows={4}
-                className={`w-full rounded-2xl pl-12 pr-4 py-3 outline-none border font-medium transition-all ${
+                rows={3}
+                className={`w-full rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none border font-medium transition-all ${
                   isDark
-                    ? "bg-[#09090b] border-white/5 focus:border-cyan-500"
-                    : "bg-slate-50 border-slate-200 focus:border-cyan-500 focus:bg-white"
+                    ? "bg-[#09090b] border-white/5 focus:border-orange-500"
+                    : "bg-slate-50 border-slate-200 focus:border-orange-500 focus:bg-white"
                 }`}
                 required
               />
@@ -158,19 +158,19 @@ export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", 
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 block">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1 block">
                 {t.priceLabel}
               </label>
               <div className="relative">
-                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
                 <input
                   type="number"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border font-medium transition-all ${
+                  className={`w-full rounded-xl pl-10 pr-4 py-2 outline-none border font-medium transition-all ${
                     isDark
-                      ? "bg-[#09090b] border-white/5 focus:border-cyan-500"
-                      : "bg-slate-50 border-slate-200 focus:border-cyan-500 focus:bg-white"
+                      ? "bg-[#09090b] border-white/5 focus:border-orange-500"
+                      : "bg-slate-50 border-slate-200 focus:border-orange-500 focus:bg-white"
                   }`}
                   min="1"
                   required
@@ -179,19 +179,19 @@ export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", 
             </div>
 
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 block">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1 block">
                 {t.timeLabel}
               </label>
               <div className="relative">
-                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
                 <input
                   type="text"
                   value={estimatedTime}
                   onChange={(e) => setEstimatedTime(e.target.value)}
-                  className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border font-medium transition-all ${
+                  className={`w-full rounded-xl pl-10 pr-4 py-2 outline-none border font-medium transition-all ${
                     isDark
-                      ? "bg-[#09090b] border-white/5 focus:border-cyan-500"
-                      : "bg-slate-50 border-slate-200 focus:border-cyan-500 focus:bg-white"
+                      ? "bg-[#09090b] border-white/5 focus:border-orange-500"
+                      : "bg-slate-50 border-slate-200 focus:border-orange-500 focus:bg-white"
                   }`}
                   required
                 />
@@ -199,11 +199,11 @@ export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", 
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-white/[0.04] mt-6">
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-white/[0.04] mt-4">
             <button
               type="button"
               onClick={onClose}
-              className={`px-6 py-3 rounded-2xl font-bold transition text-sm ${
+              className={`px-4 py-2 rounded-xl font-bold transition text-xs ${
                 isDark ? "hover:bg-white/5 text-slate-400" : "hover:bg-slate-100 text-slate-500"
               }`}
             >
@@ -212,9 +212,9 @@ export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", 
             <button
               type="submit"
               disabled={submitting}
-              className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white px-6 py-3 rounded-2xl font-bold tracking-wide transition shadow-lg shadow-cyan-500/20 disabled:opacity-40"
+              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-5 py-2 rounded-xl text-xs font-bold tracking-wide transition shadow-md shadow-orange-500/10 disabled:opacity-40"
             >
-              <Send size={16} />
+              <Send size={14} />
               {submitting ? t.submitting : t.submitBtn}
             </button>
           </div>

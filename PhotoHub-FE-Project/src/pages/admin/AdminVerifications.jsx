@@ -124,7 +124,7 @@ export default function AdminVerifications() {
             key={tab.val}
             onClick={() => { setVerificationStatus(tab.val); setPage(1); setSelectedVerification(null); }}
             className={`py-3 px-1 text-sm font-semibold border-b-2 transition ${verificationStatus === tab.val
-              ? "border-cyan-500 text-cyan-400"
+              ? "border-orange-500 text-orange-400"
               : "border-transparent text-slate-400 hover:text-white"
               }`}
           >
@@ -151,7 +151,7 @@ export default function AdminVerifications() {
               {loading ? (
                 <tr>
                   <td colSpan="4" className="text-center py-12">
-                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-cyan-500 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-orange-500 mx-auto"></div>
                   </td>
                 </tr>
               ) : verifications.length > 0 ? (
@@ -297,7 +297,7 @@ export default function AdminVerifications() {
                         href={link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 hover:underline text-xs"
+                        className="flex items-center gap-2 text-orange-400 hover:text-orange-300 hover:underline text-xs"
                       >
                         <LinkIcon className="h-3 w-3" />
                         {link}

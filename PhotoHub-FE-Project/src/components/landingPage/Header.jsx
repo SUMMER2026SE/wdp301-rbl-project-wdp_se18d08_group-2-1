@@ -339,4 +339,3 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
   );
 }
 
-

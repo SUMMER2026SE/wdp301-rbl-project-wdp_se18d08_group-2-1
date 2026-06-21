@@ -11,13 +11,13 @@ const photographerCtrl = require("../controller/booking.photographer.controller"
 
 router.post("/webhook/payos", customerCtrl.handlePayosWebhook);
 
-// ═══════════════════════════════════════════════════════════════════
-//  [2] CUSTOMER — Static routes (POST /, GET /my)
-// ═══════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  [2] CUSTOMER â€” Static routes (POST /, GET /my)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 /**
  * POST /api/bookings
- * Customer tạo booking mới → Emit Socket.IO "new-booking-request" cho Photographer
+ * Customer táº¡o booking má»›i â†’ Emit Socket.IO "new-booking-request" cho Photographer
  */
 router.post(
   "/",
@@ -29,7 +29,7 @@ router.post(
 
 /**
  * GET /api/bookings/my?status=pending&page=1&limit=10
- * Customer xem danh sách booking của mình (có phân trang)
+ * Customer xem danh sĂ¡ch booking cá»§a mĂ¬nh (cĂ³ phĂ¢n trang)
  */
 router.get(
   "/my",
@@ -38,13 +38,13 @@ router.get(
   customerCtrl.getMyBookings
 );
 
-// ═══════════════════════════════════════════════════════════════════
-//  [3] PHOTOGRAPHER — Static routes (GET /photographer/my)
-// ═══════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  [3] PHOTOGRAPHER â€” Static routes (GET /photographer/my)
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 /**
  * GET /api/bookings/photographer/my?status=pending&page=1&limit=10
- * Photographer xem danh sách booking được đặt cho mình (có phân trang)
+ * Photographer xem danh sĂ¡ch booking Ä‘Æ°á»£c Ä‘áº·t cho mĂ¬nh (cĂ³ phĂ¢n trang)
  */
 router.get(
   "/photographer/my",
@@ -53,14 +53,14 @@ router.get(
   photographerCtrl.getMyBookings
 );
 
-// ═══════════════════════════════════════════════════════════════════
-//  [4] CUSTOMER — Dynamic routes với suffix cố định
-//  Đặt TRƯỚC /:id để Express không hiểu nhầm suffix ("cancel","payment")
-// ═══════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  [4] CUSTOMER â€” Dynamic routes vá»›i suffix cá»‘ Ä‘á»‹nh
+//  Äáº·t TRÆ¯á»C /:id Ä‘á»ƒ Express khĂ´ng hiá»ƒu nháº§m suffix ("cancel","payment")
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 /**
  * PUT /api/bookings/:id/cancel
- * Customer huỷ booking (chỉ khi pending hoặc accepted)
+ * Customer huá»· booking (chá»‰ khi pending hoáº·c accepted)
  */
 router.put(
   "/:id/cancel",
@@ -71,7 +71,7 @@ router.put(
 
 /**
  * POST /api/bookings/:id/payment
- * Customer tạo link thanh toán PayOS (booking phải ở trạng thái accepted)
+ * Customer táº¡o link thanh toĂ¡n PayOS (booking pháº£i á»Ÿ tráº¡ng thĂ¡i accepted)
  */
 router.post(
   "/:id/payment",
@@ -80,13 +80,20 @@ router.post(
   customerCtrl.createPaymentLink
 );
 
-// ═══════════════════════════════════════════════════════════════════
-//  [4] PHOTOGRAPHER — Dynamic routes với suffix cố định
-// ═══════════════════════════════════════════════════════════════════
+router.get(
+  "/:id/payment/status",
+  authenticate,
+  authorize(["customer"]),
+  customerCtrl.syncPaymentStatus
+);
+
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  [4] PHOTOGRAPHER â€” Dynamic routes vá»›i suffix cá»‘ Ä‘á»‹nh
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 /**
  * PUT /api/bookings/:id/accept
- * Photographer chấp nhận booking → Emit Socket.IO "booking-status-updated" cho Customer
+ * Photographer cháº¥p nháº­n booking â†’ Emit Socket.IO "booking-status-updated" cho Customer
  */
 router.put(
   "/:id/accept",
@@ -97,7 +104,7 @@ router.put(
 
 /**
  * PUT /api/bookings/:id/reject
- * Photographer từ chối booking kèm lý do → Emit Socket.IO cho Customer
+ * Photographer tá»« chá»‘i booking kĂ¨m lĂ½ do â†’ Emit Socket.IO cho Customer
  */
 router.put(
   "/:id/reject",
@@ -109,7 +116,7 @@ router.put(
 
 /**
  * PUT /api/bookings/:id/complete
- * Photographer đánh dấu hoàn thành (bắt buộc upload finalAlbum trước)
+ * Photographer Ä‘Ă¡nh dáº¥u hoĂ n thĂ nh (báº¯t buá»™c upload finalAlbum trÆ°á»›c)
  */
 router.put(
   "/:id/complete",
@@ -118,15 +125,15 @@ router.put(
   photographerCtrl.completeBooking
 );
 
-// ═══════════════════════════════════════════════════════════════════
-//  [5] SHARED — Dynamic route thuần /:id  ← PHẢI ĐẶT CUỐI CÙNG
-//  Nếu đặt trước, Express sẽ match "my" / "photographer" / "webhook" như :id
-// ═══════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  [5] SHARED â€” Dynamic route thuáº§n /:id  â† PHáº¢I Äáº¶T CUá»I CĂ™NG
+//  Náº¿u Ä‘áº·t trÆ°á»›c, Express sáº½ match "my" / "photographer" / "webhook" nhÆ° :id
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 /**
  * GET /api/bookings/:id
- * Xem chi tiết một booking.
- * Controller tự kiểm tra: chỉ customer/photographer liên quan hoặc admin.
+ * Xem chi tiáº¿t má»™t booking.
+ * Controller tá»± kiá»ƒm tra: chá»‰ customer/photographer liĂªn quan hoáº·c admin.
  */
 router.get(
   "/:id",

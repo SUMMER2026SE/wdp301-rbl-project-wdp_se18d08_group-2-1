@@ -180,7 +180,7 @@ export default function AdminDisputes() {
             onClick={() => { setStatus(tab.val); setPage(1); setSelectedDispute(null); }}
             className={`py-3 px-1 text-sm font-semibold border-b-2 transition ${
               status === tab.val
-                ? "border-cyan-500 text-cyan-400"
+                ? "border-orange-500 text-orange-400"
                 : "border-transparent text-slate-400 hover:text-white"
             }`}
           >
@@ -208,7 +208,7 @@ export default function AdminDisputes() {
               {loading ? (
                 <tr>
                   <td colSpan="5" className="text-center py-12">
-                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-cyan-500 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-orange-500 mx-auto"></div>
                   </td>
                 </tr>
               ) : disputes.length > 0 ? (
@@ -222,7 +222,7 @@ export default function AdminDisputes() {
                       <div className="font-semibold text-white">{d.photographer?.displayName}</div>
                       <div className="text-xs text-slate-500">{d.photographer?.user?.email}</div>
                     </td>
-                    <td className="py-3 px-3 text-cyan-400 font-bold">
+                    <td className="py-3 px-3 text-orange-400 font-bold">
                       {formatCurrency(d.booking?.depositAmount)}
                     </td>
                     <td className="py-3 px-3 text-slate-400">{new Date(d.createdAt).toLocaleDateString("vi-VN")}</td>
@@ -309,7 +309,7 @@ export default function AdminDisputes() {
                 </div>
                 <div className="flex justify-between mt-1">
                   <span className="text-slate-400">Tiền cọc cọc ký quỹ đang giữ:</span>
-                  <span className="text-cyan-400 font-bold">{formatCurrency(selectedDispute.dispute.booking?.depositAmount)}</span>
+                  <span className="text-orange-400 font-bold">{formatCurrency(selectedDispute.dispute.booking?.depositAmount)}</span>
                 </div>
               </div>
 
@@ -321,7 +321,7 @@ export default function AdminDisputes() {
                     {selectedDispute.chatMessages.map((msg, i) => {
                       const isCustomer = msg.sender === selectedDispute.dispute.customer._id;
                       return (
-                        <div key={i} className={`p-1.5 rounded text-[11px] ${isCustomer ? "bg-slate-900 border border-slate-800/80" : "bg-cyan-950/20 border border-cyan-800/30"}`}>
+                        <div key={i} className={`p-1.5 rounded text-[11px] ${isCustomer ? "bg-slate-900 border border-slate-800/80" : "bg-orange-950/20 border border-orange-800/30"}`}>
                           <span className="font-bold text-slate-400">{isCustomer ? "Customer" : "Photographer"}: </span>
                           <span className="text-slate-200">"{msg.message}"</span>
                         </div>
@@ -334,7 +334,7 @@ export default function AdminDisputes() {
               {/* Resolution Form if Open or Investigating */}
               {(selectedDispute.dispute.status === "OPEN" || selectedDispute.dispute.status === "INVESTIGATING") ? (
                 <form onSubmit={handleResolveSubmit} className="pt-4 border-t border-slate-800/80 space-y-3">
-                  <h3 className="font-bold text-cyan-400 text-xs uppercase tracking-wider">Chọn hướng phân xử</h3>
+                  <h3 className="font-bold text-orange-400 text-xs uppercase tracking-wider">Chọn hướng phân xử</h3>
                   
                   {/* Status update to investigate */}
                   {selectedDispute.dispute.status === "OPEN" && (
@@ -353,7 +353,7 @@ export default function AdminDisputes() {
                     <select
                       value={resolutionType}
                       onChange={(e) => setResolutionType(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-orange-500"
                     >
                       <option value="REFUND_FULL">Hoàn tiền 100% cho Khách hàng</option>
                       <option value="RELEASE_PAYMENT">Giải ngân 100% cho Photographer</option>
@@ -390,7 +390,7 @@ export default function AdminDisputes() {
                       placeholder="Nhập lập luận phân xử tranh chấp..."
                       value={resolutionNote}
                       onChange={(e) => setResolutionNote(e.target.value)}
-                      className="w-full h-20 bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 resize-none"
+                      className="w-full h-20 bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-orange-500 resize-none"
                     />
                   </div>
 

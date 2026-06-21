@@ -45,7 +45,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-cyan-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-orange-500"></div>
       </div>
     );
   }
@@ -80,7 +80,7 @@ export default function AdminDashboard() {
       value: formatCurrency(stats.totalRevenue),
       sub: `Hoa hồng thu được: ${formatCurrency(stats.totalCommission)}`,
       icon: DollarSign,
-      color: "from-cyan-600/20 to-cyan-500/5 border-cyan-500/20 text-cyan-400"
+      color: "from-orange-600/20 to-orange-500/5 border-orange-500/20 text-orange-400"
     }
   ];
 
@@ -131,7 +131,7 @@ export default function AdminDashboard() {
         <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-md">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-cyan-400" />
+              <TrendingUp className="h-5 w-5 text-orange-400" />
               Doanh thu hàng tháng
             </h2>
             <span className="text-xs text-slate-400">Giao dịch thành công (VNĐ)</span>
@@ -145,14 +145,14 @@ export default function AdminDashboard() {
                   <div key={idx} className="flex-1 flex flex-col items-center group relative">
                     {/* Tooltip */}
                     <div className="absolute bottom-full mb-2 hidden group-hover:block z-10 bg-slate-950 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 text-white text-center shadow-xl">
-                      <p className="font-semibold text-cyan-400">{formatCurrency(data.revenue)}</p>
+                      <p className="font-semibold text-orange-400">{formatCurrency(data.revenue)}</p>
                       <p className="text-slate-400 font-normal">{data.month}</p>
                     </div>
 
                     {/* Bar */}
                     <div 
                       style={{ height: `${heightPercentage}%` }} 
-                      className="w-full bg-gradient-to-t from-cyan-600 to-cyan-400 rounded-t-lg transition-all duration-500 hover:from-cyan-400 hover:to-cyan-300 shadow-lg shadow-cyan-500/10 cursor-pointer"
+                      className="w-full bg-gradient-to-t from-orange-600 to-orange-400 rounded-t-lg transition-all duration-500 hover:from-orange-400 hover:to-orange-300 shadow-lg shadow-orange-500/10 cursor-pointer"
                     ></div>
                     
                     {/* Label */}
@@ -177,7 +177,7 @@ export default function AdminDashboard() {
             <div className="space-y-4">
               {stats.bookingStatusChart?.map((item, idx) => {
                 const percentage = stats.totalBookings > 0 ? (item.count / stats.totalBookings) * 100 : 0;
-                let colorClass = "bg-cyan-500";
+                let colorClass = "bg-orange-500";
                 if (item.status === "COMPLETED") colorClass = "bg-emerald-500";
                 if (item.status === "CANCELLED") colorClass = "bg-red-500";
                 if (item.status === "DISPUTED") colorClass = "bg-orange-500";
@@ -237,7 +237,7 @@ export default function AdminDashboard() {
                   stats.topPhotographers.map((p, idx) => (
                     <tr key={idx} className="hover:bg-slate-800/20 transition duration-200">
                       <td className="py-3 px-4 flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-cyan-500 text-white font-bold flex items-center justify-center">
+                        <div className="h-9 w-9 rounded-full bg-orange-500 text-white font-bold flex items-center justify-center">
                           {p.displayName?.charAt(0)?.toUpperCase()}
                         </div>
                         <div>
@@ -251,7 +251,7 @@ export default function AdminDashboard() {
                         <span className="text-xs text-slate-500"> ({p.totalReviews} đánh giá)</span>
                       </td>
                       <td className="py-3 px-4 text-center text-slate-400 font-semibold">{p.completedBookings}</td>
-                      <td className="py-3 px-4 text-right font-bold text-cyan-400">{formatCurrency(p.totalEarnings)}</td>
+                      <td className="py-3 px-4 text-right font-bold text-orange-400">{formatCurrency(p.totalEarnings)}</td>
                     </tr>
                   ))
                 ) : (

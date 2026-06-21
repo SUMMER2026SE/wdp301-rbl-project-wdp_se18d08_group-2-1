@@ -1,28 +1,24 @@
-/**
- * booking.service.js
- * Toàn bộ business logic cho module Bookings.
- * Dùng chung cho cả Customer và Photographer controllers.
- */
-
 const { PayOS } = require("@payos/node");
-const { Booking, BOOKING_STATUS } = require("../models/booking.model");
+const { Booking, BOOKING_STATUS, PAYMENT_STATUS } = require("../models/booking.model");
 const Photographer = require("../../photographers/models/photographer");
 const Payment = require("../../admin/models/Payment");
-const { User } = require("../../auth/models/User");
+const Wallet = require("../../admin/models/Wallet");
 const { getIO } = require("../../../socket");
 const {
   sendBookingConfirmedToCustomer,
   sendBookingConfirmedToPhotographer,
 } = require("../../../services/EmailService");
 
-// ─── Khởi tạo PayOS client ─────────────────────────────────────────
-const payos = new PayOS(
-  process.env.PAYOS_CLIENT_ID,
-  process.env.PAYOS_API_KEY,
-  process.env.PAYOS_CHECKSUM_KEY
-);
+const COMMISSION_RATE = Number(process.env.PHOTOGRAPHER_COMMISSION_RATE || 0.1);
+const PAYOUT_HOLD_DAYS = Number(process.env.PAYOUT_HOLD_DAYS || 0);
+const DEFAULT_FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:4200";
 
-// ─── Utility: Emit socket an toàn (không throw) ───────────────────
+const payos = new PayOS({
+  clientId: process.env.PAYOS_CLIENT_ID,
+  apiKey: process.env.PAYOS_API_KEY,
+  checksumKey: process.env.PAYOS_CHECKSUM_KEY,
+});
+
 const safeEmit = (room, event, data) => {
   try {
     getIO().to(room).emit(event, data);
@@ -31,14 +27,61 @@ const safeEmit = (room, event, data) => {
   }
 };
 
-class BookingService {
-  // ════════════════════════════════════════════════════════════════
-  //  SHARED
-  // ════════════════════════════════════════════════════════════════
+const normalizeUrl = (baseUrl, path) => {
+  const base = String(baseUrl || DEFAULT_FRONTEND_URL).replace(/\/$/, "");
+  return `${base}${path}`;
+};
 
-  /**
-   * Lấy chi tiết một booking (dùng chung).
-   */
+const buildPaymentResultUrl = (configuredUrl, params = {}) => {
+  const baseUrl = configuredUrl || normalizeUrl(DEFAULT_FRONTEND_URL, "/payment/result");
+  try {
+    const url = new URL(baseUrl, DEFAULT_FRONTEND_URL);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        url.searchParams.set(key, String(value));
+      }
+    });
+    return url.toString();
+  } catch (_error) {
+    const query = new URLSearchParams(params).toString();
+    const separator = String(baseUrl).includes("?") ? "&" : "?";
+    return `${baseUrl}${separator}${query}`;
+  }
+};
+
+const getBookingAmount = (booking) => Number(booking.price || booking.totalPrice || 0);
+const getPayoutEligibleAt = () => new Date(Date.now() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
+
+class BookingService {
+  async ensureWallet(userId) {
+    return await Wallet.findOneAndUpdate(
+      { user: userId },
+      { $setOnInsert: { user: userId, balance: 0, holdBalance: 0, currency: "VND" } },
+      { new: true, upsert: true }
+    );
+  }
+
+  async createPayOSPaymentLink(paymentData) {
+    if (payos.paymentRequests?.create) {
+      return await payos.paymentRequests.create(paymentData);
+    }
+    return await payos.createPaymentLink(paymentData);
+  }
+
+  async getPayOSPaymentLink(orderCodeOrPaymentLinkId) {
+    if (payos.paymentRequests?.get) {
+      return await payos.paymentRequests.get(orderCodeOrPaymentLinkId);
+    }
+    return await payos.getPaymentLinkInformation(orderCodeOrPaymentLinkId);
+  }
+
+  async verifyPayOSWebhook(webhookBody) {
+    if (payos.webhooks?.verify) {
+      return await payos.webhooks.verify(webhookBody);
+    }
+    return payos.verifyPaymentWebhookData(webhookBody);
+  }
+
   async findById(bookingId) {
     return Booking.findById(bookingId)
       .populate("customer", "fullName email avatar phoneNumber")
@@ -46,56 +89,36 @@ class BookingService {
       .populate("package", "title price durationHours numberOfPhotos locationType");
   }
 
-  /**
-   * Kiểm tra xung đột lịch của photographer.
-   * Chỉ check các booking ở trạng thái accepted/confirmed/completed.
-   */
   async checkOverlap(photographerUserId, start, end, excludeBookingId = null) {
     const query = {
       photographer: photographerUserId,
       status: { $in: [BOOKING_STATUS.ACCEPTED, BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED] },
-      $or: [
-        { start: { $lt: end }, end: { $gt: start } }, // bất kỳ phần nào giao nhau
-      ],
+      $or: [{ start: { $lt: end }, end: { $gt: start } }],
     };
     if (excludeBookingId) query._id = { $ne: excludeBookingId };
     return (await Booking.countDocuments(query)) > 0;
   }
 
-  // ════════════════════════════════════════════════════════════════
-  //  CUSTOMER ACTIONS
-  // ════════════════════════════════════════════════════════════════
-
-  /**
-   * Tạo booking mới.
-   * @param {string} customerUserId
-   * @param {Object} dto
-   */
   async createBooking(customerUserId, dto) {
     const { photographerUserId, packageId, title, note, start, end, location, price } = dto;
 
     const startDate = new Date(start);
     const endDate = new Date(end);
 
-    // Kiểm tra photographer
     const photographer = await Photographer.findOne({ user: photographerUserId });
-    if (!photographer) {
-      throw new Error("Nhiếp ảnh gia không tồn tại");
-    }
+    if (!photographer) throw new Error("Photographer profile not found");
     if (photographer.verificationStatus !== "VERIFIED") {
-      throw new Error("Nhiếp ảnh gia chưa được xác minh bởi hệ thống");
+      throw new Error("Photographer is not verified yet");
     }
     if (!photographer.isAvailable) {
-      throw new Error("Nhiếp ảnh gia hiện không nhận lịch đặt mới");
+      throw new Error("Photographer is currently unavailable for new bookings");
     }
 
-    // Kiểm tra lịch bị trùng (accepted+)
     const hasConflict = await this.checkOverlap(photographerUserId, startDate, endDate);
     if (hasConflict) {
-      throw new Error("Nhiếp ảnh gia đã có lịch chụp trong khoảng thời gian này");
+      throw new Error("Photographer already has a confirmed booking in this time range");
     }
 
-    // Tạo booking
     const booking = await Booking.create({
       customer: customerUserId,
       photographer: photographerUserId,
@@ -107,12 +130,11 @@ class BookingService {
       location: location.trim(),
       price: Number(price),
       status: BOOKING_STATUS.PENDING,
+      paymentStatus: PAYMENT_STATUS.UNPAID,
     });
 
-    // Populate để trả về đầy đủ thông tin
     const populated = await this.findById(booking._id);
 
-    // ── Realtime: Notify photographer ──
     safeEmit(`user:${photographerUserId}`, "new-booking-request", {
       bookingId: booking._id,
       customer: {
@@ -131,9 +153,6 @@ class BookingService {
     return populated;
   }
 
-  /**
-   * Danh sách bookings dành cho Customer.
-   */
   async getBookingsForCustomer(customerUserId, { status, page = 1, limit = 10 } = {}) {
     const query = { customer: customerUserId };
     if (status) query.status = status;
@@ -160,189 +179,248 @@ class BookingService {
     };
   }
 
-  /**
-   * Customer huỷ booking (chỉ khi pending hoặc accepted).
-   */
   async cancelBooking(bookingId, customerUserId) {
     const booking = await Booking.findById(bookingId);
-    if (!booking) throw new Error("Booking không tồn tại");
+    if (!booking) throw new Error("Booking not found");
 
-    if (booking.customer.toString() !== customerUserId.toString()) {
-      throw new Error("Bạn không có quyền huỷ booking này");
+    if (String(booking.customer) !== String(customerUserId)) {
+      throw new Error("You are not allowed to cancel this booking");
     }
     if (![BOOKING_STATUS.PENDING, BOOKING_STATUS.ACCEPTED].includes(booking.status)) {
-      throw new Error("Chỉ có thể huỷ booking ở trạng thái pending hoặc accepted");
+      throw new Error("Only pending or accepted bookings can be cancelled");
+    }
+
+    if (booking.payosOrderCode && booking.paymentStatus === PAYMENT_STATUS.PENDING) {
+      try {
+        if (payos.paymentRequests?.cancel) {
+          await payos.paymentRequests.cancel(Number(booking.payosOrderCode), "Customer cancelled booking");
+        } else if (payos.cancelPaymentLink) {
+          await payos.cancelPaymentLink(Number(booking.payosOrderCode), "Customer cancelled booking");
+        }
+      } catch (error) {
+        console.warn("[PayOS] Could not cancel payment link:", error.message);
+      }
     }
 
     booking.status = BOOKING_STATUS.CANCELLED;
+    booking.paymentStatus = booking.paymentStatus === PAYMENT_STATUS.PAID ? PAYMENT_STATUS.PAID : PAYMENT_STATUS.CANCELLED;
     await booking.save();
 
-    // Notify photographer
     safeEmit(`user:${booking.photographer.toString()}`, "booking-status-updated", {
       bookingId: booking._id,
       status: BOOKING_STATUS.CANCELLED,
-      message: "Khách hàng đã huỷ lịch chụp",
+      message: "Customer cancelled the booking",
     });
 
     return booking;
   }
 
-  /**
-   * Tạo link thanh toán PayOS.
-   * Booking phải ở trạng thái accepted.
-   */
   async createPaymentLink(bookingId, customerUserId) {
     const booking = await this.findById(bookingId);
-    if (!booking) throw new Error("Booking không tồn tại");
+    if (!booking) throw new Error("Booking not found");
 
-    if (booking.customer._id.toString() !== customerUserId.toString()) {
-      throw new Error("Bạn không có quyền thanh toán booking này");
+    if (String(booking.customer._id) !== String(customerUserId)) {
+      throw new Error("You are not allowed to pay this booking");
     }
     if (booking.status !== BOOKING_STATUS.ACCEPTED) {
-      throw new Error("Booking phải được nhiếp ảnh gia chấp nhận trước khi thanh toán");
+      throw new Error("Booking must be accepted before payment");
+    }
+    if (booking.paymentStatus === PAYMENT_STATUS.PAID || booking.status === BOOKING_STATUS.CONFIRMED) {
+      return { alreadyPaid: true, booking };
     }
 
-    // Idempotency: đã tạo link thì trả về luôn
-    if (booking.paymentLink && booking.payosOrderCode) {
+    if (booking.paymentLink && booking.payosOrderCode && booking.paymentStatus === PAYMENT_STATUS.PENDING) {
       return {
         paymentLink: booking.paymentLink,
+        checkoutUrl: booking.paymentLink,
         orderCode: booking.payosOrderCode,
+        paymentLinkId: booking.paymentLinkId,
       };
     }
 
-    // Tạo orderCode duy nhất (số nguyên <= Number.MAX_SAFE_INTEGER)
-    const orderCode = Date.now();
+    const orderCode = Number(`${Date.now()}${Math.floor(Math.random() * 90 + 10)}`.slice(-12));
+    const resultParams = { bookingId: booking._id, orderCode };
 
     const paymentData = {
       orderCode,
-      amount: Math.round(booking.price), // PayOS yêu cầu VND nguyên
-      description: `PhotoHub #${booking._id.toString().slice(-6).toUpperCase()}`,
+      amount: Math.round(getBookingAmount(booking)),
+      description: `PhotoHub ${String(booking._id).slice(-8)}`.slice(0, 25),
+      returnUrl: buildPaymentResultUrl(process.env.PAYOS_RETURN_URL, resultParams),
+      cancelUrl: buildPaymentResultUrl(process.env.PAYOS_CANCEL_URL, { ...resultParams, canceled: true }),
       items: [
         {
-          name: booking.title.substring(0, 25), // PayOS giới hạn độ dài
+          name: String(booking.title || "Photo booking").substring(0, 25),
           quantity: 1,
-          price: Math.round(booking.price),
+          price: Math.round(getBookingAmount(booking)),
         },
       ],
-      returnUrl:
-        process.env.PAYOS_RETURN_URL ||
-        `${process.env.FRONTEND_URL}/payment/result`,
-      cancelUrl:
-        process.env.PAYOS_CANCEL_URL ||
-        `${process.env.FRONTEND_URL}/payment/result?canceled=true`,
+      buyerName: booking.customer?.fullName,
+      buyerEmail: booking.customer?.email,
+      buyerPhone: booking.customer?.phoneNumber,
     };
 
-    const response = await payos.createPaymentLink(paymentData);
+    const response = await this.createPayOSPaymentLink(paymentData);
 
-    // Lưu thông tin thanh toán vào booking
-    await Booking.findByIdAndUpdate(bookingId, {
+    await Booking.findByIdAndUpdate(booking._id, {
       payosOrderCode: orderCode,
+      paymentLinkId: response.paymentLinkId || response.id || null,
       paymentLink: response.checkoutUrl,
+      paymentStatus: PAYMENT_STATUS.PENDING,
     });
 
     return {
       paymentLink: response.checkoutUrl,
+      checkoutUrl: response.checkoutUrl,
       orderCode,
+      paymentLinkId: response.paymentLinkId || response.id || null,
       qrCode: response.qrCode,
+      status: response.status,
     };
   }
 
-  /**
-   * Xử lý webhook PayOS — gọi từ controller webhook.
-   */
-  async handlePayosWebhook(webhookBody) {
-    // 1. Xác thực chữ ký từ PayOS
-    let verifiedData;
-    try {
-      verifiedData = payos.verifyPaymentWebhookData(webhookBody);
-    } catch (err) {
-      throw new Error(`Chữ ký PayOS không hợp lệ: ${err.message}`);
+  async markBookingPaidByOrderCode(orderCode, payosData = {}) {
+    const booking = await Booking.findOne({ payosOrderCode: Number(orderCode) });
+    if (!booking) throw new Error(`Booking not found for orderCode=${orderCode}`);
+    return await this.markBookingPaid(booking, payosData);
+  }
+
+  async markBookingPaid(booking, payosData = {}) {
+    const orderCode = Number(payosData.orderCode || booking.payosOrderCode);
+    const amount = Number(payosData.amount || payosData.amountPaid || booking.price || 0);
+    const wasPaid = booking.paymentStatus === PAYMENT_STATUS.PAID || [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED].includes(booking.status);
+    const existingPayment = await Payment.findOne({ transactionId: String(orderCode), paymentType: "DEPOSIT" });
+    const wasPaymentSuccess = existingPayment?.status === "SUCCESS";
+
+    booking.status = booking.status === BOOKING_STATUS.COMPLETED ? BOOKING_STATUS.COMPLETED : BOOKING_STATUS.CONFIRMED;
+    booking.paymentStatus = PAYMENT_STATUS.PAID;
+    booking.paidAt = booking.paidAt || new Date();
+    booking.paidAmount = Math.max(Number(booking.paidAmount || 0), amount || getBookingAmount(booking));
+    booking.paymentLinkId = payosData.paymentLinkId || payosData.id || booking.paymentLinkId;
+    await booking.save();
+
+    if (existingPayment) {
+      existingPayment.status = "SUCCESS";
+      existingPayment.amount = existingPayment.amount || booking.paidAmount;
+      existingPayment.confirmedAt = existingPayment.confirmedAt || new Date();
+      existingPayment.paymentMethod = "PAYOS";
+      existingPayment.adminNote = existingPayment.adminNote || "Confirmed by PayOS";
+      await existingPayment.save();
+    } else {
+      await Payment.create({
+        booking: booking._id,
+        sender: booking.customer,
+        receiver: booking.photographer,
+        amount: booking.paidAmount,
+        paymentType: "DEPOSIT",
+        paymentMethod: "PAYOS",
+        transactionId: String(orderCode),
+        status: "SUCCESS",
+        confirmedAt: new Date(),
+        adminNote: "Confirmed by PayOS",
+      });
     }
 
-    const { orderCode, code } = verifiedData;
-
-    // Chỉ xử lý khi thanh toán THÀNH CÔNG (code = "00")
-    if (code !== "00") {
-      console.log(`[PayOS Webhook] orderCode=${orderCode} | code=${code} → bỏ qua`);
-      return { skipped: true, reason: "Payment not successful" };
+    if (!wasPaid && !wasPaymentSuccess) {
+      await this.ensureWallet(booking.photographer);
+      await Wallet.findOneAndUpdate(
+        { user: booking.photographer },
+        { $inc: { holdBalance: booking.paidAmount } },
+        { new: true }
+      );
+      await Photographer.findOneAndUpdate(
+        { user: booking.photographer },
+        { $inc: { totalEarnings: booking.paidAmount } }
+      );
     }
 
-    // 2. Tìm booking theo orderCode
-    const booking = await this.findById(
-      await Booking.findOne({ payosOrderCode: Number(orderCode) }).select("_id").lean()
-        .then((b) => b?._id)
-    );
-
-    if (!booking) {
-      throw new Error(`Không tìm thấy booking với orderCode=${orderCode}`);
-    }
-
-    // Idempotency: đã xử lý rồi thì bỏ qua
-    if (booking.status === BOOKING_STATUS.CONFIRMED) {
-      return { alreadyProcessed: true, bookingId: booking._id };
-    }
-
-    // 3. Cập nhật booking → confirmed + paidAt
-    await Booking.findByIdAndUpdate(booking._id, {
-      status: BOOKING_STATUS.CONFIRMED,
-      paidAt: new Date(),
-    });
-
-    // 4. Tạo bản ghi Payment để lưu lịch sử
-    await Payment.create({
-      booking: booking._id,
-      sender: booking.customer._id,
-      receiver: booking.photographer._id,
-      amount: booking.price,
-      paymentType: "DEPOSIT",
-      paymentMethod: "PAYOS",
-      transactionId: String(orderCode),
-      status: "SUCCESS",
-      confirmedAt: new Date(),
-    });
-
-    // 5. Cộng doanh thu cho Photographer
-    await Photographer.findOneAndUpdate(
-      { user: booking.photographer._id },
-      { $inc: { totalEarnings: booking.price } }
-    );
-
-    // 6. Realtime: Notify cả 2 bên
+    const populated = await this.findById(booking._id);
     const socketPayload = {
       bookingId: booking._id,
       status: BOOKING_STATUS.CONFIRMED,
-      paidAt: new Date(),
+      paymentStatus: PAYMENT_STATUS.PAID,
+      paidAt: booking.paidAt,
+      amount: booking.paidAmount,
     };
-    safeEmit(`user:${booking.customer._id.toString()}`, "booking-paid", socketPayload);
-    safeEmit(`user:${booking.photographer._id.toString()}`, "booking-paid", socketPayload);
+    safeEmit(`user:${String(booking.customer)}`, "booking-paid", socketPayload);
+    safeEmit(`user:${String(booking.photographer)}`, "booking-paid", socketPayload);
 
-    // 7. Gửi email xác nhận — bất đồng bộ, không chặn response
     const emailData = {
-      bookingId: booking._id,
-      customerName: booking.customer.fullName || "Khách hàng",
-      photographerName: booking.photographer.fullName || "Nhiếp ảnh gia",
-      title: booking.title,
-      location: booking.location,
-      start: booking.start,
-      end: booking.end,
-      price: booking.price,
+      bookingId: populated._id,
+      customerName: populated.customer?.fullName || "Customer",
+      photographerName: populated.photographer?.fullName || "Photographer",
+      title: populated.title,
+      location: populated.location,
+      start: populated.start,
+      end: populated.end,
+      price: populated.paidAmount || populated.price,
     };
 
     Promise.all([
-      sendBookingConfirmedToCustomer(booking.customer.email, emailData),
-      sendBookingConfirmedToPhotographer(booking.photographer.email, emailData),
-    ]).catch((err) => console.error("[Email] Gửi email xác nhận booking thất bại:", err.message));
+      populated.customer?.email ? sendBookingConfirmedToCustomer(populated.customer.email, emailData) : Promise.resolve(),
+      populated.photographer?.email ? sendBookingConfirmedToPhotographer(populated.photographer.email, emailData) : Promise.resolve(),
+    ]).catch((err) => console.error("[Email] Booking confirmation failed:", err.message));
 
-    return { success: true, bookingId: booking._id };
+    return populated;
   }
 
-  // ════════════════════════════════════════════════════════════════
-  //  PHOTOGRAPHER ACTIONS
-  // ════════════════════════════════════════════════════════════════
+  async handlePayosWebhook(webhookBody) {
+    const verifiedData = await this.verifyPayOSWebhook(webhookBody);
+    const data = verifiedData?.data || verifiedData;
+    const orderCode = data?.orderCode;
+    const code = data?.code || webhookBody?.code;
 
-  /**
-   * Danh sách bookings dành cho Photographer.
-   */
+    if (!orderCode) throw new Error("PayOS webhook missing orderCode");
+    if (String(code) !== "00") {
+      return { skipped: true, orderCode, reason: "Payment not successful" };
+    }
+
+    const booking = await this.markBookingPaidByOrderCode(orderCode, data);
+    return { success: true, bookingId: booking._id, orderCode };
+  }
+
+  async syncPaymentStatusByOrderCode(orderCode, customerUserId) {
+    const code = Number(orderCode);
+    if (!code) throw new Error("PayOS order code is required");
+
+    const booking = await Booking.findOne({ payosOrderCode: code });
+    if (!booking) throw new Error(`Booking not found for orderCode=${orderCode}`);
+
+    return await this.syncPaymentStatus(booking._id, customerUserId, code);
+  }
+
+  async syncPaymentStatus(bookingId, customerUserId, orderCode = null) {
+    const booking = await Booking.findById(bookingId);
+    if (!booking) throw new Error("Booking not found");
+    if (String(booking.customer) !== String(customerUserId)) {
+      throw new Error("You are not allowed to check this booking payment");
+    }
+
+    if (booking.paymentStatus === PAYMENT_STATUS.PAID || [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED].includes(booking.status)) {
+      return { paid: true, status: booking.status, paymentStatus: booking.paymentStatus, booking };
+    }
+
+    const code = Number(orderCode || booking.payosOrderCode);
+    if (!code) throw new Error("This booking does not have a PayOS order code yet");
+
+    const paymentLink = await this.getPayOSPaymentLink(code);
+    if (paymentLink.status === "PAID" || Number(paymentLink.amountPaid || 0) >= getBookingAmount(booking)) {
+      const paidBooking = await this.markBookingPaid(booking, paymentLink);
+      return { paid: true, payosStatus: paymentLink.status, booking: paidBooking };
+    }
+
+    if (["CANCELLED", "EXPIRED", "FAILED"].includes(paymentLink.status)) {
+      booking.paymentStatus = paymentLink.status === "EXPIRED" ? PAYMENT_STATUS.EXPIRED : PAYMENT_STATUS.CANCELLED;
+      await booking.save();
+    }
+
+    return {
+      paid: false,
+      payosStatus: paymentLink.status,
+      paymentStatus: booking.paymentStatus,
+      booking,
+    };
+  }
+
   async getBookingsForPhotographer(photographerUserId, { status, page = 1, limit = 10 } = {}) {
     const query = { photographer: photographerUserId };
     if (status) query.status = status;
@@ -369,65 +447,52 @@ class BookingService {
     };
   }
 
-  /**
-   * Photographer chấp nhận booking.
-   */
   async acceptBooking(bookingId, photographerUserId) {
     const booking = await Booking.findById(bookingId);
-    if (!booking) throw new Error("Booking không tồn tại");
+    if (!booking) throw new Error("Booking not found");
 
-    if (booking.photographer.toString() !== photographerUserId.toString()) {
-      throw new Error("Bạn không có quyền thực hiện thao tác này");
+    if (String(booking.photographer) !== String(photographerUserId)) {
+      throw new Error("You are not allowed to accept this booking");
     }
     if (booking.status !== BOOKING_STATUS.PENDING) {
-      throw new Error("Chỉ có thể chấp nhận booking ở trạng thái pending");
+      throw new Error("Only pending bookings can be accepted");
     }
 
-    const hasConflict = await this.checkOverlap(
-      booking.photographer,
-      booking.start,
-      booking.end,
-      booking._id
-    );
+    const hasConflict = await this.checkOverlap(booking.photographer, booking.start, booking.end, booking._id);
     if (hasConflict) {
-      throw new Error("Có xung đột lịch với booking khác đang được xác nhận");
+      throw new Error("This booking conflicts with another confirmed booking");
     }
 
     booking.status = BOOKING_STATUS.ACCEPTED;
     await booking.save();
 
-    // Notify customer
     safeEmit(`user:${booking.customer.toString()}`, "booking-status-updated", {
       bookingId: booking._id,
       status: BOOKING_STATUS.ACCEPTED,
-      message: "Nhiếp ảnh gia đã chấp nhận lịch chụp! Vui lòng tiến hành thanh toán.",
+      message: "Photographer accepted your booking. Please complete payment.",
     });
 
     return booking;
   }
 
-  /**
-   * Photographer từ chối booking.
-   */
   async rejectBooking(bookingId, photographerUserId, rejectReason) {
     const booking = await Booking.findById(bookingId);
-    if (!booking) throw new Error("Booking không tồn tại");
+    if (!booking) throw new Error("Booking not found");
 
-    if (booking.photographer.toString() !== photographerUserId.toString()) {
-      throw new Error("Bạn không có quyền thực hiện thao tác này");
+    if (String(booking.photographer) !== String(photographerUserId)) {
+      throw new Error("You are not allowed to reject this booking");
     }
     if ([BOOKING_STATUS.REJECTED, BOOKING_STATUS.CANCELLED].includes(booking.status)) {
-      throw new Error("Booking đã bị từ chối hoặc huỷ trước đó");
+      throw new Error("Booking is already rejected or cancelled");
     }
-    if (booking.status === BOOKING_STATUS.CONFIRMED) {
-      throw new Error("Không thể từ chối booking đã thanh toán");
+    if ([BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED].includes(booking.status)) {
+      throw new Error("Cannot reject a paid booking");
     }
 
     booking.status = BOOKING_STATUS.REJECTED;
-    booking.rejectReason = rejectReason?.trim() || "Nhiếp ảnh gia không thể nhận lịch này";
+    booking.rejectReason = rejectReason?.trim() || "Photographer cannot take this booking";
     await booking.save();
 
-    // Notify customer
     safeEmit(`user:${booking.customer.toString()}`, "booking-status-updated", {
       bookingId: booking._id,
       status: BOOKING_STATUS.REJECTED,
@@ -437,38 +502,42 @@ class BookingService {
     return booking;
   }
 
-  /**
-   * Photographer đánh dấu hoàn thành (sau khi upload album).
-   */
   async completeBooking(bookingId, photographerUserId) {
     const booking = await Booking.findById(bookingId);
-    if (!booking) throw new Error("Booking không tồn tại");
+    if (!booking) throw new Error("Booking not found");
 
-    if (booking.photographer.toString() !== photographerUserId.toString()) {
-      throw new Error("Bạn không có quyền thực hiện thao tác này");
+    if (String(booking.photographer) !== String(photographerUserId)) {
+      throw new Error("You are not allowed to complete this booking");
     }
-    if (![BOOKING_STATUS.ACCEPTED, BOOKING_STATUS.CONFIRMED].includes(booking.status)) {
-      throw new Error("Chỉ có thể hoàn thành booking ở trạng thái accepted hoặc confirmed");
+    if (booking.status !== BOOKING_STATUS.CONFIRMED || booking.paymentStatus !== PAYMENT_STATUS.PAID) {
+      throw new Error("Only paid and confirmed bookings can be completed");
     }
     if (!booking.finalAlbum) {
-      throw new Error("Vui lòng upload album ảnh cuối trước khi đánh dấu hoàn thành");
+      throw new Error("Please upload the final album before marking this booking complete");
     }
 
+    const amount = Number(booking.paidAmount || booking.price || 0);
     booking.status = BOOKING_STATUS.COMPLETED;
+    booking.completionStatus = "completed";
     booking.completedAt = new Date();
+    booking.payoutEligibleAt = getPayoutEligibleAt();
     await booking.save();
 
-    // Cập nhật completedBookings counter
+    const wallet = await this.ensureWallet(booking.photographer);
+    const releasable = Math.min(Number(wallet.holdBalance || 0), amount);
+    wallet.holdBalance = Math.max(0, Number(wallet.holdBalance || 0) - releasable);
+    wallet.balance = Number(wallet.balance || 0) + amount;
+    await wallet.save();
+
     await Photographer.findOneAndUpdate(
       { user: photographerUserId },
       { $inc: { completedBookings: 1 } }
     );
 
-    // Notify customer
     safeEmit(`user:${booking.customer.toString()}`, "booking-status-updated", {
       bookingId: booking._id,
       status: BOOKING_STATUS.COMPLETED,
-      message: "Album ảnh của bạn đã sẵn sàng!",
+      message: "Your final album is ready.",
     });
 
     return booking;

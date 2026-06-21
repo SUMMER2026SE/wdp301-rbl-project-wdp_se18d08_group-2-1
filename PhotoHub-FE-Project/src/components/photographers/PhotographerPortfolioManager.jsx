@@ -1,8 +1,8 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
-  FolderOpen, Plus, DollarSign, FileText, Upload, Trash2,
+  Plus, DollarSign, FileText, Upload, Trash2,
   ArrowLeft, Image as ImageIcon, Tag, Layers, CheckCircle2,
-  AlertCircle, X, Eye, BookImage, Grid3X3, Loader2
+  X, Eye, BookImage, Grid3X3, Loader2
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { aiRecommendService } from "../../services/aiRecommendService";
@@ -57,6 +57,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
       loadAlbums();
       loadCommonData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photographerId]);
 
   const loadCommonData = async () => {
@@ -105,7 +106,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
   const handleCreateAlbum = async (e) => {
     e.preventDefault();
     if (!albumTitle.trim() || !albumPrice) {
-      Swal.fire({ icon: "warning", title: "Thiếu thông tin", text: "Vui lòng nhập Tiêu đề và Giá gói.", background: isDark ? "#09090b" : "#fff", color: isDark ? "#fff" : "#000", confirmButtonColor: "#06b6d4" });
+      Swal.fire({ icon: "warning", title: "Thiếu thông tin", text: "Vui lòng nhập Tiêu đề và Giá gói.", background: isDark ? "#09090b" : "#fff", color: isDark ? "#fff" : "#000", confirmButtonColor: "#ff6b3b" });
       return;
     }
     try {
@@ -143,7 +144,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
   const handleUploadImage = async (e) => {
     e.preventDefault();
     if (!uploadFile) {
-      Swal.fire({ icon: "warning", title: "Chưa chọn ảnh", text: "Vui lòng chọn ảnh để tải lên.", background: isDark ? "#09090b" : "#fff", color: isDark ? "#fff" : "#000", confirmButtonColor: "#06b6d4" });
+      Swal.fire({ icon: "warning", title: "Chưa chọn ảnh", text: "Vui lòng chọn ảnh để tải lên.", background: isDark ? "#09090b" : "#fff", color: isDark ? "#fff" : "#000", confirmButtonColor: "#ff6b3b" });
       return;
     }
     try {
@@ -202,8 +203,8 @@ export default function PhotographerPortfolioManager({ photographerId, language 
   };
 
   // ── Style helpers ─────────────────────────────────────────────────────────
-  const card = `border rounded-3xl p-6 backdrop-blur-md transition-all duration-300 ${isDark ? "bg-[#121214]/80 border-white/[0.06] shadow-2xl shadow-black/40" : "bg-white border-slate-100 shadow-md"}`;
-  const inputCls = `w-full rounded-2xl pl-4 pr-4 py-3 outline-none border font-medium transition-all duration-300 ${isDark ? "bg-[#09090b] border-white/5 text-white focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10" : "bg-slate-50 border-slate-200 text-slate-900 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/5 focus:bg-white"}`;
+  const card = `border rounded-3xl p-5 backdrop-blur-md transition-all duration-300 ${isDark ? "bg-[#121214]/80 border-white/[0.06] shadow-2xl shadow-black/40" : "bg-white border-slate-100 shadow-md"}`;
+  const inputCls = `w-full rounded-2xl pl-4 pr-4 py-2.5 outline-none border font-medium transition-all duration-300 ${isDark ? "bg-[#09090b] border-white/5 text-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10" : "bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 focus:bg-white"}`;
 
   const toggleStyleTag = (id) => {
     setAlbumStyleTags(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
@@ -224,7 +225,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
         </div>
         <button
           onClick={() => { resetCreateForm(); setView("create"); }}
-          className="flex items-center gap-2 rounded-2xl px-5 py-2.5 font-bold text-sm bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+          className="flex items-center gap-2 rounded-2xl px-5 py-2.5 font-bold text-sm bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
         >
           <Plus size={16} /> Tạo Album Mới
         </button>
@@ -244,8 +245,8 @@ export default function PhotographerPortfolioManager({ photographerId, language 
       ) : albums.length === 0 ? (
         <div className={`${card} text-center py-20`}>
           <div className="flex flex-col items-center gap-4">
-            <div className="p-5 rounded-3xl bg-cyan-500/10">
-              <BookImage size={40} className="text-cyan-400" />
+            <div className="p-5 rounded-3xl bg-orange-500/10">
+              <BookImage size={40} className="text-orange-400" />
             </div>
             <div>
               <p className="text-lg font-bold text-slate-700 dark:text-zinc-200">Chưa có Album nào</p>
@@ -253,7 +254,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
             </div>
             <button
               onClick={() => setView("create")}
-              className="flex items-center gap-2 mt-2 rounded-2xl px-5 py-2.5 font-bold text-sm border-2 border-dashed border-cyan-500/40 text-cyan-500 hover:bg-cyan-500/10 transition-all"
+              className="flex items-center gap-2 mt-2 rounded-2xl px-5 py-2.5 font-bold text-sm border-2 border-dashed border-orange-500/40 text-orange-500 hover:bg-orange-500/10 transition-all"
             >
               <Plus size={16} /> Tạo Album đầu tiên
             </button>
@@ -295,11 +296,11 @@ export default function PhotographerPortfolioManager({ photographerId, language 
                 )}
                 <div className="flex items-center justify-between mt-3">
                   {album.category?.name && (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-indigo-500 dark:text-indigo-400 bg-indigo-500/10 rounded-full px-2.5 py-1">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-orange-500 dark:text-orange-400 bg-orange-500/10 rounded-full px-2.5 py-1">
                       <Tag size={10} /> {album.category.name}
                     </span>
                   )}
-                  <span className="ml-auto text-sm font-black text-cyan-500">
+                  <span className="ml-auto text-sm font-black text-orange-500">
                     {album.price_package?.toLocaleString()} VNĐ
                   </span>
                 </div>
@@ -356,7 +357,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
                 reader.readAsDataURL(f);
               }
             }}
-            className={`border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[220px] ${albumCoverPreview ? "border-cyan-500/40 bg-cyan-500/[0.02]" : "border-slate-300 dark:border-zinc-700 hover:border-cyan-500 hover:bg-cyan-500/5"}`}
+            className={`border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[220px] ${albumCoverPreview ? "border-orange-500/40 bg-orange-500/[0.02]" : "border-slate-300 dark:border-zinc-700 hover:border-orange-500 hover:bg-orange-500/5"}`}
           >
             <input type="file" ref={coverInputRef} onChange={e => {
               const f = e.target.files[0];
@@ -375,7 +376,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
               </div>
             ) : (
               <div className="flex flex-col items-center gap-3 p-6">
-                <div className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-400"><ImageIcon size={28} /></div>
+                <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-400"><ImageIcon size={28} /></div>
                 <p className="text-sm font-bold text-slate-700 dark:text-zinc-200">Kéo thả hoặc Click</p>
                 <p className="text-xs text-slate-400">JPEG, PNG, WebP (tối đa 10MB)</p>
               </div>
@@ -452,8 +453,8 @@ export default function PhotographerPortfolioManager({ photographerId, language 
             {/* Submit */}
             <button type="submit" disabled={creatingAlbum}
               className={`w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 font-bold tracking-wide transition-all duration-300 shadow-lg mt-2 ${creatingAlbum
-                ? "bg-cyan-500/20 text-cyan-400 cursor-not-allowed border border-cyan-500/10"
-                : "bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-cyan-500/20 hover:scale-[1.01] active:scale-[0.99]"}`}
+                ? "bg-orange-500/20 text-orange-400 cursor-not-allowed border border-orange-500/10"
+                : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-orange-500/20 hover:scale-[1.01] active:scale-[0.99]"}`}
             >
               {creatingAlbum ? (<><Loader2 size={16} className="animate-spin" /> Đang tạo Album...</>) : (<><CheckCircle2 size={16} /> Tạo Album</>)}
             </button>
@@ -493,7 +494,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
       {/* Album meta tags */}
       <div className="flex flex-wrap gap-2 items-center">
         {selectedAlbum?.category?.name && (
-          <span className="flex items-center gap-1 text-xs font-bold text-indigo-500 bg-indigo-500/10 rounded-full px-3 py-1 border border-indigo-500/20">
+          <span className="flex items-center gap-1 text-xs font-bold text-orange-500 bg-orange-500/10 rounded-full px-3 py-1 border border-orange-500/20">
             <Tag size={10} /> {selectedAlbum.category.name}
           </span>
         )}
@@ -524,7 +525,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
                   reader.readAsDataURL(f);
                 }
               }}
-              className={`border-2 border-dashed rounded-2xl cursor-pointer transition-all min-h-[160px] flex items-center justify-center ${uploadPreview ? "border-cyan-500/40" : "border-slate-300 dark:border-zinc-700 hover:border-cyan-500 hover:bg-cyan-500/5"}`}
+              className={`border-2 border-dashed rounded-2xl cursor-pointer transition-all min-h-[160px] flex items-center justify-center ${uploadPreview ? "border-orange-500/40" : "border-slate-300 dark:border-zinc-700 hover:border-orange-500 hover:bg-orange-500/5"}`}
             >
               <input type="file" ref={imageInputRef} onChange={e => {
                 const f = e.target.files[0];
@@ -543,7 +544,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 p-6 text-center">
-                  <div className="p-2.5 rounded-2xl bg-cyan-500/10 text-cyan-400"><ImageIcon size={24} /></div>
+                  <div className="p-2.5 rounded-2xl bg-orange-500/10 text-orange-400"><ImageIcon size={24} /></div>
                   <p className="text-sm font-bold text-slate-700 dark:text-zinc-200">Kéo thả hoặc Click</p>
                   <p className="text-xs text-slate-400">AI sẽ tự động phân tích ảnh</p>
                 </div>
@@ -560,8 +561,8 @@ export default function PhotographerPortfolioManager({ photographerId, language 
 
             <button type="submit" disabled={uploading}
               className={`w-full flex items-center justify-center gap-2 rounded-2xl py-3 font-bold text-sm transition-all duration-300 ${uploading
-                ? "bg-cyan-500/20 text-cyan-400 cursor-not-allowed"
-                : "bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-lg shadow-cyan-500/20 hover:scale-[1.01]"}`}
+                ? "bg-orange-500/20 text-orange-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:scale-[1.01]"}`}
             >
               {uploading ? (<><Loader2 size={15} className="animate-spin" /> AI đang phân tích...</>) : (<><Upload size={15} /> Upload ảnh</>)}
             </button>
@@ -571,7 +572,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
         {/* Right: Images grid */}
         <div className={`${card} md:col-span-2 space-y-5`}>
           <h3 className="font-black text-base border-b border-slate-100 dark:border-white/[0.06] pb-3">
-            Bộ sưu tập <span className="text-cyan-500 ml-1">({albumImages.length})</span>
+            Bộ sưu tập <span className="text-orange-500 ml-1">({albumImages.length})</span>
           </h3>
 
           {loadingDetail ? (

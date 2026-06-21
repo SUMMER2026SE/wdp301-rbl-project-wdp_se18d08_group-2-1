@@ -161,7 +161,7 @@ export default function PhotographerBookingList({ theme = "dark", language = "vi
   const getStatusBadge = (status) => {
     const badges = {
       pending: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-      accepted: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+      accepted: "bg-orange-500/10 text-orange-400 border-orange-500/20",
       confirmed: "bg-purple-500/10 text-purple-400 border-purple-500/20",
       completed: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
       rejected: "bg-rose-500/10 text-rose-400 border-rose-500/20",
@@ -196,7 +196,7 @@ export default function PhotographerBookingList({ theme = "dark", language = "vi
                 setPagination(prev => ({ ...prev, page: 1 }));
               }}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${activeStatus === tab.id
-                  ? "bg-cyan-500 text-white shadow-md shadow-cyan-500/20"
+                  ? "bg-orange-500 text-white shadow-md shadow-orange-500/20"
                   : isDark
                     ? "hover:bg-white/[0.04] text-slate-400 hover:text-white border border-white/5"
                     : "hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200"
@@ -211,11 +211,11 @@ export default function PhotographerBookingList({ theme = "dark", language = "vi
       {/* Booking List Container */}
       {loading ? (
         <div className="flex justify-center items-center py-20">
-          <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : bookings.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center text-slate-500 border-2 border-dashed border-slate-200 dark:border-white/5 rounded-3xl">
-          <AlertCircle size={48} className="mb-3 opacity-40 text-cyan-500 animate-pulse" />
+          <AlertCircle size={48} className="mb-3 opacity-40 text-orange-500 animate-pulse" />
           <p className="text-sm font-semibold">{t.noBookings}</p>
         </div>
       ) : (
@@ -241,7 +241,7 @@ export default function PhotographerBookingList({ theme = "dark", language = "vi
                   <div className="space-y-2 text-sm">
                     {/* Customer Info */}
                     <div className="flex items-center gap-3">
-                      <User size={16} className="text-cyan-500" />
+                      <User size={16} className="text-orange-500" />
                       <div className="flex items-center gap-2">
                         <strong>{t.customer}</strong>
                         <span className="font-semibold text-slate-700 dark:text-slate-200">
@@ -255,7 +255,7 @@ export default function PhotographerBookingList({ theme = "dark", language = "vi
 
                     {/* Time */}
                     <div className="flex items-start gap-3">
-                      <Clock size={16} className="text-cyan-500 shrink-0 mt-0.5" />
+                      <Clock size={16} className="text-orange-500 shrink-0 mt-0.5" />
                       <div>
                         <strong>{t.time}</strong>
                         <div className="font-semibold text-slate-700 dark:text-zinc-200 text-xs sm:text-sm mt-0.5">
@@ -267,7 +267,7 @@ export default function PhotographerBookingList({ theme = "dark", language = "vi
 
                     {/* Location */}
                     <div className="flex items-start gap-3">
-                      <MapPin size={16} className="text-cyan-500 shrink-0 mt-0.5" />
+                      <MapPin size={16} className="text-orange-500 shrink-0 mt-0.5" />
                       <div>
                         <strong>{t.location}</strong>
                         <p className="font-semibold text-slate-700 dark:text-slate-200 truncate max-w-sm mt-0.5">{booking.location}</p>
@@ -317,7 +317,7 @@ export default function PhotographerBookingList({ theme = "dark", language = "vi
 
                         <button
                           onClick={() => handleAccept(booking._id)}
-                          className="px-4 py-3 bg-cyan-500 hover:bg-cyan-600 active:scale-95 text-white rounded-2xl shadow-md shadow-cyan-500/10 font-bold text-xs flex items-center gap-1.5 transition-all"
+                          className="px-4 py-3 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white rounded-2xl shadow-md shadow-orange-500/10 font-bold text-xs flex items-center gap-1.5 transition-all"
                         >
                           <Check size={15} />
                           {t.acceptBtn}

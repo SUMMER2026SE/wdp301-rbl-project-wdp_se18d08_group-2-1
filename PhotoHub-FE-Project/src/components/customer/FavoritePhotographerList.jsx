@@ -155,7 +155,7 @@ export default function FavoritePhotographerList({ language = "vi", isDark = tru
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-tr from-cyan-500/10 to-purple-600/10 text-cyan-500 gap-2">
+                    <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-tr from-orange-500/10 to-amber-600/10 text-orange-500 gap-2">
                       <Camera size={26} className="opacity-70" />
                       <span className="text-xl font-black">
                         {pg.displayName?.charAt(0).toUpperCase()}
@@ -179,7 +179,7 @@ export default function FavoritePhotographerList({ language = "vi", isDark = tru
                   {/* Location */}
                   {pg.location && (
                     <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-xl bg-black/40 backdrop-blur-md px-2 py-1 text-xs text-white border border-white/5">
-                      <MapPin size={10} className="text-cyan-400" />
+                      <MapPin size={10} className="text-orange-400" />
                       <span className="line-clamp-1 max-w-[100px]">{pg.location}</span>
                     </div>
                   )}
@@ -211,7 +211,7 @@ export default function FavoritePhotographerList({ language = "vi", isDark = tru
 
                   <Link
                     to={`/photographers/${pg._id}`}
-                    className="mt-3 block w-full rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 py-2 text-center text-xs font-bold text-white shadow hover:opacity-90 transition"
+                    className="mt-3 block w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 py-2 text-center text-xs font-bold text-white shadow hover:opacity-90 transition"
                   >
                     {t.viewProfile}
                   </Link>

@@ -429,7 +429,7 @@ export default function PhotographerPackages({
             {/* HEADER */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-5">
                 <div>
-                    <h2 className="text-3xl font-black tracking-tight text-[#00a8cc] dark:text-cyan-400">
+                    <h2 className="text-3xl font-black tracking-tight text-orange-500 dark:text-orange-400">
                         {t.title}
                     </h2>
                     <p className="text-sm mt-1 text-slate-500 dark:text-slate-400 font-medium">
@@ -439,7 +439,7 @@ export default function PhotographerPackages({
 
                 <button
                     onClick={handleOpenCreate}
-                    className="flex items-center justify-center gap-2 bg-[#00a8cc] hover:bg-[#0092b3] text-white font-semibold px-5 py-2.5 rounded-xl shadow-md transition-all duration-200 active:scale-95"
+                    className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2.5 rounded-xl shadow-md transition-all duration-200 active:scale-95"
                 >
                     <Plus size={18} />
                     <span>{t.create}</span>
@@ -464,8 +464,8 @@ export default function PhotographerPackages({
                                     className={`
                             px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border
                             ${selected
-                                            ? "bg-cyan-500 text-white border-cyan-500 shadow-lg shadow-cyan-500/20"
-                                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-cyan-400"}
+                                            ? "bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-500/20"
+                                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-orange-400"}
                         `}
                                 >
                                     {cate.name}
@@ -509,7 +509,7 @@ export default function PhotographerPackages({
             {/* MAIN LIST SECTION */}
             {loading ? (
                 <div className="py-24 flex flex-col items-center justify-center gap-3">
-                    <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
                     <span className="text-xs font-medium text-slate-400 animate-pulse">Loading packages...</span>
                 </div>
             ) : packages.length === 0 ? (
@@ -529,7 +529,7 @@ export default function PhotographerPackages({
                                 key={p._id}
                                 onClick={() => handleOpenDetail(p)}
                                 className={`group relative flex flex-col justify-between p-5 rounded-2xl border transition-all duration-300 cursor-pointer ${isSelected
-                                    ? "border-cyan-500 bg-cyan-50/30 dark:bg-cyan-500/[0.02] shadow-md ring-1 ring-cyan-500"
+                                    ? "border-orange-500 bg-orange-50/30 dark:bg-orange-500/[0.02] shadow-md ring-1 ring-orange-500"
                                     : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-[#151515] hover:shadow-md"
                                     }`}
                             >
@@ -553,7 +553,7 @@ export default function PhotographerPackages({
 
                                 <div>
                                     <div className="pr-16">
-                                        <h3 className="font-bold text-lg leading-snug line-clamp-1 group-hover:text-cyan-500 transition-colors">
+                                        <h3 className="font-bold text-lg leading-snug line-clamp-1 group-hover:text-orange-500 transition-colors">
                                             {p.title}
                                         </h3>
                                     </div>
@@ -614,7 +614,7 @@ export default function PhotographerPackages({
                     {/* Drawer Header */}
                     <div className="p-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-2">
-                            <div className="w-2 h-5 bg-[#00a8cc] rounded-full"></div>
+                            <div className="w-2 h-5 bg-orange-500 rounded-full"></div>
                             <h3 className="text-base font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
                                 {t.detailTitle}
                             </h3>
@@ -631,7 +631,7 @@ export default function PhotographerPackages({
                     <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
                         {loadingDetail ? (
                             <div className="h-full flex flex-col items-center justify-center gap-2 py-20">
-                                <div className="w-8 h-8 border-3 border-[#00a8cc] border-t-transparent rounded-full animate-spin" />
+                                <div className="w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin" />
                                 <span className="text-xs font-medium text-slate-400">Loading details...</span>
                             </div>
                         ) : detailData ? (
@@ -664,7 +664,7 @@ export default function PhotographerPackages({
                                             onChange={(e) =>
                                                 setEditForm({ ...editForm, title: e.target.value })
                                             }
-                                            className="w-full text-xl font-black tracking-tight bg-transparent border border-cyan-500 rounded-lg px-3 py-2 outline-none"
+                                            className="w-full text-xl font-black tracking-tight bg-transparent border border-orange-500 rounded-lg px-3 py-2 outline-none"
                                         />
                                     ) : (
                                         <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white leading-tight">
@@ -711,7 +711,7 @@ export default function PhotographerPackages({
                                         {detailData.categories.map((cate) => (
                                             <span
                                                 key={cate._id}
-                                                className="px-2 py-1 bg-cyan-500/10 text-cyan-500 text-xs font-bold rounded-lg"
+                                                className="px-2 py-1 bg-orange-500/10 text-orange-500 text-xs font-bold rounded-lg"
                                             >
                                                 {cate?.name || "Unknown"}
                                             </span>
@@ -797,7 +797,7 @@ export default function PhotographerPackages({
 
                             {/* Edit */}
                             <button onClick={() => handleEdit(detailData)}
-                                className="px-3 py-2 rounded-lg text-xs font-bold bg-cyan-500/10 text-cyan-500">
+                                className="px-3 py-2 rounded-lg text-xs font-bold bg-orange-500/10 text-orange-500">
                                 {t.edit}
                             </button>
                             {/* Delete */}
@@ -842,7 +842,7 @@ export default function PhotographerPackages({
                                 <input
                                     required
                                     placeholder={t.placeholderTitle}
-                                    className="w-full px-4 py-2.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium placeholder-slate-400 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+                                    className="w-full px-4 py-2.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium placeholder-slate-400 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all"
                                     onChange={(e) => setTitle(e.target.value)}
                                     value={title}
                                 />
@@ -860,7 +860,7 @@ export default function PhotographerPackages({
                                             type="number"
                                             required
                                             placeholder="500"
-                                            className="w-full pl-8 pr-4 py-2.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium placeholder-slate-400 text-sm focus:outline-none focus:border-cyan-500 transition-all"
+                                            className="w-full pl-8 pr-4 py-2.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium placeholder-slate-400 text-sm focus:outline-none focus:border-orange-500 transition-all"
                                             onChange={(e) => setPrice(e.target.value)}
                                             value={price}
                                         />
@@ -877,7 +877,7 @@ export default function PhotographerPackages({
                                             type="number"
                                             required
                                             placeholder="4"
-                                            className="w-full pl-9 pr-4 py-2.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium placeholder-slate-400 text-sm focus:outline-none focus:border-cyan-500 transition-all"
+                                            className="w-full pl-9 pr-4 py-2.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium placeholder-slate-400 text-sm focus:outline-none focus:border-orange-500 transition-all"
                                             onChange={(e) => setDuration(e.target.value)}
                                             value={duration}
                                         />
@@ -892,7 +892,7 @@ export default function PhotographerPackages({
                                 </label>
 
                                 <div
-                                    className="w-full min-h-[42px] px-3 py-1.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex flex-wrap items-center gap-1.5 focus-within:border-cyan-500 focus-within:ring-1 focus-within:ring-cyan-500 transition-all cursor-text"
+                                    className="w-full min-h-[42px] px-3 py-1.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex flex-wrap items-center gap-1.5 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500 transition-all cursor-text"
                                     onClick={() => {
                                         document.getElementById("search-cate-input")?.focus();
                                         setShowCateDropdown(true);
@@ -900,9 +900,9 @@ export default function PhotographerPackages({
                                     }}
                                 >
                                     {availableCategories.filter(c => selectedCategories.includes(c._id)).map(cate => (
-                                        <span key={cate._id} className="flex items-center gap-1 bg-cyan-500 text-white text-xs font-semibold pl-2 pr-1 py-0.5 rounded-md shadow-sm">
+                                        <span key={cate._id} className="flex items-center gap-1 bg-orange-500 text-white text-xs font-semibold pl-2 pr-1 py-0.5 rounded-md shadow-sm">
                                             {cate.name}
-                                            <button type="button" onClick={(e) => { e.stopPropagation(); toggleCategory(cate._id); }} className="hover:bg-cyan-600 rounded p-0.5">
+                                            <button type="button" onClick={(e) => { e.stopPropagation(); toggleCategory(cate._id); }} className="hover:bg-orange-600 rounded p-0.5">
                                                 <X size={10} />
                                             </button>
                                         </span>
@@ -935,12 +935,12 @@ export default function PhotographerPackages({
                                                         toggleCategory(cate._id);
                                                     }}
                                                     className={`flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-lg cursor-pointer transition-colors ${isSelected
-                                                        ? "bg-cyan-50 dark:bg-cyan-950/40 text-cyan-500"
+                                                        ? "bg-orange-50 dark:bg-orange-950/40 text-orange-500"
                                                         : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
                                                         }`}
                                                 >
                                                     <span>{cate.name}</span>
-                                                    {isSelected && <Check size={12} className="text-cyan-500" />}
+                                                    {isSelected && <Check size={12} className="text-orange-500" />}
                                                 </div>
                                             );
                                         })}
@@ -1025,7 +1025,7 @@ export default function PhotographerPackages({
                                 <textarea
                                     rows={3}
                                     placeholder={t.placeholderDesc}
-                                    className="w-full px-4 py-2.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium placeholder-slate-400 text-sm focus:outline-none focus:border-cyan-500 transition-all resize-none"
+                                    className="w-full px-4 py-2.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium placeholder-slate-400 text-sm focus:outline-none focus:border-orange-500 transition-all resize-none"
                                     onChange={(e) => setDescription(e.target.value)}
                                     value={description}
                                 />
@@ -1051,7 +1051,7 @@ export default function PhotographerPackages({
                                         Nhấp để chọn hoặc kéo thả hình ảnh vào đây
                                     </p>
                                     {files.length > 0 && (
-                                        <p className="text-xs text-cyan-500 dark:text-cyan-400 font-bold mt-1.5">
+                                        <p className="text-xs text-orange-500 dark:text-orange-400 font-bold mt-1.5">
                                             Đã chọn {files.length} ảnh
                                         </p>
                                     )}
@@ -1065,6 +1065,7 @@ export default function PhotographerPackages({
                                             <div key={`old-${index}`} className="relative">
                                                 <img
                                                     src={img.imageUrl || img}
+                                                    alt={`existing preview ${index}`}
                                                     className="w-full h-24 rounded-lg object-cover"
                                                 />
 
@@ -1099,6 +1100,7 @@ export default function PhotographerPackages({
                                                 <div key={`new-${index}`} className="relative">
                                                     <img
                                                         src={previewUrl}
+                                                        alt={`new upload preview ${index}`}
                                                         className="w-full h-24 rounded-lg object-cover"
                                                         onLoad={() => URL.revokeObjectURL(previewUrl)}
                                                     />
@@ -1145,7 +1147,7 @@ export default function PhotographerPackages({
                                 type="button"
                                 disabled={uploading}
                                 onClick={handleSubmit}
-                                className="px-5 py-2 rounded-xl text-sm font-bold bg-[#00a8cc] hover:bg-[#0092b3] text-white shadow-md transition disabled:opacity-50"
+                                className="px-5 py-2 rounded-xl text-sm font-bold bg-orange-500 hover:bg-orange-600 text-white shadow-md transition disabled:opacity-50"
                             >
                                 {uploading
                                     ? t.uploading

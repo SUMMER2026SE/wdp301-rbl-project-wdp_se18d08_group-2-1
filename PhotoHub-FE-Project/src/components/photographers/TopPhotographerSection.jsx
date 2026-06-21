@@ -53,14 +53,14 @@ export default function TopPhotographerSection({ language = "en", limit = 6 }) {
     <section className="relative bg-slate-950 px-4 py-24 sm:px-6 lg:px-8">
       {/* Glow background */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/4 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl" />
+        <div className="absolute left-1/4 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-orange-500/10 blur-3xl" />
         <div className="absolute right-1/4 bottom-0 h-96 w-96 translate-x-1/2 rounded-full bg-purple-500/10 blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-7xl">
         {/* Section header */}
         <div className="mb-12 text-center">
-          <div className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-300/80">
+          <div className="mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-orange-300/80">
             <Sparkles className="h-4 w-4" strokeWidth={1.5} />
             {t.eyebrow}
           </div>
@@ -100,7 +100,7 @@ export default function TopPhotographerSection({ language = "en", limit = 6 }) {
         <div className="mt-14 flex justify-center">
           <Link
             to="/photographers"
-            className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-md transition-all duration-300 hover:border-cyan-300/40 hover:bg-white/[0.09] hover:-translate-y-0.5"
+            className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-md transition-all duration-300 hover:border-orange-300/40 hover:bg-white/[0.09] hover:-translate-y-0.5"
           >
             <Star className="h-4 w-4 text-amber-400 fill-amber-400" strokeWidth={1.5} />
             {t.viewAll}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
     Camera,
     User,
@@ -9,12 +10,13 @@ import {
     Shield,
     Lock,
     Save,
-
+    MessageSquare,
 } from "lucide-react";
 
 import Swal from "sweetalert2";
 import { profileService } from "../services/profileService";
 import CustomerBookingList from "../booking/CustomerBookingList";
+import PhotographerChat from "../components/photographers/PhotographerChat";
 
 export default function ProfilePage({
     language = "vi",
@@ -75,12 +77,26 @@ export default function ProfilePage({
         dateOfBirth: "",
     });
 
+    const routeLocation = useLocation();
     const [activeTab, setActiveTab] = useState("info");
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: "instant" });
+    }, [activeTab]);
+    const [initialConvId, setInitialConvId] = useState(null);
 
     const [passwordData, setPasswordData] = useState({
         currentPassword: "",
         newPassword: "",
     });
+
+    useEffect(() => {
+        if (routeLocation.state?.activeTab) {
+            setActiveTab(routeLocation.state.activeTab);
+            if (routeLocation.state.activeConvId) {
+                setInitialConvId(routeLocation.state.activeConvId);
+            }
+        }
+    }, [routeLocation]);
 
     useEffect(() => {
         fetchProfile();
@@ -215,13 +231,13 @@ export default function ProfilePage({
 
     // Đổi từ bg-[#0f172a] (Dark) sang bg-slate-50 hoặc bg-white (Light) thay vì bị trong suốt hoặc dính nền tối
     const inputClass = `w-full rounded-2xl pl-12 pr-4 py-4 outline-none border transition ${isDark
-        ? "bg-[#0f172a] border-white/10 text-white focus:border-cyan-500"
-        : "bg-slate-50 border-slate-200 text-slate-900 focus:border-cyan-500 focus:bg-white shadow-sm"
+        ? "bg-[#0f172a] border-white/10 text-white focus:border-orange-500"
+        : "bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500 focus:bg-white shadow-sm"
         }`;
 
     const selectClass = `w-full rounded-2xl pl-12 pr-4 py-4 outline-none border transition appearance-none ${isDark
-        ? "bg-[#0f172a] border-white/10 text-white focus:border-cyan-500"
-        : "bg-slate-50 border-slate-200 text-slate-900 focus:border-cyan-500 focus:bg-white shadow-sm"
+        ? "bg-[#0f172a] border-white/10 text-white focus:border-orange-500"
+        : "bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500 focus:bg-white shadow-sm"
         }`;
 
     const iconClass = `absolute left-4 top-4 transition-colors ${isDark ? "text-slate-500" : "text-slate-400"}`;
@@ -233,7 +249,7 @@ export default function ProfilePage({
                     }`}
             >
                 <div className="flex flex-col items-center gap-2">
-                    <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
                     <span>{t.loading}</span>
                 </div>
             </div>
@@ -304,9 +320,9 @@ export default function ProfilePage({
                             <img
                                 src={user?.avatar ? `http://localhost:3000${user.avatar}` : "https://i.pravatar.cc/300"}
                                 alt="avatar"
-                                className="w-36 h-36 rounded-full object-cover border-4 border-cyan-400"
+                                className="w-36 h-36 rounded-full object-cover border-4 border-orange-400"
                             />
-                            <label className="absolute bottom-0 right-0 bg-cyan-500 p-3 rounded-full cursor-pointer hover:bg-cyan-400 transition text-white shadow-lg">
+                            <label className="absolute bottom-0 right-0 bg-orange-500 p-3 rounded-full cursor-pointer hover:bg-orange-400 transition text-white shadow-lg">
                                 <Camera size={18} />
                                 <input type="file" hidden accept="image/*" onChange={handleUploadAvatar} />
                             </label>
@@ -344,7 +360,7 @@ export default function ProfilePage({
                                 onClick={() => setActiveTab("info")}
                                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition ${
                                     activeTab === "info"
-                                        ? "bg-cyan-500 text-white shadow-lg shadow-cyan-500/20"
+                                        ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
                                         : isDark
                                         ? "hover:bg-white/5 text-slate-400 hover:text-white"
                                         : "hover:bg-slate-100 text-slate-600 hover:text-slate-900"
@@ -358,7 +374,7 @@ export default function ProfilePage({
                                 onClick={() => setActiveTab("bookings")}
                                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition ${
                                     activeTab === "bookings"
-                                        ? "bg-cyan-500 text-white shadow-lg shadow-cyan-500/20"
+                                        ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
                                         : isDark
                                         ? "hover:bg-white/5 text-slate-400 hover:text-white"
                                         : "hover:bg-slate-100 text-slate-600 hover:text-slate-900"
@@ -366,6 +382,20 @@ export default function ProfilePage({
                             >
                                 <Calendar size={18} />
                                 {language === "vi" ? "Lịch sử đặt lịch" : "My Bookings"}
+                            </button>
+
+                            <button
+                                onClick={() => setActiveTab("chat")}
+                                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition ${
+                                    activeTab === "chat"
+                                        ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                                        : isDark
+                                        ? "hover:bg-white/5 text-slate-400 hover:text-white"
+                                        : "hover:bg-slate-100 text-slate-600 hover:text-slate-900"
+                                }`}
+                            >
+                                <MessageSquare size={18} />
+                                {language === "vi" ? "Trò chuyện" : "Chat Messages"}
                             </button>
                         </div>
                     </div>
@@ -464,7 +494,7 @@ export default function ProfilePage({
 
                         <button
                             onClick={handleUpdateProfile}
-                            className="mt-6 flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-white px-6 py-3 rounded-2xl font-semibold transition shadow-md shadow-cyan-500/20"
+                            className="mt-6 flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white px-6 py-3 rounded-2xl font-semibold transition shadow-md shadow-orange-500/20"
                         >
                             <Save size={18} />
                             {t.save}
@@ -518,9 +548,13 @@ export default function ProfilePage({
                         </button>
                     </div>
                         </>
-                    ) : (
+                    ) : activeTab === "bookings" ? (
                         <div className="animate-fadeIn">
                             <CustomerBookingList theme={theme} language={language} />
+                        </div>
+                    ) : (
+                        <div className="animate-fadeIn">
+                            <PhotographerChat theme={theme} language={language} initialActiveConvId={initialConvId} />
                         </div>
                     )}
                 </div>
