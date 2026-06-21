@@ -14,6 +14,7 @@ import PaymentResult from "./booking/PaymentResult";
 import ChatPage from "./pages/ChatPage";
 import AiSearchPage from "./pages/AiSearchPage";
 import CommunityPage from "./pages/CommunityPage";
+import BookingPage from "./pages/BookingPage";
 
 // Admin Imports
 import AdminLayout from "./components/admin/AdminLayout";
@@ -106,6 +107,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home language={language} />} />
         <Route path="/photographers/:id" element={<PhotographerProfile language={language} />} />
+        <Route path="/booking" element={<BookingPage language={language} theme={theme} />} />
+        <Route path="/booking/:photographerId" element={<BookingPage language={language} theme={theme} />} />
 
         <Route
           path="/login"

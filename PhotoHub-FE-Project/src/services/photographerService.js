@@ -256,6 +256,14 @@ export const photographerMarketplaceService = {
         return response.data;
     },
 
+    getPhotographerCalendar: async (photographerId, params = {}) => {
+        const response = await axios.get(`${MARKETPLACE_BASE_URL}/calendar/photographer/${photographerId}`, {
+            ...getAuthConfig(),
+            params,
+        });
+        return response.data;
+    },
+
     // --- JOB POSTS ---
     getJobPosts: async (params = {}) => {
         const response = await axios.get(`${MARKETPLACE_BASE_URL}/jobs`, {

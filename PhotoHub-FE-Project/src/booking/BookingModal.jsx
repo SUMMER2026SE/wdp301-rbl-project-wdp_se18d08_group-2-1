@@ -341,14 +341,14 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
   const labelClass = `text-xs font-bold tracking-wider uppercase mb-1.5 block ${isDark ? "text-slate-400" : "text-slate-600"}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className={`relative max-w-2xl w-full rounded-3xl p-6 md:p-8 border shadow-2xl transition-all ${isDark ? "bg-[#0b0f19] border-white/10 text-white" : "bg-white border-slate-100 text-slate-900"
+    <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className={`relative max-w-xl w-full max-h-[90vh] overflow-y-auto rounded-3xl p-5 md:p-6 border shadow-2xl transition-all ${isDark ? "bg-[#0b0f19] border-white/10 text-white" : "bg-white border-slate-100 text-slate-900"
         }`}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200/50 dark:border-white/[0.06]">
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200/50 dark:border-white/[0.06]">
           <div>
-            <h2 className="text-2xl font-black tracking-tight">{t.bookTitle}</h2>
-            <p className={`text-xs mt-1 ${isDark ? "text-orange-400" : "text-orange-600"} font-semibold`}>
+            <h2 className="text-xl font-black tracking-tight">{t.bookTitle}</h2>
+            <p className={`text-xs mt-0.5 ${isDark ? "text-orange-400" : "text-orange-600"} font-semibold`}>
               @ {photographer?.displayName}
             </p>
           </div>
@@ -357,11 +357,11 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
             className={`p-2 rounded-xl border transition-all ${isDark ? "border-white/5 hover:bg-white/5 text-slate-400 hover:text-white" : "border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-900"
               }`}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Package Selection */}
           <div>
             <label className={labelClass}>{t.selectPackage}</label>
@@ -502,13 +502,24 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
               </p>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading || formData.price <= 0}
-              className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-orange-500 via-orange-500 to-amber-600 hover:brightness-110 active:scale-[0.98] text-white font-bold rounded-2xl shadow-lg transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {loading ? t.submitting : t.submitBtn}
-            </button>
+            <div className="flex w-full md:w-auto gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className={`px-6 py-3.5 border rounded-2xl font-bold transition-all duration-300 hover:bg-slate-500/10 active:scale-[0.98] ${
+                  isDark ? "border-slate-700 text-slate-300" : "border-slate-200 text-slate-600"
+                }`}
+              >
+                {t.close}
+              </button>
+              <button
+                type="submit"
+                disabled={loading || formData.price <= 0}
+                className="px-6 py-3.5 bg-gradient-to-r from-orange-500 via-orange-500 to-amber-600 hover:brightness-110 active:scale-[0.98] text-white font-bold rounded-2xl shadow-lg transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {loading ? t.submitting : t.submitBtn}
+              </button>
+            </div>
           </div>
         </form>
       </div>

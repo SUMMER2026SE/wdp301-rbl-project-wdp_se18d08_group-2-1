@@ -422,6 +422,10 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                 <div className="mb-5">
                   {/* Đặt lịch */}
                   <button
+                    onClick={() => {
+                      onClose();
+                      navigate(`/booking/${photographerId}`);
+                    }}
                     className={`w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition-all duration-200 shadow-md active:scale-[0.98] ${isAvailable
                         ? "bg-orange-500 hover:bg-orange-600 shadow-orange-400/30"
                         : "bg-slate-400 cursor-not-allowed"

@@ -11,7 +11,7 @@ const copy = {
     navItems: [
       { label: "About Us", href: "/#ecosystem" },
       { label: "Photographer", href: "/photographers", isRoute: true },
-      { label: "Booking", href: "/#workflow" },
+      { label: "Booking", href: "/booking", isRoute: true },
       { label: "Community", href: "/community", isRoute: true },
     ],
     cta: "Login",
@@ -28,7 +28,7 @@ const copy = {
     navItems: [
       { label: "V\u1ec1 PhotoHub", href: "/#ecosystem" },
       { label: "Nhi\u1ebfp \u1ea2nh Gia", href: "/photographers", isRoute: true },
-      { label: "\u0110\u1eb7t L\u1ecbch", href: "/#workflow" },
+      { label: "\u0110\u1eb7t L\u1ecbch", href: "/booking", isRoute: true },
       { label: "Di\u1ec5n \u0110\u00e0n", href: "/community", isRoute: true },
     ],
     cta: "\u0110\u0103ng nh\u1eadp",

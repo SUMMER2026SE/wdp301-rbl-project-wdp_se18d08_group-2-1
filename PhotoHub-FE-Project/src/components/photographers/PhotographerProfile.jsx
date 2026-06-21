@@ -1,6 +1,6 @@
 // src/components/photographers/PhotographerProfile.jsx
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import usePhotographers from "../../hooks/usePhotographers";
 import { aiRecommendService } from "../../services/aiRecommendService";
 import BookingModal from "../../booking/BookingModal";
@@ -35,6 +35,7 @@ import {
 const PhotographerProfile = ({ language = "en" }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const routerLocation = useLocation();
   const { getPhotographerDetail, loading, error } = usePhotographers();
   const [photographer, setPhotographer] = useState(null);
   const [selectedImg, setSelectedImg] = useState(null);
@@ -196,6 +197,16 @@ const PhotographerProfile = ({ language = "en" }) => {
     loadPhotographer();
   }
 }, [id, getPhotographerDetail]);
+
+  useEffect(() => {
+    if (
+      photographer &&
+      (routerLocation.state?.openBooking ||
+        new URLSearchParams(routerLocation.search).get("book") === "true")
+    ) {
+      navigate(`/booking/${id}`, { replace: true });
+    }
+  }, [routerLocation, photographer, navigate, id]);
 
   const openAlbumDetail = async (album) => {
     try {
@@ -650,7 +661,7 @@ const PhotographerProfile = ({ language = "en" }) => {
           )}
 
           <button 
-            onClick={() => setIsBookingModalOpen(true)}
+            onClick={() => navigate(`/booking/${id}`)}
             className="w-full rounded-2xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 px-6 py-4 font-bold text-white shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 hover:brightness-110 active:scale-[0.98] transition-all duration-300 tracking-wide text-base"
           >
             {t.bookNow}
@@ -683,13 +694,6 @@ const PhotographerProfile = ({ language = "en" }) => {
           </div>
         </div>
       )}
-      <BookingModal
-        isOpen={isBookingModalOpen}
-        onClose={() => setIsBookingModalOpen(false)}
-        photographer={photographer}
-        theme={localStorage.getItem("photohub-theme") || "dark"}
-        language={language}
-      />
     </div>
   );
 };
