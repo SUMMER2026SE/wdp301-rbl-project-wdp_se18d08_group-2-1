@@ -10,7 +10,15 @@ import {
   MessageSquare, 
   Settings,
   LogOut,
-  Camera
+  Camera,
+  AlertOctagon,
+  Coins,
+  TrendingUp,
+  ClipboardList,
+  Star,
+  Activity,
+  Tag,
+  LineChart
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -26,6 +34,14 @@ export default function AdminSidebar() {
     { label: "Tranh chấp & Khiếu nại", path: "/admin/disputes", icon: AlertTriangle },
     { label: "Báo cáo & Kiểm duyệt", path: "/admin/reports-chats", icon: MessageSquare },
     { label: "Cấu hình & Gói", path: "/admin/settings-packages", icon: Settings },
+    { label: "Giám sát rủi ro", path: "/admin/risk-dashboard", icon: AlertOctagon },
+    { label: "Duyệt yêu cầu rút tiền", path: "/admin/withdrawals", icon: Coins },
+    { label: "Xu hướng & Insights", path: "/admin/marketplace-insights", icon: TrendingUp },
+    { label: "Nhật ký hoạt động (Audit)", path: "/admin/audit-logs", icon: ClipboardList },
+    { label: "Đánh giá Photographer", path: "/admin/photographer-performance", icon: Star },
+    { label: "Hành vi Khách hàng", path: "/admin/customer-behavior", icon: Activity },
+    { label: "Chiến dịch quảng cáo", path: "/admin/campaigns", icon: Tag },
+    { label: "Dự báo doanh thu", path: "/admin/revenue-forecast", icon: LineChart },
   ];
 
   const handleLogout = () => {

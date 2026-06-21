@@ -74,4 +74,47 @@ router.patch("/withdraw-requests/:id/approve", (req, res) => AdminController.app
 router.patch("/withdraw-requests/:id/reject", (req, res) => AdminController.rejectWithdrawRequest(req, res));
 router.patch("/withdraw-requests/:id/mark-paid", (req, res) => AdminController.markPaidWithdrawRequest(req, res));
 
+// ================= EXTENDED ADMIN ROUTES (UC86 - UC95) =================
+const AdminExtensionController = require("../controllers/AdminExtensionController");
+
+// UC86 - Risk Dashboard
+router.get("/risk-dashboard", (req, res) => AdminExtensionController.getRiskDashboard(req, res));
+
+// UC87 - Withdrawals
+router.get("/withdrawals/pending", (req, res) => AdminExtensionController.getPendingWithdrawals(req, res));
+router.patch("/withdrawals/:id/approve", (req, res) => AdminExtensionController.approveWithdrawal(req, res));
+router.patch("/withdrawals/:id/reject", (req, res) => AdminExtensionController.rejectWithdrawal(req, res));
+router.patch("/withdrawals/:id/mark-paid", (req, res) => AdminExtensionController.markPaidWithdrawal(req, res));
+
+// UC88 - Refund & Partial Release Control
+router.post("/disputes/:id/refund-full", (req, res) => AdminExtensionController.refundFullDispute(req, res));
+router.post("/disputes/:id/refund-partial", (req, res) => AdminExtensionController.refundPartialDispute(req, res));
+router.post("/disputes/:id/release-payment", (req, res) => AdminExtensionController.releaseEscrowDispute(req, res));
+
+// UC89 - Insights
+router.get("/marketplace-insights", (req, res) => AdminExtensionController.getMarketplaceInsights(req, res));
+
+// UC90 - System Settings
+router.get("/settings", (req, res) => AdminExtensionController.getSettings(req, res));
+router.patch("/settings", (req, res) => AdminExtensionController.updateSettings(req, res));
+
+// UC91 - Audit Logs
+router.get("/audit-logs", (req, res) => AdminExtensionController.getAuditLogs(req, res));
+router.get("/audit-logs/:id", (req, res) => AdminExtensionController.getAuditLogById(req, res));
+
+// UC92 - Photographer Performance
+router.get("/photographer-performance", (req, res) => AdminExtensionController.getPhotographerPerformance(req, res));
+
+// UC93 - Customer Behavior
+router.get("/customer-behavior", (req, res) => AdminExtensionController.getCustomerBehavior(req, res));
+
+// UC94 - Promotion Campaigns
+router.get("/campaigns", (req, res) => AdminExtensionController.getCampaigns(req, res));
+router.post("/campaigns", (req, res) => AdminExtensionController.createCampaign(req, res));
+router.patch("/campaigns/:id", (req, res) => AdminExtensionController.updateCampaign(req, res));
+router.delete("/campaigns/:id", (req, res) => AdminExtensionController.deleteCampaign(req, res));
+
+// UC95 - Revenue Forecast
+router.get("/revenue-forecast", (req, res) => AdminExtensionController.getRevenueForecast(req, res));
+
 module.exports = router;

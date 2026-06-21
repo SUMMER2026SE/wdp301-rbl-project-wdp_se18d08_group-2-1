@@ -22,6 +22,14 @@ import AdminFinance from "./pages/admin/AdminFinance";
 import AdminDisputes from "./pages/admin/AdminDisputes";
 import AdminReportsChats from "./pages/admin/AdminReportsChats";
 import AdminSettingsPackages from "./pages/admin/AdminSettingsPackages";
+import AdminRiskDashboard from "./pages/admin/AdminRiskDashboard";
+import AdminWithdrawalManagement from "./pages/admin/AdminWithdrawalManagement";
+import AdminMarketplaceInsights from "./pages/admin/AdminMarketplaceInsights";
+import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
+import AdminPhotographerAudit from "./pages/admin/AdminPhotographerAudit";
+import AdminCustomerBehavior from "./pages/admin/AdminCustomerBehavior";
+import AdminCampaignManager from "./pages/admin/AdminCampaignManager";
+import AdminRevenueForecast from "./pages/admin/AdminRevenueForecast";
 
 function getInitialTheme() {
   const storedTheme = localStorage.getItem("photohub-theme");
@@ -147,6 +155,14 @@ export default function App() {
           <Route path="disputes" element={<AdminDisputes />} />
           <Route path="reports-chats" element={<AdminReportsChats />} />
           <Route path="settings-packages" element={<AdminSettingsPackages />} />
+          <Route path="risk-dashboard" element={<AdminRiskDashboard />} />
+          <Route path="withdrawals" element={<AdminWithdrawalManagement />} />
+          <Route path="marketplace-insights" element={<AdminMarketplaceInsights />} />
+          <Route path="audit-logs" element={<AdminAuditLogs />} />
+          <Route path="photographer-performance" element={<AdminPhotographerAudit />} />
+          <Route path="customer-behavior" element={<AdminCustomerBehavior />} />
+          <Route path="campaigns" element={<AdminCampaignManager />} />
+          <Route path="revenue-forecast" element={<AdminRevenueForecast />} />
         </Route>
         <Route
           path="/favorites"

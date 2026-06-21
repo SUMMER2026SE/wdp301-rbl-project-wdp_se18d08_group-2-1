@@ -377,4 +377,186 @@ export const adminService = {
     });
     return response.json();
   },
+
+  // Risk Dashboard (UC86)
+  getRiskDashboard: async () => {
+    const response = await fetch(`${BASE_URL}/risk-dashboard`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    return response.json();
+  },
+
+  // Withdrawals (New Workflow UC87)
+  getPendingWithdrawals: async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    const response = await fetch(`${BASE_URL}/withdrawals/pending?${query}`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    return response.json();
+  },
+
+  approveWithdrawal: async (id, adminNote = "") => {
+    const response = await fetch(`${BASE_URL}/withdrawals/${id}/approve`, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify({ adminNote }),
+    });
+    return response.json();
+  },
+
+  rejectWithdrawal: async (id, adminNote) => {
+    const response = await fetch(`${BASE_URL}/withdrawals/${id}/reject`, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify({ adminNote }),
+    });
+    return response.json();
+  },
+
+  markPaidWithdrawal: async (id, adminNote = "") => {
+    const response = await fetch(`${BASE_URL}/withdrawals/${id}/mark-paid`, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify({ adminNote }),
+    });
+    return response.json();
+  },
+
+  // Disputes Refund & Escrow (UC88)
+  refundFullDispute: async (id, resolutionNote) => {
+    const response = await fetch(`${BASE_URL}/disputes/${id}/refund-full`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({ resolutionNote }),
+    });
+    return response.json();
+  },
+
+  refundPartialDispute: async (id, refundPercent, resolutionNote) => {
+    const response = await fetch(`${BASE_URL}/disputes/${id}/refund-partial`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({ refundPercent, resolutionNote }),
+    });
+    return response.json();
+  },
+
+  releaseEscrowDispute: async (id, resolutionNote) => {
+    const response = await fetch(`${BASE_URL}/disputes/${id}/release-payment`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({ resolutionNote }),
+    });
+    return response.json();
+  },
+
+  // Insights (UC89)
+  getMarketplaceInsights: async () => {
+    const response = await fetch(`${BASE_URL}/marketplace-insights`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    return response.json();
+  },
+
+  // Policy Settings (UC90)
+  getSystemSettings: async () => {
+    const response = await fetch(`${BASE_URL}/settings`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    return response.json();
+  },
+
+  updateSystemSettings: async (settings) => {
+    const response = await fetch(`${BASE_URL}/settings`, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify(settings),
+    });
+    return response.json();
+  },
+
+  // Audit Logs (UC91)
+  getAuditLogs: async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    const response = await fetch(`${BASE_URL}/audit-logs?${query}`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    return response.json();
+  },
+
+  getAuditLogById: async (id) => {
+    const response = await fetch(`${BASE_URL}/audit-logs/${id}`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    return response.json();
+  },
+
+  // Photographer Performance (UC92)
+  getPhotographerPerformance: async () => {
+    const response = await fetch(`${BASE_URL}/photographer-performance`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    return response.json();
+  },
+
+  // Customer Behavior (UC93)
+  getCustomerBehavior: async () => {
+    const response = await fetch(`${BASE_URL}/customer-behavior`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    return response.json();
+  },
+
+  // Promotion Campaigns (UC94)
+  getCampaigns: async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    const response = await fetch(`${BASE_URL}/campaigns?${query}`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    return response.json();
+  },
+
+  createCampaign: async (data) => {
+    const response = await fetch(`${BASE_URL}/campaigns`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return response.json();
+  },
+
+  updateCampaign: async (id, data) => {
+    const response = await fetch(`${BASE_URL}/campaigns/${id}`, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return response.json();
+  },
+
+  deleteCampaign: async (id) => {
+    const response = await fetch(`${BASE_URL}/campaigns/${id}`, {
+      method: "DELETE",
+      headers: getHeaders(),
+    });
+    return response.json();
+  },
+
+  // Revenue Forecast (UC95)
+  getRevenueForecast: async () => {
+    const response = await fetch(`${BASE_URL}/revenue-forecast`, {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    return response.json();
+  },
 };
