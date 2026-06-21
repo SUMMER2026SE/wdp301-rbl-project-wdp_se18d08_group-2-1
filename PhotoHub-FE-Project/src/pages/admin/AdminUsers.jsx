@@ -143,10 +143,10 @@ export default function AdminUsers() {
               placeholder="Tìm kiếm theo email, họ tên, số điện thoại..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-cyan-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-orange-500"
             />
           </div>
-          <button type="submit" className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-sm font-semibold transition">
+          <button type="submit" className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-sm font-semibold transition">
             Tìm
           </button>
         </form>
@@ -156,7 +156,7 @@ export default function AdminUsers() {
           <select 
             value={role} 
             onChange={(e) => { setRole(e.target.value); setPage(1); }}
-            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
+            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-orange-500"
           >
             <option value="">Tất cả vai trò</option>
             <option value="CUSTOMER">Khách hàng</option>
@@ -168,7 +168,7 @@ export default function AdminUsers() {
           <select 
             value={status} 
             onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
+            className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-orange-500"
           >
             <option value="">Tất cả trạng thái</option>
             <option value="ACTIVE">Hoạt động (Đã xác thực)</option>
@@ -197,7 +197,7 @@ export default function AdminUsers() {
               {loading ? (
                 <tr>
                   <td colSpan="4" className="text-center py-12">
-                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-cyan-500 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-orange-500 mx-auto"></div>
                   </td>
                 </tr>
               ) : users.length > 0 ? (
@@ -215,7 +215,7 @@ export default function AdminUsers() {
                   if (u.role === "admin") {
                     roleBadge = <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-red-500/15 text-red-400 uppercase">Admin</span>;
                   } else if (u.role === "photographer") {
-                    roleBadge = <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 capitalize">Nhiếp ảnh</span>;
+                    roleBadge = <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-orange-500/10 text-orange-400 capitalize">Nhiếp ảnh</span>;
                   }
 
                   return (
@@ -303,12 +303,12 @@ export default function AdminUsers() {
             <div className="space-y-4">
               {/* Avatar & Basic Info */}
               <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-cyan-600 font-bold text-white flex items-center justify-center text-xl">
+                <div className="h-16 w-16 rounded-full bg-orange-600 font-bold text-white flex items-center justify-center text-xl">
                   {selectedUser.user.fullName?.charAt(0)?.toUpperCase()}
                 </div>
                 <div>
                   <h3 className="font-semibold text-white text-base">{selectedUser.user.fullName}</h3>
-                  <p className="text-xs text-cyan-400 font-semibold uppercase tracking-wider">{selectedUser.user.role}</p>
+                  <p className="text-xs text-orange-400 font-semibold uppercase tracking-wider">{selectedUser.user.role}</p>
                   <p className="text-xs text-slate-500 mt-0.5">ID: {selectedUser.user._id}</p>
                 </div>
               </div>
@@ -342,7 +342,7 @@ export default function AdminUsers() {
               {/* Photographer Profile specific fields */}
               {selectedUser.profile && selectedUser.user.role === "photographer" && (
                 <div className="space-y-2.5 text-sm pt-4 border-t border-slate-800/80">
-                  <h4 className="font-bold text-cyan-400 text-xs uppercase tracking-wider">Hồ sơ Photographer</h4>
+                  <h4 className="font-bold text-orange-400 text-xs uppercase tracking-wider">Hồ sơ Photographer</h4>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Nghệ danh:</span>
                     <span className="text-white font-medium">{selectedUser.profile.displayName}</span>
@@ -353,7 +353,7 @@ export default function AdminUsers() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Giá chụp / giờ:</span>
-                    <span className="text-cyan-400 font-bold">
+                    <span className="text-orange-400 font-bold">
                       {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(selectedUser.profile.hourlyRate || 0)}
                     </span>
                   </div>

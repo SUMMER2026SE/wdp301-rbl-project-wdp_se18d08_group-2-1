@@ -48,6 +48,9 @@ export default function PhotographerDashboard({
 }) {
     const isDark = theme === "dark";
     const [activeTab, setActiveTab] = useState("profile");
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: "instant" });
+    }, [activeTab]);
     const [loading, setLoading] = useState(false);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
@@ -413,23 +416,23 @@ export default function PhotographerDashboard({
         }
     };
     // --- UI HELPER CLASSES ---
-    const labelClass = `text-xs font-semibold tracking-wider uppercase mb-2 block transition-colors ${isDark ? "text-slate-500" : "text-slate-500"}`;
+    const labelClass = `text-xs font-semibold tracking-wider uppercase mb-1.5 block transition-colors ${isDark ? "text-slate-500" : "text-slate-500"}`;
 
-    const inputClass = `w-full rounded-2xl pl-12 pr-4 py-4 outline-none border font-medium transition-all duration-300 ${isDark
-        ? "bg-[#09090b] border-white/5 text-white focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 focus:bg-[#030303]"
-        : "bg-slate-50 border-slate-200 text-slate-900 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/5 focus:bg-white shadow-sm"
+    const inputClass = `w-full rounded-xl pl-10 pr-4 py-3 outline-none border font-medium transition-all duration-300 ${isDark
+        ? "bg-[#09090b] border-white/5 text-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 focus:bg-[#030303]"
+        : "bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 focus:bg-white shadow-sm"
         }`;
 
-    const disabledInputClass = `w-full rounded-2xl pl-12 pr-4 py-4 outline-none border font-mono text-xs transition-all ${isDark
+    const disabledInputClass = `w-full rounded-xl pl-10 pr-4 py-3 outline-none border font-mono text-xs transition-all ${isDark
         ? "bg-white/[0.02] border-white/5 text-slate-500 cursor-not-allowed opacity-60"
         : "bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed"
         }`;
 
-    const iconClass = `absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-300 ${isDark ? "text-slate-600 group-focus-within:text-cyan-500" : "text-slate-400 group-focus-within:text-cyan-500"}`;
+    const iconClass = `absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${isDark ? "text-slate-600 group-focus-within:text-orange-500" : "text-slate-400 group-focus-within:text-orange-500"}`;
 
-    const cardClass = `border rounded-3xl p-6 backdrop-blur-md transition-all duration-300 ${isDark
-        ? "bg-[#121214]/80 border-white/[0.06] hover:border-white/[0.1] shadow-2xl shadow-black/40"
-        : "bg-white border-slate-100 shadow-md shadow-slate-100/50"
+    const cardClass = `border rounded-2xl p-5 backdrop-blur-md transition-all duration-300 ${isDark
+        ? "bg-[#121214]/80 border-white/[0.06] hover:border-white/[0.1] shadow-xl shadow-black/40"
+        : "bg-white border-slate-100 shadow-sm shadow-slate-100/50"
         }`;
 
     const handleChange = (e) => {
@@ -600,7 +603,7 @@ export default function PhotographerDashboard({
                 {/* 1. LEFT SIDEBAR - GLOW CARD */}
                 <div className="lg:col-span-1">
                     <div className={`${cardClass} sticky top-28 overflow-hidden group`}>
-                        <div className="absolute -top-12 -left-12 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-all duration-500"></div>
+                        <div className="absolute -top-12 -left-12 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl group-hover:bg-orange-500/20 transition-all duration-500"></div>
 
                         <div className="flex flex-col items-center relative z-10 mb-8 pb-6 border-b border-slate-200 dark:border-white/[0.06]">
 
@@ -616,9 +619,9 @@ export default function PhotographerDashboard({
                             {/* AVATAR WRAPPER WITH HOVER OVERLAY EFFECT */}
                             <div
                                 onClick={handleAvatarClick}
-                                className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-cyan-500 to-purple-600 p-[2px] mb-4 shadow-xl shadow-cyan-500/10 relative overflow-hidden cursor-pointer group/avatar"
+                                className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-orange-500 to-amber-500 p-[2px] mb-4 shadow-xl shadow-orange-500/10 relative overflow-hidden cursor-pointer group/avatar"
                             >
-                                <div className="w-full h-full rounded-[22px] bg-[#09090b] flex items-center justify-center text-cyan-400 overflow-hidden relative">
+                                <div className="w-full h-full rounded-[22px] bg-[#09090b] flex items-center justify-center text-orange-500 overflow-hidden relative">
                                     {avatarUrl ? (
                                         <img
                                             src={avatarUrl}
@@ -638,7 +641,7 @@ export default function PhotographerDashboard({
                                     {/* Hiển thị Trạng thái Đang tải file lên */}
                                     {uploadingAvatar && (
                                         <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                                            <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                                            <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
                                         </div>
                                     )}
                                 </div>
@@ -682,8 +685,8 @@ export default function PhotographerDashboard({
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
-                                        className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all duration-300 ${isSelected
-                                            ? "bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/20 transform translate-x-1"
+                                        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${isSelected
+                                            ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/10 transform translate-x-1"
                                             : isDark
                                                 ? "hover:bg-white/[0.04] text-slate-400 hover:text-white"
                                                 : "hover:bg-slate-100 text-slate-600 hover:text-slate-900"
@@ -707,15 +710,15 @@ export default function PhotographerDashboard({
                             { label: t.rating, val: `${photographerData.averageRating}/5`, icon: Star, color: "from-amber-500 to-orange-500 shadow-amber-500/5" },
                             { label: t.bookings, val: photographerData.completedBookings, icon: CheckCircle, color: "from-green-500 to-emerald-500 shadow-emerald-500/5" },
                             { label: t.reviews, val: photographerData.totalReviews, icon: Briefcase, color: "from-purple-500 to-indigo-500 shadow-purple-500/5" },
-                            { label: t.earnings, val: `$${photographerData.totalEarnings}`, icon: DollarSign, color: "from-cyan-500 to-blue-500 shadow-cyan-500/5" }
+                            { label: t.earnings, val: `$${photographerData.totalEarnings}`, icon: DollarSign, color: "from-orange-500 to-amber-500 shadow-orange-500/5" }
                         ].map((stat, i) => (
-                            <div key={i} className={`${cardClass} !p-5 flex items-center gap-4 relative overflow-hidden group hover:-translate-y-1 shadow-lg ${stat.color}`}>
-                                <div className="p-3.5 rounded-2xl bg-slate-500/5 dark:bg-white/[0.03] text-cyan-400 group-hover:scale-110 transition-transform duration-300">
-                                    <stat.icon size={22} className="text-cyan-400" />
+                            <div key={i} className={`${cardClass} !p-4 flex items-center gap-3.5 relative overflow-hidden group hover:-translate-y-1 shadow-md ${stat.color}`}>
+                                <div className="p-2.5 rounded-xl bg-slate-500/5 dark:bg-white/[0.03] text-orange-500 group-hover:scale-110 transition-transform duration-300">
+                                    <stat.icon size={20} className="text-orange-500" />
                                 </div>
                                 <div>
-                                    <p className="text-[11px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">{stat.label}</p>
-                                    <p className="font-black text-2xl tracking-tight mt-0.5">{stat.val}</p>
+                                    <p className="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">{stat.label}</p>
+                                    <p className="font-black text-xl tracking-tight mt-0.5">{stat.val}</p>
                                 </div>
                             </div>
                         ))}
@@ -750,8 +753,8 @@ export default function PhotographerDashboard({
 
                             {/* NEW BLOCK: PERSONAL IDENTITY AND SECURITY FIELDS (Chỉnh sửa Phone & Address của User, Email chỉ đọc) */}
                             <div className={cardClass}>
-                                <div className="flex items-center gap-2.5 mb-6 text-cyan-400 border-b border-slate-200 dark:border-white/[0.06] pb-3">
-                                    <User size={18} className="text-emerald-400" />
+                                <div className="flex items-center gap-2.5 mb-6 text-orange-500 border-b border-slate-200 dark:border-white/[0.06] pb-3">
+                                    <User size={18} className="text-orange-500" />
                                     <h3 className="text-sm font-bold tracking-tight text-slate-800 dark:text-zinc-200">{t.infoPersonal}</h3>
                                 </div>
 
@@ -808,8 +811,8 @@ export default function PhotographerDashboard({
 
                             {/* CCCD VERIFICATION BLOCK */}
                             <div className={cardClass}>
-                                <div className="flex items-center gap-2.5 mb-6 text-cyan-400 border-b border-slate-200 dark:border-white/[0.06] pb-3">
-                                    <CreditCard size={18} className="text-cyan-400" />
+                                <div className="flex items-center gap-2.5 mb-6 text-orange-500 border-b border-slate-200 dark:border-white/[0.06] pb-3">
+                                    <CreditCard size={18} className="text-orange-500" />
                                     <h3 className="text-sm font-bold tracking-tight text-slate-800 dark:text-zinc-200">
                                         {t.idVerificationTitle}
                                     </h3>
@@ -846,12 +849,12 @@ export default function PhotographerDashboard({
                                                     frontIdRef.current?.click();
                                                 }
                                             }}
-                                            className={`mt-1.5 border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center min-h-[160px] transition-all relative overflow-hidden ${canEditVerification
+                                            className={`mt-1.5 border-2 border-dashed rounded-xl p-3 flex flex-col items-center justify-center min-h-[140px] transition-all relative overflow-hidden ${canEditVerification
                                                 ? "cursor-pointer"
                                                 : "cursor-default"
                                                 } ${isDark
-                                                    ? "border-white/10 bg-[#09090b] hover:border-cyan-500/50"
-                                                    : "border-slate-300 bg-slate-50 hover:border-cyan-500"
+                                                    ? "border-white/10 bg-[#09090b] hover:border-orange-500/50"
+                                                    : "border-slate-300 bg-slate-50 hover:border-orange-500"
                                                 }`}
                                         >
                                             {frontPreview ? (
@@ -905,12 +908,12 @@ export default function PhotographerDashboard({
                                                     backIdRef.current?.click();
                                                 }
                                             }}
-                                            className={`mt-1.5 border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center min-h-[160px] transition-all relative overflow-hidden ${canEditVerification
+                                            className={`mt-1.5 border-2 border-dashed rounded-xl p-3 flex flex-col items-center justify-center min-h-[140px] transition-all relative overflow-hidden ${canEditVerification
                                                 ? "cursor-pointer"
                                                 : "cursor-default"
                                                 } ${isDark
-                                                    ? "border-white/10 bg-[#09090b] hover:border-cyan-500/50"
-                                                    : "border-slate-300 bg-slate-50 hover:border-cyan-500"
+                                                    ? "border-white/10 bg-[#09090b] hover:border-orange-500/50"
+                                                    : "border-slate-300 bg-slate-50 hover:border-orange-500"
                                                 }`}
                                         >
                                             {backPreview ? (
@@ -953,7 +956,7 @@ export default function PhotographerDashboard({
                                                 !frontFile ||
                                                 !backFile
                                             }
-                                            className="w-full md:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-6 py-3 rounded-xl font-bold text-xs tracking-wide transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                                            className="w-full md:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-400 hover:to-amber-500 text-white px-5 py-2 rounded-xl font-bold text-xs tracking-wide transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-orange-500/10"
                                         >
                                             <CreditCard
                                                 size={16}
@@ -974,8 +977,8 @@ export default function PhotographerDashboard({
                             <div className={`${cardClass} relative overflow-hidden`}>
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/[0.02] rounded-full blur-3xl pointer-events-none"></div>
 
-                                <div className="flex items-center gap-2.5 mb-8 border-b border-slate-200 dark:border-white/[0.06] pb-4">
-                                    <Layers size={20} className="text-cyan-400" />
+                                <div className="flex items-center gap-2.5 mb-6 border-b border-slate-200 dark:border-white/[0.06] pb-3">
+                                    <Layers size={18} className="text-orange-500" />
                                     <h3 className="text-lg font-bold tracking-tight">{t.infoService}</h3>
                                 </div>
 
@@ -1030,7 +1033,7 @@ export default function PhotographerDashboard({
 
                                     <div className="md:col-span-2">
                                         <label className={labelClass}>{t.bio}</label>
-                                        <textarea name="bio" value={photographerData.bio || ""} onChange={handleChange} rows={5} placeholder={t.bioPlaceholder} className={`w-full rounded-2xl p-4 mt-1.5 outline-none border font-medium transition-all duration-300 ${isDark ? "bg-[#09090b] border-white/5 text-white focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 focus:bg-[#030303]" : "bg-slate-50 border-slate-200 text-slate-900 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/5 focus:bg-white shadow-sm"
+                                        <textarea name="bio" value={photographerData.bio || ""} onChange={handleChange} rows={4} placeholder={t.bioPlaceholder} className={`w-full rounded-xl p-3.5 mt-1.5 outline-none border font-medium transition-all duration-300 ${isDark ? "bg-[#09090b] border-white/5 text-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 focus:bg-[#030303]" : "bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 focus:bg-white shadow-sm"
                                             }`} />
                                     </div>
                                 </div>
@@ -1058,8 +1061,8 @@ export default function PhotographerDashboard({
 
                                 {/* TOGGLE ACCOUNT AVAILABILITY */}
                                 <div className="mt-8 flex flex-wrap gap-6 items-center justify-between border-t border-slate-200 dark:border-white/[0.06] pt-6">
-                                    <label className="flex items-center gap-3.5 cursor-pointer group">
-                                        <input type="checkbox" name="isAvailable" checked={photographerData.isAvailable ?? true} onChange={handleChange} className="w-5 h-5 rounded-lg accent-cyan-500 cursor-pointer transition" />
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <input type="checkbox" name="isAvailable" checked={photographerData.isAvailable ?? true} onChange={handleChange} className="w-4 h-4 rounded accent-orange-500 cursor-pointer transition" />
                                         <span className={`text-sm font-semibold select-none ${isDark ? "text-slate-300 group-hover:text-white" : "text-slate-700 group-hover:text-black"}`}>
                                             {t.availableToggle}
                                         </span>
@@ -1112,7 +1115,7 @@ export default function PhotographerDashboard({
                                     <button
                                         onClick={handleSaveProfile}
                                         disabled={loading}
-                                        className="w-full md:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white px-8 py-4 rounded-2xl font-bold tracking-wide transition-all duration-300 shadow-lg shadow-cyan-500/20 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
+                                        className="w-full md:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-6 py-3 rounded-xl font-bold tracking-wide transition-all duration-300 shadow-md shadow-orange-500/10 disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
                                     >
                                         <Save size={18} className={loading ? "animate-spin" : ""} />
                                         {loading ? t.loading : t.save}

@@ -82,92 +82,92 @@ export default function PhotographerRecommendedJobs({ theme = "dark", language =
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header Info */}
-      <div className="relative overflow-hidden p-6 rounded-3xl border border-cyan-500/10 bg-gradient-to-r from-cyan-500/5 to-purple-600/5 backdrop-blur-md">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none" />
-        <div className="flex items-center gap-3 mb-2">
-          <Sparkles className="text-cyan-400 animate-pulse" size={24} />
-          <h2 className="text-2xl font-black tracking-tight">{t.title}</h2>
+      <div className="relative overflow-hidden p-5 rounded-2xl border border-orange-500/10 bg-gradient-to-r from-orange-500/5 to-amber-500/5 backdrop-blur-md">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="flex items-center gap-2.5 mb-2">
+          <Sparkles className="text-orange-500 animate-pulse" size={22} />
+          <h2 className="text-xl font-black tracking-tight">{t.title}</h2>
         </div>
-        <p className="text-xs text-slate-500 max-w-2xl font-medium leading-relaxed">{t.subtitle}</p>
+        <p className="text-[11px] text-slate-500 max-w-2xl font-medium leading-relaxed">{t.subtitle}</p>
       </div>
 
       {loading ? (
         <div className="flex justify-center items-center py-20">
-          <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : recommendations.length === 0 ? (
         <div
-          className={`p-16 rounded-3xl border flex flex-col items-center justify-center text-center ${
+          className={`p-10 rounded-2xl border flex flex-col items-center justify-center text-center ${
             isDark ? "bg-[#121214]/40 border-white/5" : "bg-white border-slate-200 shadow-sm"
           }`}
         >
-          <AlertCircle className="text-slate-500 mb-3 opacity-60 animate-bounce" size={36} />
-          <p className="font-extrabold text-slate-500 max-w-sm leading-relaxed">{t.noMatch}</p>
+          <AlertCircle className="text-slate-500 mb-3 opacity-60 animate-bounce" size={32} />
+          <p className="font-extrabold text-slate-500 max-w-sm leading-relaxed text-sm">{t.noMatch}</p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-5">
           {/* Recommended Jobs List */}
-          <div className="md:col-span-2 space-y-4 max-h-[600px] overflow-y-auto pr-1">
+          <div className="md:col-span-2 space-y-3.5 max-h-[600px] overflow-y-auto pr-1">
             {recommendations.map((job) => (
               <div
                 key={job._id}
                 onClick={() => setSelectedJob(job)}
-                className={`p-5 rounded-3xl border transition-all cursor-pointer relative group flex justify-between items-center ${
+                className={`p-4 rounded-2xl border transition-all cursor-pointer relative group flex justify-between items-center ${
                   selectedJob?._id === job._id
-                    ? "border-cyan-500 bg-cyan-500/5 shadow-lg shadow-cyan-500/5"
+                    ? "border-orange-500 bg-orange-500/5 shadow-md shadow-orange-500/5"
                     : isDark
                     ? "bg-[#121214]/80 border-white/[0.06] hover:border-white/[0.12] hover:bg-[#151518]"
                     : "bg-white border-slate-100 shadow-md hover:bg-slate-50/50 hover:border-slate-200"
                 }`}
               >
-                <div className="space-y-2 flex-1 pr-4">
+                <div className="space-y-1.5 flex-1 pr-4">
                   <div className="flex justify-between items-start">
-                    <h3 className="font-extrabold text-lg tracking-tight group-hover:text-cyan-400 transition">
+                    <h3 className="font-extrabold text-base tracking-tight group-hover:text-orange-500 transition">
                       {job.title}
                     </h3>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-y-1 text-xs text-slate-500 mb-2">
+                  <div className="grid grid-cols-2 gap-y-1 text-[11px] text-slate-500 mb-2">
                     <div className="flex items-center gap-2">
-                      <MapPin size={13} className="text-cyan-500" />
+                      <MapPin size={12} className="text-orange-500" />
                       <span>{job.location}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Grid size={13} className="text-cyan-500" />
+                      <Grid size={12} className="text-orange-500" />
                       <span className="capitalize">{job.style}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <DollarSign size={13} className="text-emerald-400 font-extrabold" />
+                      <DollarSign size={12} className="text-emerald-400 font-extrabold" />
                       <span className="font-bold text-emerald-400">${job.budget}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Calendar size={13} className="text-cyan-500" />
+                      <Calendar size={12} className="text-orange-500" />
                       <span>{new Date(job.date).toLocaleDateString()}</span>
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                  <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">
                     {job.description}
                   </p>
                 </div>
 
                 {/* Score Circle Progress Indicator */}
-                <div className="flex flex-col items-center gap-1.5 ml-4">
+                <div className="flex flex-col items-center gap-1 ml-4">
                   <div className="relative flex items-center justify-center">
-                    <svg className="w-14 h-14 transform -rotate-90">
+                    <svg className="w-12 h-12 transform -rotate-90">
                       <circle
-                        cx="28"
-                        cy="28"
-                        r="22"
+                        cx="24"
+                        cy="24"
+                        r="19"
                         className="stroke-slate-300 dark:stroke-white/5 fill-transparent"
-                        strokeWidth="3.5"
+                        strokeWidth="3"
                       />
                       <circle
-                        cx="28"
-                        cy="28"
-                        r="22"
+                        cx="24"
+                        cy="24"
+                        r="19"
                         className={`fill-transparent transition-all duration-1000 ${
                           job.matchScore >= 80
                             ? "stroke-emerald-400"
@@ -175,15 +175,15 @@ export default function PhotographerRecommendedJobs({ theme = "dark", language =
                             ? "stroke-amber-400"
                             : "stroke-slate-400"
                         }`}
-                        strokeWidth="3.5"
-                        strokeDasharray={2 * Math.PI * 22}
+                        strokeWidth="3"
+                        strokeDasharray={2 * Math.PI * 19}
                         strokeDashoffset={getStrokeDashOffset(job.matchScore)}
                         strokeLinecap="round"
                       />
                     </svg>
-                    <span className="absolute text-[11px] font-black">{job.matchScore}%</span>
+                    <span className="absolute text-[10px] font-black">{job.matchScore}%</span>
                   </div>
-                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">
+                  <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider text-center">
                     {t.matchScore}
                   </span>
                 </div>
@@ -195,15 +195,15 @@ export default function PhotographerRecommendedJobs({ theme = "dark", language =
           <div className="md:col-span-1">
             {selectedJob ? (
               <div
-                className={`p-6 rounded-3xl border h-full flex flex-col justify-between space-y-6 ${
+                className={`p-4 rounded-2xl border h-full flex flex-col justify-between space-y-4 ${
                   isDark ? "bg-[#09090b] border-white/5" : "bg-slate-50 border-slate-100"
                 }`}
               >
-                <div className="space-y-4">
+                <div className="space-y-3.5">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-black text-xl leading-snug">{selectedJob.title}</h3>
+                    <h3 className="font-black text-lg leading-snug">{selectedJob.title}</h3>
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-black border uppercase ${getScoreColor(
+                      className={`px-2 py-0.5 rounded text-[10px] font-black border uppercase ${getScoreColor(
                         selectedJob.matchScore
                       )}`}
                     >
@@ -213,33 +213,33 @@ export default function PhotographerRecommendedJobs({ theme = "dark", language =
 
                   <div className="h-[2px] bg-slate-200 dark:bg-white/[0.04]" />
 
-                  <div className="space-y-3 text-sm text-slate-500">
-                    <div className="flex items-center gap-2.5">
-                      <User size={16} className="text-cyan-500" />
+                  <div className="space-y-2.5 text-[13px] text-slate-500">
+                    <div className="flex items-center gap-2">
+                      <User size={15} className="text-orange-500" />
                       <span>
                         <strong>{t.client}</strong> {selectedJob.customer?.fullName || selectedJob.customer?.email}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2.5">
-                      <MapPin size={16} className="text-cyan-500" />
+                    <div className="flex items-center gap-2">
+                      <MapPin size={15} className="text-orange-500" />
                       <span>
                         <strong>{t.locationLabel}</strong> {selectedJob.location}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2.5">
-                      <Grid size={16} className="text-cyan-500" />
+                    <div className="flex items-center gap-2">
+                      <Grid size={15} className="text-orange-500" />
                       <span className="capitalize">
                         <strong>{t.styleLabel}</strong> {selectedJob.style}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2.5">
-                      <Calendar size={16} className="text-cyan-500" />
+                    <div className="flex items-center gap-2">
+                      <Calendar size={15} className="text-orange-500" />
                       <span>
                         <strong>{t.dateLabel}</strong> {new Date(selectedJob.date).toLocaleDateString()}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2.5">
-                      <DollarSign size={16} className="text-emerald-400 font-extrabold" />
+                    <div className="flex items-center gap-2">
+                      <DollarSign size={15} className="text-emerald-400 font-extrabold" />
                       <span>
                         <strong>{t.budgetLabel}</strong>{" "}
                         <span className="font-bold text-emerald-400">${selectedJob.budget}</span>
@@ -248,10 +248,10 @@ export default function PhotographerRecommendedJobs({ theme = "dark", language =
                   </div>
 
                   {selectedJob.matchBreakdown && (
-                    <div className="rounded-2xl border border-cyan-500/15 bg-cyan-500/5 p-3 text-xs">
-                      <h4 className="mb-2 font-black uppercase tracking-wider text-cyan-300">Fit breakdown</h4>
+                    <div className="rounded-xl border border-orange-500/15 bg-orange-500/5 p-2.5 text-xs">
+                      <h4 className="mb-1.5 font-black uppercase tracking-wider text-orange-600 dark:text-orange-400">Fit breakdown</h4>
                       {Object.entries(selectedJob.matchBreakdown).map(([key, value]) => (
-                        <div key={key} className="flex justify-between gap-3 py-1 text-slate-400">
+                        <div key={key} className="flex justify-between gap-3 py-0.5 text-slate-400">
                           <span className="capitalize">{key}</span>
                           <span className="font-bold text-slate-200">{value.score ?? "-"} pts</span>
                         </div>
@@ -259,11 +259,11 @@ export default function PhotographerRecommendedJobs({ theme = "dark", language =
                     </div>
                   )}
 
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <div className="space-y-1.5">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                       {t.description}
                     </h4>
-                    <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                    <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
                       {selectedJob.description}
                     </p>
                   </div>
@@ -271,9 +271,9 @@ export default function PhotographerRecommendedJobs({ theme = "dark", language =
 
                 <button
                   onClick={() => setShowBidModal(true)}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-black py-4 rounded-2xl transition shadow-lg shadow-cyan-500/20 active:scale-[0.98]"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black py-3 rounded-xl transition shadow-md shadow-orange-500/10 active:scale-[0.98]"
                 >
-                  <Send size={16} />
+                  <Send size={15} />
                   {t.submitBid}
                 </button>
               </div>

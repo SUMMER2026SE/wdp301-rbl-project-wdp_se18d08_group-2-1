@@ -63,7 +63,7 @@ const PhotographerGallery = ({ language = "en" }) => {
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <Loader className="animate-spin text-blue-500" size={32} />
+          <Loader className="animate-spin text-orange-500" size={32} />
         </div>
       )}
 

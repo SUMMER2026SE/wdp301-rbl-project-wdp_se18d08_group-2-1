@@ -104,32 +104,32 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
 
       {loading ? (
         <div className="flex justify-center items-center py-20">
-          <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {/* Total Earnings Card */}
             <div
-              className={`p-6 rounded-3xl border relative overflow-hidden flex items-center gap-5 ${
+              className={`p-4 rounded-2xl border relative overflow-hidden flex items-center gap-4 ${
                 isDark
                   ? "bg-[#121214]/80 border-white/[0.06] shadow-xl"
                   : "bg-white border-slate-200 shadow-md"
               }`}
             >
-              <div className="p-4 rounded-2xl bg-cyan-500/10 text-cyan-400">
-                <DollarSign size={24} />
+              <div className="p-3 rounded-xl bg-orange-500/10 text-orange-500">
+                <DollarSign size={20} />
               </div>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   {t.totalEarnings}
                 </p>
-                <h3 className="text-2xl font-black mt-1">
+                <h3 className="text-xl font-black mt-0.5">
                   ${stats.totalRevenue}
                 </h3>
                 <span className="text-[9px] font-bold text-slate-500 flex items-center gap-1 mt-1">
-                  <CheckCircle size={10} className="text-emerald-400" />
+                  <CheckCircle size={10} className="text-emerald-500" />
                   {stats.completedBookings} {t.completedJobs}
                 </span>
               </div>
@@ -137,24 +137,24 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
 
             {/* Withdrawn Stats Card */}
             <div
-              className={`p-6 rounded-3xl border relative overflow-hidden flex items-center gap-5 ${
+              className={`p-4 rounded-2xl border relative overflow-hidden flex items-center gap-4 ${
                 isDark
                   ? "bg-[#121214]/80 border-white/[0.06] shadow-xl"
                   : "bg-white border-slate-200 shadow-md"
               }`}
             >
-              <div className="p-4 rounded-2xl bg-purple-500/10 text-purple-400">
-                <Landmark size={24} />
+              <div className="p-3 rounded-xl bg-amber-500/10 text-amber-500">
+                <Landmark size={20} />
               </div>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   {t.totalWithdrawn}
                 </p>
-                <h3 className="text-2xl font-black mt-1">
+                <h3 className="text-xl font-black mt-0.5">
                   ${stats.totalWithdrawn}
                 </h3>
                 {stats.pendingWithdrawn > 0 && (
-                  <span className="text-[9px] font-bold text-amber-400 flex items-center gap-1 mt-1">
+                  <span className="text-[9px] font-bold text-amber-500 flex items-center gap-1 mt-1">
                     <ShieldAlert size={10} />
                     {t.pendingWithdrawn}: ${stats.pendingWithdrawn}
                   </span>
@@ -164,57 +164,57 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
 
             {/* Balance to Withdraw Card */}
             <div
-              className={`p-6 rounded-3xl border relative overflow-hidden bg-gradient-to-tr from-cyan-500/10 via-cyan-600/[0.03] to-transparent border-cyan-500/20 shadow-lg shadow-cyan-500/5`}
+              className={`p-4 rounded-2xl border relative overflow-hidden bg-gradient-to-tr from-orange-500/10 via-amber-500/[0.02] to-transparent border-orange-500/20 shadow-md shadow-orange-500/5`}
             >
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                     {t.withdrawable}
                   </p>
-                  <h3 className="text-3xl font-black text-cyan-400 mt-1">
+                  <h3 className="text-2xl font-black text-orange-500 mt-0.5">
                     ${stats.withdrawableAmount}
                   </h3>
                 </div>
                 {onNavigateToWithdraw && stats.withdrawableAmount > 0 && (
                   <button
                     onClick={onNavigateToWithdraw}
-                    className="flex items-center gap-1 bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition shadow-md shadow-cyan-500/20 active:scale-[0.95]"
+                    className="flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition shadow-sm shadow-orange-500/10 active:scale-[0.95]"
                   >
                     <span>{t.withdrawBtn}</span>
-                    <ArrowUpRight size={14} />
+                    <ArrowUpRight size={12} />
                   </button>
                 )}
               </div>
             </div>
           </div>
 
-          <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 rounded-3xl border p-5 ${isDark ? "bg-[#121214]/60 border-white/[0.06]" : "bg-white border-slate-200 shadow-sm"}`}>
+          <div className={`grid grid-cols-1 md:grid-cols-3 gap-3.5 rounded-2xl border p-4 ${isDark ? "bg-[#121214]/60 border-white/[0.06]" : "bg-white border-slate-200 shadow-sm"}`}>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Bid win rate</p>
-              <p className="mt-1 text-2xl font-black text-emerald-400">{stats.bidWinRate || 0}%</p>
+              <p className="mt-0.5 text-xl font-black text-emerald-500">{stats.bidWinRate || 0}%</p>
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Completion rate</p>
-              <p className="mt-1 text-2xl font-black text-cyan-400">{stats.completionRate || 0}%</p>
+              <p className="mt-0.5 text-xl font-black text-orange-500">{stats.completionRate || 0}%</p>
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Net payout after commission</p>
-              <p className="mt-1 text-2xl font-black text-amber-300">${stats.netWithdrawableAmount || 0}</p>
+              <p className="mt-0.5 text-xl font-black text-amber-300">${stats.netWithdrawableAmount || 0}</p>
             </div>
-            <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-200 pt-4 dark:border-white/[0.04]">
+            <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-3.5 border-t border-slate-200 pt-3 dark:border-white/[0.04]">
               <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Top revenue styles</p>
+                <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Top revenue styles</p>
                 {(stats.topStyles || []).slice(0, 3).map((item) => (
-                  <div key={item.name} className="flex justify-between text-xs font-bold text-slate-400">
+                  <div key={item.name} className="flex justify-between text-[11px] font-bold text-slate-400">
                     <span>{item.name}</span>
                     <span>${item.revenue}</span>
                   </div>
                 ))}
               </div>
               <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Top packages</p>
+                <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">Top packages</p>
                 {(stats.topPackages || []).slice(0, 3).map((item) => (
-                  <div key={item.name} className="flex justify-between text-xs font-bold text-slate-400">
+                  <div key={item.name} className="flex justify-between text-[11px] font-bold text-slate-400">
                     <span>{item.name}</span>
                     <span>${item.revenue}</span>
                   </div>
@@ -225,12 +225,12 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
 
           {/* Interactive Chart Section */}
           <div
-            className={`p-6 rounded-3xl border ${
+            className={`p-4 rounded-2xl border ${
               isDark ? "bg-[#121214]/60 border-white/[0.06]" : "bg-white border-slate-200 shadow-sm"
             }`}
           >
-            <h3 className="font-extrabold text-md mb-6 flex items-center gap-2">
-              <TrendingUp size={18} className="text-cyan-400" />
+            <h3 className="font-extrabold text-sm mb-4 flex items-center gap-2">
+              <TrendingUp size={16} className="text-orange-500" />
               {t.chartTitle}
             </h3>
 
@@ -260,8 +260,8 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
                         {/* Gradient definition per bar */}
                         <defs>
                           <linearGradient id={`grad-${i}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#06b6d4" />
-                            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.2" />
+                            <stop offset="0%" stopColor="#ff6b3b" />
+                            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.2" />
                           </linearGradient>
                         </defs>
 

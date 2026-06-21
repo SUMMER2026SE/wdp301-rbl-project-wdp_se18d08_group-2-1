@@ -70,7 +70,7 @@ export default function Footer({ language }) {
         <div className="grid gap-10 lg:grid-cols-[1.15fr_1.4fr_0.8fr]">
           <div>
             <Link to="/" className="inline-flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] text-cyan-100">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] text-orange-100">
                 <Camera className="h-5 w-5" {...iconProps} />
               </span>
               <span className="text-xl font-semibold tracking-tight text-white">
@@ -81,7 +81,7 @@ export default function Footer({ language }) {
               {t.description}
             </p>
             <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-slate-400">
-              <ShieldCheck className="h-4 w-4 text-cyan-200" {...iconProps} />
+              <ShieldCheck className="h-4 w-4 text-orange-200" {...iconProps} />
               {t.trust}
             </div>
           </div>
@@ -97,7 +97,7 @@ export default function Footer({ language }) {
                     <li key={link}>
                       <a
                         href="/"
-                        className="text-sm text-slate-500 transition-colors duration-300 hover:text-cyan-100"
+                        className="text-sm text-slate-500 transition-colors duration-300 hover:text-orange-100"
                       >
                         {link}
                       </a>
@@ -120,7 +120,7 @@ export default function Footer({ language }) {
                 <a
                   key={index}
                   href="/"
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-400 transition-all duration-300 hover:border-cyan-200/40 hover:text-cyan-100"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-400 transition-all duration-300 hover:border-orange-200/40 hover:text-orange-100"
                 >
                   <Icon className="h-4 w-4" {...iconProps} />
                 </a>

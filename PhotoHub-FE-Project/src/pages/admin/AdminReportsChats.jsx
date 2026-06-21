@@ -65,7 +65,7 @@ export default function AdminReportsChats() {
       html:
         '<input id="swal-resolution" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-white mb-4" placeholder="Ghi nhận hướng xử lý (bắt buộc)..."/>' +
         '<div class="flex items-center gap-2 text-slate-300 text-xs">' +
-        '  <input id="swal-block-user" type="checkbox" class="h-4 w-4 rounded bg-slate-900 border-slate-800 accent-cyan-500" />' +
+        '  <input id="swal-block-user" type="checkbox" class="h-4 w-4 rounded bg-slate-900 border-slate-800 accent-orange-500" />' +
         '  <label for="swal-block-user" class="font-semibold text-red-400">Đồng thời khóa tài khoản bị báo cáo này</label>' +
         "</div>",
       focusConfirm: false,
@@ -173,7 +173,7 @@ export default function AdminReportsChats() {
           onClick={() => setActiveTab("reports")}
           className={`py-3 px-1 text-sm font-semibold border-b-2 transition ${
             activeTab === "reports"
-              ? "border-cyan-500 text-cyan-400"
+              ? "border-orange-500 text-orange-400"
               : "border-transparent text-slate-400 hover:text-white"
           }`}
         >
@@ -183,7 +183,7 @@ export default function AdminReportsChats() {
           onClick={() => setActiveTab("chats")}
           className={`py-3 px-1 text-sm font-semibold border-b-2 transition ${
             activeTab === "chats"
-              ? "border-cyan-500 text-cyan-400"
+              ? "border-orange-500 text-orange-400"
               : "border-transparent text-slate-400 hover:text-white"
           }`}
         >
@@ -202,7 +202,7 @@ export default function AdminReportsChats() {
               <select 
                 value={reportStatus} 
                 onChange={(e) => { setReportStatus(e.target.value); setReportPage(1); setSelectedReport(null); }}
-                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
+                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-orange-500"
               >
                 <option value="">Tất cả trạng thái</option>
                 <option value="PENDING">Chưa xử lý (PENDING)</option>

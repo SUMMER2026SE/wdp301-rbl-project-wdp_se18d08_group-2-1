@@ -5,9 +5,8 @@ import PhotographerCard from "./PhotographerCard";
 import PhotographerListItem from "./PhotographerListItem";
 import PhotographerFilters from "./PhotographerFilters";
 import usePhotographers from "../../hooks/usePhotographers";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Camera } from "lucide-react";
 import PhotographerDrawer from "./PhotographerDrawer";
-
 
 export default function PhotographerList({ language = "en" }) {
   const {
@@ -39,32 +38,36 @@ export default function PhotographerList({ language = "en" }) {
   const [selectedPhotographerId, setSelectedPhotographerId] = useState(null);
   const navigate = useNavigate();
 
-
   const labels = {
     en: {
+      badge: "PhotoHub creators",
       title: "Our Photographers",
-      subtitle: "Discover elite creators capturing timeless visual stories",
-      noResults: "No creators found matching this criteria",
+      subtitle: "Find trusted photographers by style, location, rating, and availability.",
+      noResults: "No photographers match your filters",
       showing: "Showing",
       of: "of",
       results: "results",
       prev: "Previous",
       next: "Next",
+      loading: "Loading photographers...",
+      loginRequired: "Please sign in to add this photographer to favorites. Press OK to go to login.",
     },
     vi: {
-      title: "Hội Biểu Diễn Thị Giác",
-      subtitle: "Khám phá những nhiếp ảnh gia hàng đầu định hình phong cách của bạn",
-      noResults: "Không tìm thấy nhiếp ảnh gia nào",
-      showing: "Hiển thị",
+      badge: "\u0110\u1ed9i ng\u0169 PhotoHub",
+      title: "Nhi\u1ebfp \u1ea3nh gia PhotoHub",
+      subtitle: "T\u00ecm nhi\u1ebfp \u1ea3nh gia ph\u00f9 h\u1ee3p theo phong c\u00e1ch, khu v\u1ef1c, \u0111\u00e1nh gi\u00e1 v\u00e0 l\u1ecbch r\u1ea3nh.",
+      noResults: "Kh\u00f4ng t\u00ecm th\u1ea5y nhi\u1ebfp \u1ea3nh gia ph\u00f9 h\u1ee3p",
+      showing: "Hi\u1ec3n th\u1ecb",
       of: "trong",
-      results: "kết quả",
-      prev: "Trước",
-      next: "Tiếp",
+      results: "k\u1ebft qu\u1ea3",
+      prev: "Tr\u01b0\u1edbc",
+      next: "Ti\u1ebfp",
+      loading: "\u0110ang t\u1ea3i nhi\u1ebfp \u1ea3nh gia...",
+      loginRequired: "B\u1ea1n c\u1ea7n \u0111\u0103ng nh\u1eadp \u0111\u1ec3 th\u00eam v\u00e0o danh s\u00e1ch y\u00eau th\u00edch. Nh\u1ea5n OK \u0111\u1ec3 \u0111\u1ebfn trang \u0111\u0103ng nh\u1eadp.",
     },
   };
   const t = labels[language] || labels.en;
 
-  // Load styles & locations một lần khi mount
   useEffect(() => {
     const loadFilterOptions = async () => {
       const [styles, locations] = await Promise.all([getStyles(), getLocations()]);
@@ -74,7 +77,6 @@ export default function PhotographerList({ language = "en" }) {
     loadFilterOptions();
   }, [getStyles, getLocations]);
 
-  // Gọi API mỗi khi filter thay đổi
   useEffect(() => {
     const hasFilter =
       currentFilters.search ||
@@ -95,7 +97,6 @@ export default function PhotographerList({ language = "en" }) {
     }
   }, [currentFilters, searchPhotographers, listPhotographers]);
 
-  // Nhận filter thay đổi từ PhotographerFilters
   const handleFilterChange = useCallback((newFilters) => {
     setCurrentFilters((prev) => ({
       ...prev,
@@ -104,7 +105,6 @@ export default function PhotographerList({ language = "en" }) {
     }));
   }, []);
 
-  // Chuyển trang
   const handlePageChange = (newPage) => {
     setCurrentFilters((prev) => ({ ...prev, page: newPage }));
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -116,73 +116,67 @@ export default function PhotographerList({ language = "en" }) {
   }, []);
 
   const handleRequireLogin = useCallback(() => {
-    const confirmLogin = window.confirm(
-      "Bạn cần đăng nhập để thêm vào danh sách yêu thích.\nNhấn OK để đến trang đăng nhập."
-    );
+    const confirmLogin = window.confirm(t.loginRequired);
     if (confirmLogin) navigate("/login");
-  }, [navigate]);
+  }, [navigate, t.loginRequired]);
 
-
-  // ✅ QUAN TRỌNG: Luôn render toàn bộ layout, KHÔNG return sớm
-  // PhotographerFilters phải luôn được mount để tránh infinite loop
   return (
-    <div className="mx-auto max-w-7xl px-6 py-12 text-slate-900 dark:text-zinc-100 relative transition-colors duration-300">
-      {/* Background Glow */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 dark:bg-cyan-500/[0.02] rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500/5 dark:bg-purple-500/[0.02] rounded-full blur-3xl pointer-events-none" />
-
-      {/* Header */}
-      <div className="relative z-10 mb-8">
-        <h2 className="text-3xl md:text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:via-zinc-200 dark:to-zinc-400">
-          {t.title}
-        </h2>
-        <p className="mt-2 text-sm md:text-base text-slate-500 dark:text-zinc-400 font-medium tracking-wide">
-          {t.subtitle}
-        </p>
-      </div>
-
-      {/* ✅ Filter Panel — luôn render, không bao giờ bị unmount */}
-      <div className="relative z-10 mb-8">
-        <PhotographerFilters
-          onFilterChange={handleFilterChange}
-          onViewChange={setViewType}
-          styles={availableStyles}
-          locations={availableLocations}
-          language={language}
-        />
-      </div>
-
-      {/* Result count */}
-      {!loading && pagination?.total > 0 && (
-        <div className="relative z-10 mb-4 text-sm text-slate-500 dark:text-zinc-400 font-medium">
-          {t.showing} {photographers.length} {t.of} {pagination.total} {t.results}
+    <div className="relative mx-auto max-w-7xl px-5 py-10 text-slate-950 transition-colors duration-300 dark:text-slate-100 sm:px-6">
+      <section className="mb-8 rounded-[28px] border border-orange-100 bg-white px-6 py-7 shadow-sm shadow-orange-100/70 dark:border-orange-500/20 dark:bg-slate-900 dark:shadow-black/20 sm:px-8">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-orange-700 dark:border-orange-500/25 dark:bg-orange-500/10 dark:text-orange-200">
+              <Camera size={14} />
+              {t.badge}
+            </div>
+            <h2 className="text-3xl font-black tracking-tight text-slate-950 dark:text-white md:text-4xl">
+              {t.title}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-600 dark:text-slate-300 md:text-base">
+              {t.subtitle}
+            </p>
+          </div>
+          {!loading && pagination?.total > 0 && (
+            <div className="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-3 text-sm font-bold text-orange-700 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-200">
+              {t.showing} {photographers.length} {t.of} {pagination.total} {t.results}
+            </div>
+          )}
         </div>
-      )}
 
-      {/* ✅ Chỉ phần NÀY mới hiện skeleton — KHÔNG return sớm toàn bộ component */}
-      <div className="relative z-10">
+        <div className="mt-7 border-t border-orange-100 pt-5 dark:border-orange-500/15">
+          <PhotographerFilters
+            onFilterChange={handleFilterChange}
+            onViewChange={setViewType}
+            styles={availableStyles}
+            locations={availableLocations}
+            language={language}
+          />
+        </div>
+      </section>
+
+      <div>
         {loading ? (
-          /* Skeleton chỉ cho grid */
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[1, 2, 3, 4].map((n) => (
               <div
                 key={n}
-                className="h-[430px] rounded-3xl bg-slate-100 dark:bg-zinc-900 animate-pulse border border-slate-200/50 dark:border-zinc-800/50"
+                className="h-[520px] animate-pulse rounded-2xl border border-orange-100 bg-white shadow-sm dark:border-orange-500/20 dark:bg-slate-900"
+                aria-label={t.loading}
               />
             ))}
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center p-12 text-center max-w-md mx-auto my-12 rounded-3xl border border-red-500/10 bg-red-500/5 backdrop-blur-md">
-            <p className="font-semibold text-red-500 dark:text-red-400">{error}</p>
+          <div className="mx-auto my-12 flex max-w-md flex-col items-center justify-center rounded-2xl border border-red-200 bg-red-50 p-10 text-center text-red-600 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-300">
+            <p className="font-semibold">{error}</p>
           </div>
         ) : photographers.length === 0 ? (
-          <div className="text-center py-20 border border-dashed border-slate-200 dark:border-zinc-800 rounded-3xl">
-            <p className="text-sm font-semibold text-slate-400 dark:text-zinc-500 tracking-wider uppercase">
+          <div className="rounded-2xl border border-dashed border-orange-200 bg-white py-16 text-center dark:border-orange-500/25 dark:bg-slate-900">
+            <p className="text-sm font-black uppercase tracking-wide text-orange-700 dark:text-orange-200">
               {t.noResults}
             </p>
           </div>
         ) : viewType === "grid" ? (
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {photographers.map((p) => (
               <PhotographerCard
                 key={p._id}
@@ -202,13 +196,12 @@ export default function PhotographerList({ language = "en" }) {
         )}
       </div>
 
-      {/* Pagination */}
       {!loading && pagination?.totalPages > 1 && (
-        <div className="relative z-10 mt-12 flex items-center justify-center gap-3">
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <button
             onClick={() => handlePageChange(currentFilters.page - 1)}
             disabled={currentFilters.page <= 1}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="flex items-center gap-1.5 rounded-xl border border-orange-200 bg-white px-4 py-2 text-sm font-bold text-orange-700 transition-all hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-orange-500/25 dark:bg-slate-900 dark:text-orange-200 dark:hover:bg-orange-500/10"
           >
             <ChevronLeft size={16} />
             {t.prev}
@@ -225,13 +218,13 @@ export default function PhotographerList({ language = "en" }) {
               .map((p, idx, arr) => (
                 <React.Fragment key={p}>
                   {idx > 0 && arr[idx - 1] !== p - 1 && (
-                    <span className="text-slate-400 dark:text-zinc-500">...</span>
+                    <span className="text-slate-400 dark:text-slate-500">...</span>
                   )}
                   <button
                     onClick={() => handlePageChange(p)}
-                    className={`h-9 w-9 rounded-xl text-sm font-bold transition-all ${p === currentFilters.page
-                      ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-md shadow-cyan-500/20"
-                      : "border border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800"
+                    className={`h-9 w-9 rounded-xl text-sm font-black transition-all ${p === currentFilters.page
+                      ? "bg-orange-500 text-white shadow-md shadow-orange-500/25"
+                      : "border border-orange-200 bg-white text-orange-700 hover:bg-orange-50 dark:border-orange-500/25 dark:bg-slate-900 dark:text-orange-200 dark:hover:bg-orange-500/10"
                       }`}
                   >
                     {p}
@@ -243,21 +236,20 @@ export default function PhotographerList({ language = "en" }) {
           <button
             onClick={() => handlePageChange(currentFilters.page + 1)}
             disabled={currentFilters.page >= pagination.totalPages}
-            className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="flex items-center gap-1.5 rounded-xl border border-orange-200 bg-white px-4 py-2 text-sm font-bold text-orange-700 transition-all hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-orange-500/25 dark:bg-slate-900 dark:text-orange-200 dark:hover:bg-orange-500/10"
           >
             {t.next}
             <ChevronRight size={16} />
           </button>
         </div>
       )}
-      {/* Drawer */}
+
       <PhotographerDrawer
         photographerId={selectedPhotographerId}
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         language={language}
       />
-
     </div>
   );
 }
