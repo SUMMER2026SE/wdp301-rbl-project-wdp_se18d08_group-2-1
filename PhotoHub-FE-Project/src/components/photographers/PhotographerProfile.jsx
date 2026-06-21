@@ -485,7 +485,7 @@ const PhotographerProfile = ({ language = "en" }) => {
                     key={idx}
                     className="rounded-xl bg-gradient-to-r from-blue-500/5 to-purple-500/5 hover:from-blue-500/10 hover:to-purple-500/10 px-4 py-2 text-sm font-semibold text-blue-700 border border-blue-500/10 dark:text-blue-300 dark:border-blue-400/20 transition-all duration-300 cursor-default"
                   >
-                    #{style}
+                    #{style.name}
                   </span>
                 ))}
               </div>
