@@ -1,1 +1,1 @@
-﻿module.exports = require("../../bookings/models/booking.model").Booking;
+module.exports = require("../../bookings/models/booking.model").Booking;

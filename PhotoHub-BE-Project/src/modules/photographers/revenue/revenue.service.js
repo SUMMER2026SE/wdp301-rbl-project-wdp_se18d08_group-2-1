@@ -3,13 +3,14 @@ const WithdrawRequest = require("../withdraw/withdrawRequest.model");
 const Bid = require("../bid/bid.model");
 const Payment = require("../../admin/models/Payment");
 const Dispute = require("../../admin/models/Dispute");
+const Wallet = require("../../admin/models/Wallet");
 const { getPhotographerIdentity } = require("../utils/photographerIdentity");
 
-const COMMISSION_RATE = 0.1;
+const COMMISSION_RATE = Number(process.env.PHOTOGRAPHER_COMMISSION_RATE || 0.1);
 const COMPLETED_STATUSES = ["completed", "COMPLETED"];
 const TERMINAL_CANCELLED_STATUSES = ["rejected", "cancelled", "CANCELLED", "DISPUTED"];
-const WITHDRAW_APPROVED_STATUSES = ["approved", "paid", "APPROVED", "PAID"];
-const WITHDRAW_PENDING_STATUSES = ["pending", "PENDING"];
+const WITHDRAW_PAID_STATUSES = ["paid", "PAID"];
+const WITHDRAW_RESERVED_STATUSES = ["pending", "PENDING", "approved", "APPROVED"];
 const OPEN_DISPUTE_STATUSES = ["OPEN", "INVESTIGATING"];
 
 const isCompletedBooking = (booking) =>
@@ -70,7 +71,7 @@ class RevenueService {
       ? { $or: [{ photographerId: photographerUserId }, { photographer: identity.photographerId }] }
       : { photographerId: photographerUserId };
     const [paidBookingIds, openDisputeBookingIds, withdrawRequests, bids] = await Promise.all([
-      this.getPaidBookingIds(completedBookings),
+      this.getPaidBookingIds(allBookings),
       this.getOpenDisputeBookingIds(completedBookings),
       WithdrawRequest.find(withdrawQuery),
       Bid.find({ photographerId: { $in: identity.ids } }).select("status price createdAt"),
@@ -80,11 +81,11 @@ class RevenueService {
     const completedBookingsCount = completedBookings.length;
 
     const totalWithdrawn = withdrawRequests
-      .filter((r) => WITHDRAW_APPROVED_STATUSES.includes(r.status))
+      .filter((r) => WITHDRAW_PAID_STATUSES.includes(r.status))
       .reduce((sum, r) => sum + (r.amount || 0), 0);
 
     const pendingWithdrawn = withdrawRequests
-      .filter((r) => WITHDRAW_PENDING_STATUSES.includes(r.status))
+      .filter((r) => WITHDRAW_RESERVED_STATUSES.includes(r.status))
       .reduce((sum, r) => sum + (r.amount || 0), 0);
 
     const eligibleBookings = completedBookings.filter((booking) => {
@@ -111,10 +112,40 @@ class RevenueService {
             : "Waiting for customer approval or auto-complete window",
       }));
 
+    const eligibleBookingIdSet = new Set(eligibleBookings.map((booking) => String(booking._id)));
+    const paidBlockedBookings = allBookings.filter((booking) => {
+      const bookingId = String(booking._id);
+      return (
+        paidBookingIds.has(bookingId) &&
+        !eligibleBookingIdSet.has(bookingId) &&
+        !TERMINAL_CANCELLED_STATUSES.includes(booking.status) &&
+        booking.paymentStatus !== "refunded"
+      );
+    });
+
     const eligibleRevenue = eligibleBookings.reduce((sum, booking) => sum + getBookingAmount(booking), 0);
+    const escrowAmount = Math.max(
+      0,
+      paidBlockedBookings.reduce((sum, booking) => sum + getBookingAmount(booking), 0) + pendingWithdrawn
+    );
     const withdrawableAmount = Math.max(0, eligibleRevenue - totalWithdrawn - pendingWithdrawn);
     const estimatedCommission = Math.round(withdrawableAmount * COMMISSION_RATE * 100) / 100;
     const netWithdrawableAmount = Math.max(0, withdrawableAmount - estimatedCommission);
+
+    const wallet = await Wallet.findOneAndUpdate(
+      { user: photographerUserId },
+      {
+        $set: {
+          balance: withdrawableAmount,
+          holdBalance: escrowAmount,
+          currency: "VND",
+        },
+        $setOnInsert: {
+          user: photographerUserId,
+        },
+      },
+      { new: true, upsert: true }
+    );
 
     const monthlyRevenueMap = {};
     const monthlyJobsMap = {};
@@ -162,8 +193,10 @@ class RevenueService {
       pendingPayout: withdrawableAmount,
       withdrawableAmount,
       netWithdrawableAmount,
+      escrowAmount,
       commissionRate: COMMISSION_RATE,
       estimatedCommission,
+      wallet,
       eligibleBookingIds: eligibleBookings.map((booking) => booking._id),
       eligibleBookings: eligibleBookings.map((booking) => ({
         id: booking._id,

@@ -13,7 +13,7 @@ export default function ChatPage({ theme = "dark", language = "vi" }) {
         <div className="mb-5">
           <p className="text-sm font-bold uppercase tracking-wide text-orange-500">PhotoHub Chat</p>
           <h1 className="mt-1 text-2xl font-black tracking-tight">
-            {language === "vi" ? "Tr\u00f2 chuy\u1ec7n realtime" : "Realtime conversation"}
+            {language === "vi" ? "Trò chuyện realtime" : "Realtime conversation"}
           </h1>
         </div>
         <PhotographerChat theme={theme} language={language} initialActiveConvId={conversationId} />

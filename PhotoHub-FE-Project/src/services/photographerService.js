@@ -132,7 +132,6 @@ export const photographerService = {
 
         return response.json();
     },
-
     // Upload CCCD xac minh
     uploadVerification: async (frontImage, backImage) => {
         const token = localStorage.getItem("token");
@@ -224,6 +223,26 @@ export const photographerMarketplaceService = {
             `${BOOKING_BASE_URL}/${bookingId}/approve`,
             {},
             getAuthConfig()
+        );
+        return response.data;
+    },
+
+    createBookingPaymentLink: async (bookingId) => {
+        const response = await axios.post(
+            `${MARKETPLACE_BASE_URL}/bookings/${bookingId}/payment`,
+            {},
+            getAuthConfig()
+        );
+        return response.data;
+    },
+
+    syncBookingPaymentStatus: async (bookingId, orderCode) => {
+        const response = await axios.get(
+            `${MARKETPLACE_BASE_URL}/bookings/${bookingId}/payment/status`,
+            {
+                ...getAuthConfig(),
+                params: { orderCode },
+            }
         );
         return response.data;
     },
@@ -372,6 +391,5 @@ export const photographerMarketplaceService = {
         const response = await axios.get(`${MARKETPLACE_BASE_URL}/withdraw`, getAuthConfig());
         return response.data;
     },
-
 };
 

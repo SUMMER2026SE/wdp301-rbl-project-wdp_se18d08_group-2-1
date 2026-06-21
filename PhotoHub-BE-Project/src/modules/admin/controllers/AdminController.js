@@ -18,6 +18,29 @@ const Notification = require("../models/Notification");
 const logAdminAction = require("../utils/adminActionLogger");
 const ApiResponse = require("../../../utils/ApiResponse");
 
+const COMMISSION_RATE = Number(process.env.PHOTOGRAPHER_COMMISSION_RATE || 0.1);
+const getBookingAmount = (booking) => Number(booking?.totalPrice || booking?.price || booking?.depositAmount || 0);
+
+const ensureWallet = async (userId) =>
+  Wallet.findOneAndUpdate(
+    { user: userId },
+    { $setOnInsert: { user: userId, balance: 0, holdBalance: 0, currency: "VND" } },
+    { new: true, upsert: true }
+  );
+
+const addStatusLog = (booking, status, note) => {
+  booking.statusLogs = booking.statusLogs || [];
+  booking.statusLogs.push({ status, note, updatedAt: new Date() });
+};
+
+const resolvePhotographerUserId = async (photographerRef) => {
+  const photographer = await Photographer.findOne({
+    $or: [{ _id: photographerRef }, { user: photographerRef }],
+  }).select("user");
+
+  return photographer?.user || photographerRef;
+};
+
 class AdminController {
 
   // ================= 1. AUTH & ROLE MIDDLEWARE CHECK =================
@@ -567,7 +590,7 @@ class AdminController {
       await payment.save();
 
       // Đồng bộ ví hoặc lịch đặt tương ứng nếu thanh toán cọc thành công
-      if (payment.booking) {
+      if (false && payment.booking) {
         const booking = await Booking.findById(payment.booking);
         if (booking) {
           if (payment.paymentType === "DEPOSIT") {
@@ -588,6 +611,39 @@ class AdminController {
                 await wallet.save();
               }
             }
+          }
+        }
+      }
+
+      if (payment.booking && (payment.paymentType === "DEPOSIT" || payment.paymentType === "FINAL")) {
+        const booking = await Booking.findById(payment.booking);
+        if (booking) {
+          booking.status = "confirmed";
+          booking.paymentStatus = "paid";
+          booking.paidAmount = Math.max(Number(booking.paidAmount || 0), Number(payment.amount || getBookingAmount(booking)));
+          booking.paidAt = booking.paidAt || new Date();
+          addStatusLog(booking, "PAYMENT_PAID", "Admin confirmed payment and moved funds to photographer escrow");
+          await booking.save();
+
+          const photographerUserId = await resolvePhotographerUserId(booking.photographer);
+          const wallet = await ensureWallet(photographerUserId);
+          wallet.holdBalance = Number(wallet.holdBalance || 0) + Number(payment.amount || 0);
+          await wallet.save();
+
+          const commissionAmount = Math.round(Number(payment.amount || 0) * COMMISSION_RATE);
+          if (commissionAmount > 0) {
+            await Commission.findOneAndUpdate(
+              { booking: booking._id },
+              {
+                $setOnInsert: {
+                  booking: booking._id,
+                  amount: commissionAmount,
+                  rate: COMMISSION_RATE,
+                  status: "PENDING",
+                },
+              },
+              { upsert: true }
+            );
           }
         }
       }
@@ -644,7 +700,7 @@ class AdminController {
       });
 
       // Nếu có booking và ví tương ứng, trừ holdBalance hoặc trả ví Customer
-      if (payment.booking) {
+      if (false && payment.booking) {
         const booking = await Booking.findById(payment.booking);
         if (booking) {
           booking.status = "CANCELLED";
@@ -671,6 +727,28 @@ class AdminController {
             customerWallet.balance += amountToRefund;
             await customerWallet.save();
           }
+        }
+      }
+
+      if (payment.booking) {
+        const booking = await Booking.findById(payment.booking);
+        if (booking) {
+          booking.status = "cancelled";
+          booking.paymentStatus = "refunded";
+          addStatusLog(booking, "REFUNDED", `Refunded ${amountToRefund} VND to customer wallet`);
+          await booking.save();
+
+          const photographerUserId = await resolvePhotographerUserId(booking.photographer);
+          const photoWallet = await ensureWallet(photographerUserId);
+          const refundFromHold = Math.min(Number(photoWallet.holdBalance || 0), Number(amountToRefund));
+          const refundRemainder = Number(amountToRefund) - refundFromHold;
+          photoWallet.holdBalance = Math.max(0, Number(photoWallet.holdBalance || 0) - refundFromHold);
+          photoWallet.balance = Math.max(0, Number(photoWallet.balance || 0) - refundRemainder);
+          await photoWallet.save();
+
+          const customerWallet = await ensureWallet(booking.customer);
+          customerWallet.balance = Number(customerWallet.balance || 0) + Number(amountToRefund);
+          await customerWallet.save();
         }
       }
 
@@ -1633,6 +1711,16 @@ class AdminController {
       request.adminNote = adminNote;
       await request.save();
 
+      const wallet = (request.wallet && (await Wallet.findById(request.wallet))) ||
+        (await Wallet.findOne({ user: request.photographer?.user || request.photographerId }));
+      if (wallet) {
+        const amount = Number(request.amount || 0);
+        const releaseFromHold = Math.min(Number(wallet.holdBalance || 0), amount);
+        wallet.holdBalance = Math.max(0, Number(wallet.holdBalance || 0) - releaseFromHold);
+        wallet.balance = Number(wallet.balance || 0) + releaseFromHold;
+        await wallet.save();
+      }
+
       // Gửi thông báo từ chối
       await Notification.create({
         recipientType: "SPECIFIC",
@@ -1666,17 +1754,22 @@ class AdminController {
       }
 
       // Khấu trừ số tiền khả dụng từ Wallet của Photographer
-      const wallet = await Wallet.findOne({ user: request.photographer?.user });
+      const wallet = (request.wallet && (await Wallet.findById(request.wallet))) ||
+        (await Wallet.findOne({ user: request.photographer?.user || request.photographerId }));
       if (!wallet) {
         return ApiResponse.error(res, "Không tìm thấy ví tiền của nhiếp ảnh gia để trừ tiền", 404);
       }
 
-      if (wallet.balance < request.amount) {
+      if ((Number(wallet.holdBalance || 0) + Number(wallet.balance || 0)) < Number(request.amount || 0)) {
         return ApiResponse.error(res, `Số dư ví không đủ để rút. Số dư hiện tại: ${wallet.balance} VND | Số tiền rút: ${request.amount} VND`, 400);
       }
 
       // Khấu trừ số dư
-      wallet.balance -= request.amount;
+      const amount = Number(request.amount || 0);
+      const amountFromHold = Math.min(Number(wallet.holdBalance || 0), amount);
+      const amountFromBalance = amount - amountFromHold;
+      wallet.holdBalance = Math.max(0, Number(wallet.holdBalance || 0) - amountFromHold);
+      wallet.balance = Math.max(0, Number(wallet.balance || 0) - amountFromBalance);
       await wallet.save();
 
       const payoutAmount = request.finalAmount || request.amount;

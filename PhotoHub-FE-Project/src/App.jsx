@@ -10,6 +10,8 @@ import GoogleSuccess from "./pages/GoogleSuccess";
 import PhotographerDashboard from "./pages/PhotographerDashboard";
 import FavoritesPage from "./pages/FavoritesPage";
 import PhotographersPage from "./pages/PhotographersPage";
+import PaymentResult from "./pages/PaymentResult";
+import ChatPage from "./pages/ChatPage";
 import AiSearchPage from "./pages/AiSearchPage";
 import CommunityPage from "./pages/CommunityPage";
 import PaymentResult from "./booking/PaymentResult";
@@ -173,6 +175,15 @@ export default function App() {
             />
           }
         />
+        <Route
+          path="/payment-result"
+          element={
+            <PaymentResult
+              language={language}
+              theme={theme}
+            />
+          }
+        />
 
         {/* Admin routes */}
         <Route path="/admin" element={<AdminLayout />}>
@@ -223,4 +234,3 @@ export default function App() {
     </div>
   );
 }
-
