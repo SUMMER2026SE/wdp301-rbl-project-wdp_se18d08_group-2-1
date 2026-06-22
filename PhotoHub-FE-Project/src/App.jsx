@@ -16,6 +16,7 @@ import ChatPage from "./pages/ChatPage";
 import AiSearchPage from "./pages/AiSearchPage";
 import CommunityPage from "./pages/CommunityPage";
 import BookingPage from "./pages/BookingPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 
 // Admin Imports
 import AdminLayout from "./components/admin/AdminLayout";
@@ -27,6 +28,8 @@ import AdminFinance from "./pages/admin/AdminFinance";
 import AdminDisputes from "./pages/admin/AdminDisputes";
 import AdminReportsChats from "./pages/admin/AdminReportsChats";
 import AdminSettingsPackages from "./pages/admin/AdminSettingsPackages";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import VerifyOtpPage from "./pages/VerifyOtpPage";
 
 function getInitialTheme() {
   const storedTheme = localStorage.getItem("photohub-theme");
@@ -133,6 +136,36 @@ export default function App() {
               theme={theme}
               onToggleLanguage={toggleLanguage}
               onToggleTheme={toggleTheme}
+            />
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <ForgotPasswordPage
+              language={language}
+              theme={theme}
+              onToggleLanguage={toggleLanguage}
+              onToggleTheme={toggleTheme}
+            />
+          }
+        />
+        <Route
+          path="/verify-otp"
+          element={
+            <VerifyOtpPage
+              language={language}
+              theme={theme}
+            />
+          }
+        />
+
+        <Route
+          path="/reset-password"
+          element={
+            <ResetPasswordPage
+              language={language}
+              theme={theme}
             />
           }
         />

@@ -2,6 +2,8 @@
 const AuthService = require("../services/AuthService");
 const ApiResponse = require("../../../utils/ApiResponse");
 
+const { User } = require("../models/User")
+
 const authService = new AuthService();
 
 class AuthController {
@@ -123,6 +125,42 @@ class AuthController {
       return ApiResponse.success(res, result, "Password reset successfully");
     } catch (e) {
       return ApiResponse.error(res, e.message, 400);
+    }
+  }
+
+  async verifyResetOTP(req, res) {
+    try {
+      const { email, token } = req.body;
+
+      if (!email || !token) {
+        return ApiResponse.error(
+          res,
+          "Email và OTP là bắt buộc",
+          400
+        );
+      }
+
+      const user = await User.findOne({
+        email,
+        resetPasswordOTP: token,
+        resetPasswordExpires: { $gt: new Date() }
+      });
+
+      if (!user) {
+        return ApiResponse.error(
+          res,
+          "OTP không hợp lệ hoặc đã hết hạn",
+          400
+        );
+      }
+
+      return ApiResponse.success(
+        res,
+        null,
+        "OTP hợp lệ"
+      );
+    } catch (e) {
+      return ApiResponse.error(res, e.message, 500);
     }
   }
 }

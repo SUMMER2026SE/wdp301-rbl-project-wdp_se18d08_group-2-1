@@ -42,11 +42,9 @@ const getUser = () => { try { return JSON.parse(localStorage.getItem("user") || 
 const hasValidToken = () => { const token = localStorage.getItem("token") || localStorage.getItem("accessToken"); return Boolean(token && token !== "undefined" && token !== "null"); };
 
 function Avatar({ user, text, size = "h-11 w-11" }) {
-  const BASE_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:3000";
 
   const avatarUrl = user?.avatar
-    ? `${BASE_URL}${user.avatar}`
+    ? `${user.avatar}`
     : null;
 
   return avatarUrl ? (

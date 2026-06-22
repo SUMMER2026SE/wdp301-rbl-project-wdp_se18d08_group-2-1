@@ -34,6 +34,11 @@ router.post("/reset-password", (req, res) =>
   auth.resetPassword(req, res)
 );
 
+router.post(
+    "/verify-reset-otp",
+    auth.verifyResetOTP
+);
+
 // ================= PROFILE =================
 router.get("/profile", authenticate, (req, res) =>
   profile.getProfile(req, res)

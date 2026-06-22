@@ -40,6 +40,21 @@ export const authService = {
     return response.json();
   },
 
+  verifyResetOTP: async (data) => {
+    const response = await fetch(
+      `${BASE_URL}/verify-reset-otp`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
+
+    return response.json();
+  },
+
   // LOGIN
   login: async (data) => {
     const response = await fetch(`${BASE_URL}/login`, {

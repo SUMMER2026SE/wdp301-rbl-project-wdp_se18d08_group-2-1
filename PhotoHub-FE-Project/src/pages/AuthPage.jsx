@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, ArrowRight } from 'lucide-react';
+import { Camera, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
 import { authService } from '../services/authService';
@@ -76,6 +76,8 @@ const copy = {
 
 export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLanguage, onToggleTheme }) {
     const navigate = useNavigate();
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [isLoggedIn, setIsLoggedIn] = useState(
         !!localStorage.getItem("token")
@@ -83,6 +85,8 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
     const [isRegister, setIsRegister] = useState(false);
     const [step, setStep] = useState('auth'); // 'auth' hoặc 'otp'
     const [confirmPassword, setConfirmPassword] = useState('');
+    const currentPath = window.location.pathname;
+
 
     // Form States
     const [email, setEmail] = useState('');
@@ -197,11 +201,11 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
 
                 const isAdminUser = result.data.user?.role === "admin";
                 const redirectPath = isAdminUser ? "/admin" : "/";
-                const redirectText = isAdminUser 
-                    ? "Đang chuyển hướng đến trang quản trị Admin..." 
+                const redirectText = isAdminUser
+                    ? "Đang chuyển hướng đến trang quản trị Admin..."
                     : "Sẽ chuyển về trang chủ sau 5 giây.";
 
-                Swal.fire({
+                const swalResult = await Swal.fire({
                     icon: "success",
                     title: "Đăng nhập thành công",
                     text: redirectText,
@@ -209,14 +213,17 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
                     color: isDark ? "#fff" : "#0f172a",
                     confirmButtonColor: "#06b6d4",
                     timer: isAdminUser ? 1500 : 5000,
+                    timerProgressBar: true,
                     showConfirmButton: !isAdminUser
                 });
-                // tự chuyển sau 1.5 hoặc 5 giây
-                setRedirecting(true);
 
-                setTimeout(() => {
+                if (
+                    (swalResult.isConfirmed ||
+                        swalResult.dismiss === Swal.DismissReason.timer) &&
+                    window.location.pathname === currentPath
+                ) {
                     navigate(redirectPath);
-                }, isAdminUser ? 1500 : 5000);
+                }
 
             } else {
                 Swal.fire({
@@ -385,29 +392,88 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
                                     <div style={styles.inputGroup}>
                                         <div style={styles.labelRow}>
                                             <label style={styles.label}>{t.labelPassword}</label>
-                                            {!isRegister && <a href="#forgot" style={styles.forgotLink}>{t.forgot}</a>}
+
+                                            {!isRegister && (
+                                                <Link
+                                                    to="/forgot-password"
+                                                    style={styles.forgotLink}
+                                                >
+                                                    {t.forgot}
+                                                </Link>
+                                            )}
                                         </div>
-                                        <input
-                                            type="password"
-                                            placeholder="••••••••"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            style={styles.input}
-                                            required
-                                        />
+
+                                        <div style={{ position: "relative" }}>
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                placeholder="••••••••"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                style={{
+                                                    ...styles.input,
+                                                    paddingRight: "45px"
+                                                }}
+                                                required
+                                            />
+
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                style={{
+                                                    position: "absolute",
+                                                    right: "12px",
+                                                    top: "50%",
+                                                    transform: "translateY(-50%)",
+                                                    background: "none",
+                                                    border: "none",
+                                                    cursor: "pointer",
+                                                    color: "#64748b"
+                                                }}
+                                            >
+                                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            </button>
+                                        </div>
                                     </div>
                                     {isRegister && (
                                         <div style={styles.inputGroup}>
                                             <label style={styles.label}>Confirm Password</label>
 
-                                            <input
-                                                type="password"
-                                                placeholder="••••••••"
-                                                value={confirmPassword}
-                                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                                style={styles.input}
-                                                required
-                                            />
+                                            <div style={{ position: "relative" }}>
+                                                <input
+                                                    type={showConfirmPassword ? "text" : "password"}
+                                                    placeholder="••••••••"
+                                                    value={confirmPassword}
+                                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                                    style={{
+                                                        ...styles.input,
+                                                        paddingRight: "45px"
+                                                    }}
+                                                    required
+                                                />
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setShowConfirmPassword(!showConfirmPassword)
+                                                    }
+                                                    style={{
+                                                        position: "absolute",
+                                                        right: "12px",
+                                                        top: "50%",
+                                                        transform: "translateY(-50%)",
+                                                        background: "none",
+                                                        border: "none",
+                                                        cursor: "pointer",
+                                                        color: "#64748b"
+                                                    }}
+                                                >
+                                                    {showConfirmPassword ? (
+                                                        <EyeOff size={18} />
+                                                    ) : (
+                                                        <Eye size={18} />
+                                                    )}
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
 
@@ -530,8 +596,8 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
                                         marginBottom: "12px",
                                         fontSize: "14px"
                                     }}>
-                                        {user.role === "admin" 
-                                            ? "Đang chuyển hướng đến trang quản trị Admin..." 
+                                        {user.role === "admin"
+                                            ? "Đang chuyển hướng đến trang quản trị Admin..."
                                             : "Sẽ chuyển về trang chủ sau 5 giây..."}
                                     </p>
 

@@ -172,6 +172,7 @@ class ProfileController {
             return ApiResponse.error(res, e.message, 500);
         }
     }
+
 }
 
 module.exports = ProfileController;
