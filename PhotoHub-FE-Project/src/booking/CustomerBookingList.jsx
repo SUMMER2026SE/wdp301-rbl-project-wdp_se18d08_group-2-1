@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Calendar, MapPin, DollarSign, Clock, User, AlertCircle, CreditCard, Ban, FolderHeart, Eye, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Calendar, MapPin, DollarSign, Clock, User, AlertCircle, CreditCard, Ban, FolderHeart, Eye, ChevronLeft, ChevronRight, X, Star, CheckCircle } from "lucide-react";
 import Swal from "sweetalert2";
 import { bookingService } from "../services/bookingService";
 
@@ -50,6 +50,12 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
       albumTitle: "Album Ảnh Hoàn Thành",
       albumEmpty: "Nhiếp ảnh gia chưa đăng ảnh nào trong album này.",
       close: "Đóng",
+      reviewBtn: "Đánh giá",
+      reviewedBtn: "Đã đánh giá",
+      reviewTitle: "Đánh giá nhiếp ảnh gia",
+      reviewSuccess: "Gửi đánh giá thành công!",
+      ratingRequired: "Vui lòng chọn số sao đánh giá",
+      commentRequired: "Vui lòng nhập nội dung đánh giá",
     },
     en: {
       title: "My Booking History",
@@ -83,6 +89,12 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
       albumTitle: "Completed Photo Album",
       albumEmpty: "Photographer hasn't uploaded any photos to this album yet.",
       close: "Close",
+      reviewBtn: "Review",
+      reviewedBtn: "Reviewed",
+      reviewTitle: "Rate Photographer",
+      reviewSuccess: "Review submitted successfully!",
+      ratingRequired: "Please select a rating",
+      commentRequired: "Please write a comment",
     },
   }[language];
 
@@ -212,6 +224,74 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
       Swal.fire(t.error, err.message, "error");
     } finally {
       setAlbumLoading(false);
+    }
+  };
+
+  const handleReview = async (bookingId) => {
+    let selectedRating = 5;
+    const result = await Swal.fire({
+      title: t.reviewTitle,
+      html: `
+        <div class="flex justify-center gap-2 my-4" id="swal-stars">
+          ${[1, 2, 3, 4, 5].map(star => `
+            <span data-val="${star}" class="cursor-pointer text-4xl text-amber-400 star-btn" style="transition: all 0.2s;">★</span>
+          `).join('')}
+        </div>
+        <textarea id="swal-comment" class="w-full h-24 p-3 border border-slate-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white" placeholder="${language === 'vi' ? 'Nhập nhận xét của bạn...' : 'Write your review here...'}"></textarea>
+      `,
+      showCancelButton: true,
+      confirmButtonText: language === "vi" ? "Gửi" : "Submit",
+      cancelButtonText: language === "vi" ? "Hủy" : "Cancel",
+      confirmButtonColor: "#f97316",
+      background: isDark ? "#0f172a" : "#fff",
+      color: isDark ? "#fff" : "#000",
+      didOpen: () => {
+        const container = document.getElementById("swal-stars");
+        const stars = container.querySelectorAll(".star-btn");
+        const updateStars = (rating) => {
+          selectedRating = rating;
+          stars.forEach(s => {
+            const val = parseInt(s.getAttribute("data-val"));
+            if (val <= rating) {
+              s.innerHTML = "★";
+              s.style.color = "#fbbf24";
+              s.style.transform = "scale(1.15)";
+            } else {
+              s.innerHTML = "☆";
+              s.style.color = "#94a3b8";
+              s.style.transform = "scale(1)";
+            }
+          });
+        };
+        stars.forEach(s => {
+          s.addEventListener("click", () => {
+            const val = parseInt(s.getAttribute("data-val"));
+            updateStars(val);
+          });
+        });
+        updateStars(5);
+      },
+      preConfirm: () => {
+        const comment = document.getElementById("swal-comment").value;
+        if (!comment.trim()) {
+          Swal.showValidationMessage(t.commentRequired);
+          return false;
+        }
+        return { rating: selectedRating, comment: comment.trim() };
+      }
+    });
+
+    if (result.isConfirmed) {
+      const { rating, comment } = result.value;
+      try {
+        const res = await bookingService.createReview(bookingId, rating, comment);
+        if (res.success) {
+          Swal.fire(t.success, t.reviewSuccess, "success");
+          fetchBookings(pagination.page, activeStatus);
+        }
+      } catch (err) {
+        Swal.fire(t.error, err.response?.data?.message || err.message, "error");
+      }
     }
   };
 
@@ -398,6 +478,24 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
                         <FolderHeart size={15} />
                         {t.viewAlbumBtn}
                       </button>
+                    )}
+
+                    {/* Đánh giá photographer (Chỉ hiện khi completed) */}
+                    {booking.status === "completed" && (
+                      booking.isReviewed ? (
+                        <span className="px-4 py-3 bg-slate-500/10 text-slate-400 border border-slate-500/20 rounded-2xl font-bold text-xs flex items-center gap-1.5 cursor-default">
+                          <CheckCircle size={15} className="text-emerald-500" />
+                          {t.reviewedBtn}
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleReview(booking._id)}
+                          className="px-4 py-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white rounded-2xl shadow-md font-bold text-xs flex items-center gap-1.5 transition-all"
+                        >
+                          <Star size={15} className="fill-white text-white" />
+                          {t.reviewBtn}
+                        </button>
+                      )
                     )}
                   </div>
                 </div>

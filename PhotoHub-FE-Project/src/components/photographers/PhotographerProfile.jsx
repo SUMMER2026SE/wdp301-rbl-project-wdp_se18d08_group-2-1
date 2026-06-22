@@ -6,6 +6,8 @@ import { aiRecommendService } from "../../services/aiRecommendService";
 import BookingModal from "../../booking/BookingModal";
 import Swal from "sweetalert2";
 import { photographerMarketplaceService } from "../../services/photographerService";
+import { bookingService } from "../../services/bookingService";
+import ReviewList from "../review/ReviewList";
 
 import {
   Star,
@@ -41,6 +43,7 @@ const PhotographerProfile = ({ language = "en" }) => {
   const [photographer, setPhotographer] = useState(null);
   const [selectedImg, setSelectedImg] = useState(null);
   const [albums, setAlbums] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [selectedAlbumDetail, setSelectedAlbumDetail] = useState(null); // { album, images }
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
@@ -193,6 +196,16 @@ const PhotographerProfile = ({ language = "en" }) => {
         }
       } catch (err) {
         console.error("Lỗi khi tải albums:", err);
+      }
+
+      // Tải danh sách Reviews
+      try {
+        const reviewRes = await bookingService.getPhotographerReviews(id);
+        if (reviewRes.success && reviewRes.data) {
+          setReviews(reviewRes.data.reviews || []);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải reviews:", err);
       }
     };
     loadPhotographer();
@@ -583,6 +596,15 @@ const PhotographerProfile = ({ language = "en" }) => {
               </p>
             </div>
           )}
+
+          {/* Đánh giá từ khách hàng */}
+          <div className="rounded-3xl bg-white p-6 sm:p-8 shadow-md dark:bg-gray-800 border border-gray-100/50 dark:border-gray-700/40 transition-all duration-300 hover:shadow-lg">
+            <h3 className="mb-5 flex items-center gap-2 text-xl font-black text-gray-900 dark:text-white">
+              <Star size={22} className="text-amber-500 fill-amber-500" />
+              {language === "vi" ? "Đánh giá từ khách hàng" : "Client Reviews"}
+            </h3>
+            <ReviewList reviews={reviews} language={language} />
+          </div>
         </div>
 
         {/* Khối liên hệ bên phải (Sidebar) */}

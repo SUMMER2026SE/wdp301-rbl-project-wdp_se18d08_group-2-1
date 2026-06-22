@@ -52,7 +52,31 @@ const buildPaymentResultUrl = (configuredUrl, params = {}) => {
 const getBookingAmount = (booking) => Number(booking.price || booking.totalPrice || 0);
 const getPayoutEligibleAt = () => new Date(Date.now() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
 
+const resolvePhotographerUserId = async (photographerRef) => {
+  const photographer = await Photographer.findOne({
+    $or: [{ _id: photographerRef }, { user: photographerRef }],
+  }).select("user");
+  return photographer?.user || photographerRef;
+};
+
 class BookingService {
+  transformBooking(booking) {
+    if (!booking) return null;
+    const obj = booking.toObject ? booking.toObject() : booking;
+    if (obj.photographer && obj.photographer.user) {
+      const userObj = obj.photographer.user;
+      obj.photographer = {
+        ...obj.photographer,
+        fullName: userObj.fullName || obj.photographer.displayName,
+        email: userObj.email,
+        avatar: userObj.avatar,
+        phoneNumber: userObj.phoneNumber,
+        user: userObj._id,
+      };
+    }
+    return obj;
+  }
+
   async ensureWallet(userId) {
     return await Wallet.findOneAndUpdate(
       { user: userId },
@@ -83,15 +107,21 @@ class BookingService {
   }
 
   async findById(bookingId) {
-    return Booking.findById(bookingId)
+    const booking = await Booking.findById(bookingId)
       .populate("customer", "fullName email avatar phoneNumber")
-      .populate("photographer", "fullName email avatar")
+      .populate({
+        path: "photographer",
+        populate: { path: "user", select: "fullName email avatar phoneNumber" }
+      })
       .populate("package", "title price durationHours numberOfPhotos locationType");
+
+    return this.transformBooking(booking);
   }
 
   async checkOverlap(photographerUserId, start, end, excludeBookingId = null) {
+    const photographer = await Photographer.findOne({ user: photographerUserId }).select("_id");
     const query = {
-      photographer: photographerUserId,
+      photographer: photographer ? photographer._id : photographerUserId,
       status: { $in: [BOOKING_STATUS.ACCEPTED, BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED] },
       $or: [{ start: { $lt: end }, end: { $gt: start } }],
     };
@@ -121,7 +151,7 @@ class BookingService {
 
     const booking = await Booking.create({
       customer: customerUserId,
-      photographer: photographerUserId,
+      photographer: photographer._id,
       package: packageId || null,
       title: title.trim(),
       note: note?.trim() || null,
@@ -158,15 +188,20 @@ class BookingService {
     if (status) query.status = status;
 
     const skip = (Number(page) - 1) * Number(limit);
-    const [bookings, total] = await Promise.all([
+    const [rawBookings, total] = await Promise.all([
       Booking.find(query)
-        .populate("photographer", "fullName email avatar")
+        .populate({
+          path: "photographer",
+          populate: { path: "user", select: "fullName email avatar" }
+        })
         .populate("package", "title price durationHours")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
       Booking.countDocuments(query),
     ]);
+
+    const bookings = rawBookings.map((b) => this.transformBooking(b));
 
     return {
       bookings,
@@ -206,7 +241,8 @@ class BookingService {
     booking.paymentStatus = booking.paymentStatus === PAYMENT_STATUS.PAID ? PAYMENT_STATUS.PAID : PAYMENT_STATUS.CANCELLED;
     await booking.save();
 
-    safeEmit(`user:${booking.photographer.toString()}`, "booking-status-updated", {
+    const photographerUserId = await resolvePhotographerUserId(booking.photographer);
+    safeEmit(`user:${photographerUserId}`, "booking-status-updated", {
       bookingId: booking._id,
       status: BOOKING_STATUS.CANCELLED,
       message: "Customer cancelled the booking",
@@ -298,6 +334,8 @@ class BookingService {
     booking.paymentLinkId = payosData.paymentLinkId || payosData.id || booking.paymentLinkId;
     await booking.save();
 
+    const photographerUserId = await resolvePhotographerUserId(booking.photographer);
+
     if (existingPayment) {
       existingPayment.status = "SUCCESS";
       existingPayment.amount = existingPayment.amount || booking.paidAmount;
@@ -309,7 +347,7 @@ class BookingService {
       await Payment.create({
         booking: booking._id,
         sender: booking.customer,
-        receiver: booking.photographer,
+        receiver: photographerUserId,
         amount: booking.paidAmount,
         paymentType: "DEPOSIT",
         paymentMethod: "PAYOS",
@@ -321,14 +359,14 @@ class BookingService {
     }
 
     if (!wasPaid && !wasPaymentSuccess) {
-      await this.ensureWallet(booking.photographer);
+      await this.ensureWallet(photographerUserId);
       await Wallet.findOneAndUpdate(
-        { user: booking.photographer },
+        { user: photographerUserId },
         { $inc: { holdBalance: booking.paidAmount } },
         { new: true }
       );
-      await Photographer.findOneAndUpdate(
-        { user: booking.photographer },
+      await Photographer.findByIdAndUpdate(
+        booking.photographer,
         { $inc: { totalEarnings: booking.paidAmount } }
       );
     }
@@ -342,7 +380,7 @@ class BookingService {
       amount: booking.paidAmount,
     };
     safeEmit(`user:${String(booking.customer)}`, "booking-paid", socketPayload);
-    safeEmit(`user:${String(booking.photographer)}`, "booking-paid", socketPayload);
+    safeEmit(`user:${photographerUserId}`, "booking-paid", socketPayload);
 
     const emailData = {
       bookingId: populated._id,
@@ -422,11 +460,16 @@ class BookingService {
   }
 
   async getBookingsForPhotographer(photographerUserId, { status, page = 1, limit = 10 } = {}) {
-    const query = { photographer: photographerUserId };
+    const photographer = await Photographer.findOne({ user: photographerUserId }).select("_id");
+    if (!photographer) {
+      return { bookings: [], pagination: { total: 0, page: Number(page), limit: Number(limit), totalPages: 0 } };
+    }
+
+    const query = { photographer: photographer._id };
     if (status) query.status = status;
 
     const skip = (Number(page) - 1) * Number(limit);
-    const [bookings, total] = await Promise.all([
+    const [rawBookings, total] = await Promise.all([
       Booking.find(query)
         .populate("customer", "fullName email avatar phoneNumber")
         .populate("package", "title price durationHours")
@@ -435,6 +478,8 @@ class BookingService {
         .limit(Number(limit)),
       Booking.countDocuments(query),
     ]);
+
+    const bookings = rawBookings.map((b) => this.transformBooking(b));
 
     return {
       bookings,
@@ -451,14 +496,15 @@ class BookingService {
     const booking = await Booking.findById(bookingId);
     if (!booking) throw new Error("Booking not found");
 
-    if (String(booking.photographer) !== String(photographerUserId)) {
+    const photographerProfile = await Photographer.findOne({ user: photographerUserId }).select("_id");
+    if (!photographerProfile || String(booking.photographer) !== String(photographerProfile._id)) {
       throw new Error("You are not allowed to accept this booking");
     }
     if (booking.status !== BOOKING_STATUS.PENDING) {
       throw new Error("Only pending bookings can be accepted");
     }
 
-    const hasConflict = await this.checkOverlap(booking.photographer, booking.start, booking.end, booking._id);
+    const hasConflict = await this.checkOverlap(photographerUserId, booking.start, booking.end, booking._id);
     if (hasConflict) {
       throw new Error("This booking conflicts with another confirmed booking");
     }
@@ -479,7 +525,8 @@ class BookingService {
     const booking = await Booking.findById(bookingId);
     if (!booking) throw new Error("Booking not found");
 
-    if (String(booking.photographer) !== String(photographerUserId)) {
+    const photographerProfile = await Photographer.findOne({ user: photographerUserId }).select("_id");
+    if (!photographerProfile || String(booking.photographer) !== String(photographerProfile._id)) {
       throw new Error("You are not allowed to reject this booking");
     }
     if ([BOOKING_STATUS.REJECTED, BOOKING_STATUS.CANCELLED].includes(booking.status)) {
@@ -506,7 +553,8 @@ class BookingService {
     const booking = await Booking.findById(bookingId);
     if (!booking) throw new Error("Booking not found");
 
-    if (String(booking.photographer) !== String(photographerUserId)) {
+    const photographerProfile = await Photographer.findOne({ user: photographerUserId }).select("_id");
+    if (!photographerProfile || String(booking.photographer) !== String(photographerProfile._id)) {
       throw new Error("You are not allowed to complete this booking");
     }
     if (booking.status !== BOOKING_STATUS.CONFIRMED || booking.paymentStatus !== PAYMENT_STATUS.PAID) {
@@ -523,7 +571,7 @@ class BookingService {
     booking.payoutEligibleAt = getPayoutEligibleAt();
     await booking.save();
 
-    const wallet = await this.ensureWallet(booking.photographer);
+    const wallet = await this.ensureWallet(photographerUserId);
     const releasable = Math.min(Number(wallet.holdBalance || 0), amount);
     wallet.holdBalance = Math.max(0, Number(wallet.holdBalance || 0) - releasable);
     wallet.balance = Number(wallet.balance || 0) + amount;

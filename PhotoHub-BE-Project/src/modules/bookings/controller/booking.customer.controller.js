@@ -68,11 +68,12 @@ class CustomerBookingController {
       const userId = req.user.id.toString();
       const isAllowed =
         booking.customer._id.toString() === userId ||
+        (booking.photographer.user && booking.photographer.user.toString() === userId) ||
         booking.photographer._id.toString() === userId ||
         req.user.role === "admin";
 
       if (!isAllowed) {
-        return ApiResponse.error(res, "Báº¡n khĂ´ng cĂ³ quyá»n xem booking nĂ y", 403);
+        return ApiResponse.error(res, "Báº¡n khĂ´ng cĂ³ quyá» n xem booking nĂ y", 403);
       }
 
       return ApiResponse.success(res, booking, "Láº¥y chi tiáº¿t booking thĂ nh cĂ´ng");

@@ -90,9 +90,21 @@ export const bookingService = {
     return res.data;
   },
 
-  // 10. Láº¥y danh sĂ¡ch packages cá»§a má»™t photographer (Customer xem)
+  // 10. Lấy danh sách packages của một photographer (Customer xem)
   getPhotographerPackages: async (photographerId) => {
     const res = await axios.get(`${API_BASE}/packages/photographer/${photographerId}`, getHeaders());
+    return res.data;
+  },
+
+  // 11. Tạo đánh giá cho booking
+  createReview: async (bookingId, rating, comment) => {
+    const res = await axios.post(`${API_BASE}/bookings/${bookingId}/reviews`, { rating, comment }, getHeaders());
+    return res.data;
+  },
+
+  // 12. Lấy danh sách đánh giá của photographer
+  getPhotographerReviews: async (photographerId, params = {}) => {
+    const res = await axios.get(`${API_BASE}/photographers/${photographerId}/reviews`, { params });
     return res.data;
   },
 };

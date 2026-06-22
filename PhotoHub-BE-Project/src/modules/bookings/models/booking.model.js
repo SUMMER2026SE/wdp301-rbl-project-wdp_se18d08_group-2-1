@@ -1,4 +1,4 @@
-﻿const mongoose = require("mongoose");
+const mongoose = require("mongoose");
 
 const BOOKING_STATUS = {
   PENDING: "pending",
@@ -28,7 +28,7 @@ const bookingSchema = new mongoose.Schema(
     },
     photographer: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Photographer",
       required: true,
       index: true,
     },
@@ -121,6 +121,10 @@ const bookingSchema = new mongoose.Schema(
     payoutEligibleAt: {
       type: Date,
       default: null,
+    },
+    isReviewed: {
+      type: Boolean,
+      default: false,
     },
   },
   {

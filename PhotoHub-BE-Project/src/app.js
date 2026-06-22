@@ -1,4 +1,4 @@
-﻿const express = require("express");
+const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const passport = require("passport");
@@ -21,6 +21,7 @@ const styleTagRoutes = require("./modules/common/routes/styleTag.routes");
 const packageRoutes = require("./modules/packages/routes/photographerPackage.routes");
 const communityRoutes = require("./modules/community/community.routes");
 const bookingRoutes = require("./modules/bookings/routes/booking.routes");
+const reviewRoutes = require("./modules/review/routes/review.routes");
 // Middlewares
 app.use(express.json({ limit: "300mb" }));
 app.use(express.urlencoded({ limit: "300mb", extended: true }));
@@ -59,6 +60,7 @@ app.use("/api/style-tags", styleTagRoutes);
 app.use("/api/packages", packageRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api", reviewRoutes);
 app.use("/api/upload", require("./utils/upload.routes"));
 
 // Health check

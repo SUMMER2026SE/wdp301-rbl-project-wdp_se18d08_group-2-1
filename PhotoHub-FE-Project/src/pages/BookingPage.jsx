@@ -90,6 +90,8 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
     price: 0,
   });
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [conflictWarning, setConflictWarning] = useState(null); // null | { start, end, title }
+  const [showAllImages, setShowAllImages] = useState(false); // expand gallery
 
   const t = {
     vi: {
@@ -126,10 +128,17 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
       customerOnly: "Chỉ tài khoản customer mới có thể đặt lịch và thanh toán. Hãy đăng xuất rồi đăng nhập tài khoản customer.",
       cannotBookSelf: "Bạn không thể đặt lịch với chính mình.",
       selectDatePrompt: "Vui lòng chọn ngày chụp trên lịch làm việc",
+      timeConflict: "Khung giờ này đã có lịch đặt! Vui lòng chọn khung giờ khác.",
       calendarHeader: "Lịch Trống & Lịch Bận",
       calendarSub: "Xem lịch làm việc của creator để chọn ngày phù hợp",
       busyDay: "Bận",
       freeDay: "Trống",
+      timeSlotTitle: "Khung giờ ngày",
+      timeSlotSub: "Chọn giờ phù hợp với lịch còn trống bên dưới",
+      bookedSlots: "Lịch đã đặt trong ngày",
+      noBookingToday: "Ngày này chưa có lịch đặt nào – bạn có thể chọn bất kỳ giờ nào!",
+      slotFree: "Trống",
+      slotBusy: "Đã đặt",
       mon: "T2", tue: "T3", wed: "T4", thu: "T5", fri: "T6", sat: "T7", sun: "CN",
       rating: "Đánh giá",
       exp: "Kinh nghiệm",
@@ -172,10 +181,17 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
       customerOnly: "Only customer accounts can create bookings and pay. Please sign out and sign in with a customer account.",
       cannotBookSelf: "You cannot book yourself.",
       selectDatePrompt: "Please select a shoot date from the schedule calendar",
+      timeConflict: "This time slot is already booked! Please choose a different time.",
       calendarHeader: "Availability Schedule",
       calendarSub: "View creator's schedule to choose a vacant date",
       busyDay: "Busy",
       freeDay: "Vacant",
+      timeSlotTitle: "Time Slots for",
+      timeSlotSub: "Pick an available slot from the timeline below",
+      bookedSlots: "Booked Slots Today",
+      noBookingToday: "No bookings yet today – any hour is available!",
+      slotFree: "Free",
+      slotBusy: "Booked",
       mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun",
       rating: "Rating",
       exp: "Exp",
@@ -364,6 +380,26 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
     }
   };
 
+  /**
+   * Kiểm tra xem khoảng [newStart, newEnd] có trùng với bất kỳ booking nào không.
+   * Trả về booking bị trùng đầu tiên, hoặc null nếu không có conflict.
+   */
+  const hasTimeConflict = (newStart, newEnd) => {
+    if (!newStart || !newEnd) return null;
+    const ns = new Date(newStart).getTime();
+    const ne = new Date(newEnd).getTime();
+    if (ne <= ns) return null;
+    for (const b of calendarBookings) {
+      const bs = new Date(b.start).getTime();
+      const be = b.end ? new Date(b.end).getTime() : bs + 3600000;
+      // overlap: ns < be && ne > bs
+      if (ns < be && ne > bs) {
+        return b; // trả về booking đầu tiên bị trùng
+      }
+    }
+    return null;
+  };
+
   const handleDateChange = (field, value) => {
     const updatedData = { ...formData, [field]: value };
     if (selectedPackageId && field === "start" && value) {
@@ -379,6 +415,12 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
     if (!selectedPackageId) {
       calculateCustomPrice(updatedData.start, updatedData.end);
     }
+
+    // Kiểm tra conflict sau khi cập nhật cả 2 field
+    const checkStart = field === "start" ? value : updatedData.start;
+    const checkEnd   = field === "end"   ? value : updatedData.end;
+    const conflict = hasTimeConflict(checkStart, checkEnd);
+    setConflictWarning(conflict || null);
   };
 
   // Calendar Helpers
@@ -402,10 +444,49 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
   };
 
   const getBookingsForDay = (day) => {
+    // Lấy tất cả bookings có thời gian chồng lên ngày này (không chỉ bắt đầu trong ngày)
+    const dayStart = new Date(year, month, day, 0, 0, 0).getTime();
+    const dayEnd   = new Date(year, month, day, 23, 59, 59).getTime();
     return calendarBookings.filter((b) => {
-      const bDate = new Date(b.start);
-      return bDate.getDate() === day && bDate.getMonth() === month && bDate.getFullYear() === year;
+      const bStart = new Date(b.start).getTime();
+      const bEnd   = b.end ? new Date(b.end).getTime() : bStart + 60 * 60 * 1000;
+      // Có overlap với ngày này
+      return bStart < dayEnd && bEnd > dayStart;
     });
+  };
+
+  /**
+   * Tính tổng số phút bận trong khung giờ làm việc [workStart, workEnd] của ngày đó.
+   * Dùng thuật toán merge-interval để tránh tính trùng khi các booking chồng nhau.
+   */
+  const getBusyMinutesInDay = (day, bookings) => {
+    const WORK_START = 8;  // 08:00
+    const WORK_END   = 20; // 20:00
+    const dayWorkStart = new Date(year, month, day, WORK_START, 0, 0).getTime();
+    const dayWorkEnd   = new Date(year, month, day, WORK_END,   0, 0).getTime();
+
+    // Chuyển mỗi booking thành interval clamp trong khung làm việc
+    const intervals = bookings
+      .map((b) => ({
+        s: Math.max(new Date(b.start).getTime(), dayWorkStart),
+        e: Math.min(b.end ? new Date(b.end).getTime() : new Date(b.start).getTime() + 60 * 60 * 1000, dayWorkEnd),
+      }))
+      .filter((iv) => iv.e > iv.s)
+      .sort((a, b) => a.s - b.s);
+
+    // Merge overlapping intervals
+    let totalMs = 0;
+    let mergedEnd = -Infinity;
+    for (const iv of intervals) {
+      if (iv.s >= mergedEnd) {
+        totalMs += iv.e - iv.s;
+        mergedEnd = iv.e;
+      } else if (iv.e > mergedEnd) {
+        totalMs += iv.e - mergedEnd;
+        mergedEnd = iv.e;
+      }
+    }
+    return totalMs / 60000; // đổi sang phút
   };
 
   const isDateInPast = (day) => {
@@ -423,9 +504,12 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
   for (let i = 1; i <= totalDays; i++) {
     const isPast = isDateInPast(i);
     const dayBookings = getBookingsForDay(i);
-    // Mark as busy if it has active bookings
-    const isBusy = dayBookings.length > 0;
-    daysGrid.push({ day: i, isCurrentMonth: true, isPast, isBusy });
+    // Khung giờ làm việc: 8h → 20h = 720 phút
+    // Chỉ đánh dấu BẬN khi tổng giờ booking lấp đầy toàn bộ khung giờ làm việc (>= 720 phút)
+    const WORK_TOTAL_MINUTES = (20 - 8) * 60; // 720 phút
+    const busyMinutes = dayBookings.length > 0 ? getBusyMinutesInDay(i, dayBookings) : 0;
+    const isBusy = busyMinutes >= WORK_TOTAL_MINUTES;
+    daysGrid.push({ day: i, isCurrentMonth: true, isPast, isBusy, busyMinutes, dayBookings });
   }
   // Next month padding to fill grid
   const remainingCells = 42 - daysGrid.length;
@@ -545,6 +629,30 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
         text: t.invalidDates,
         background: isDark ? "#0f172a" : "#fff",
         color: isDark ? "#fff" : "#000",
+      });
+      return;
+    }
+
+    // Chặn submit nếu khung giờ trùng với booking hiện có
+    const conflictBooking = hasTimeConflict(start, end);
+    if (conflictBooking) {
+      const fmt = (iso) => {
+        const d = new Date(iso);
+        return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      };
+      const conflictStart = fmt(conflictBooking.start);
+      const conflictEnd   = conflictBooking.end ? fmt(conflictBooking.end) : fmt(new Date(new Date(conflictBooking.start).getTime() + 3600000));
+      Swal.fire({
+        icon: "error",
+        title: t.timeConflict,
+        html: `<p style="font-size:14px;color:${isDark?'#d1d5db':'#374151'}">
+          Khung giờ bạn chọn trùng với lịch đã đặt:<br/>
+          <strong style="color:#ef4444">${conflictStart} – ${conflictEnd}</strong>
+          ${conflictBooking.title ? `<br/><em>${conflictBooking.title}</em>` : ''}
+        </p>`,
+        background: isDark ? "#0f172a" : "#fff",
+        color: isDark ? "#fff" : "#000",
+        confirmButtonColor: "#ef4444",
       });
       return;
     }
@@ -802,12 +910,20 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                   <div className="grid grid-cols-7 gap-1.5">
                     {daysGrid.map((cell, idx) => {
                       const isCellSelected = selectedDate && cell.isCurrentMonth && selectedDate.getDate() === cell.day && selectedDate.getMonth() === month && selectedDate.getFullYear() === year;
-                      
+                      // Ngày có booking nhưng chưa bận hoàn toàn (còn giờ trống)
+                      const hasPartialBooking = cell.isCurrentMonth && !cell.isBusy && !cell.isPast && cell.dayBookings && cell.dayBookings.length > 0;
                       const clickable = cell.isCurrentMonth && !cell.isPast && !cell.isBusy && photographer?.isAvailable;
 
                       return (
                         <div
                           key={idx}
+                          title={
+                            hasPartialBooking
+                              ? `Đã có ${cell.dayBookings.length} lịch đặt – còn khung giờ trống`
+                              : cell.isBusy
+                              ? "Nhiếp ảnh gia đã kín lịch ngày này"
+                              : undefined
+                          }
                           onClick={() => clickable && handleCalendarDayClick(cell.day)}
                           className={`aspect-square p-1 rounded-xl border transition-all flex flex-col justify-between select-none relative ${
                             !cell.isCurrentMonth
@@ -816,9 +932,13 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                                 ? "bg-slate-100 dark:bg-zinc-900/40 border-transparent text-slate-400 dark:text-zinc-600 cursor-not-allowed opacity-50"
                                 : cell.isBusy
                                   ? "bg-rose-500/10 border-rose-300/30 text-rose-500 cursor-not-allowed"
-                                  : isCellSelected
-                                    ? "bg-orange-500 border-orange-500 text-white font-black shadow-md shadow-orange-500/20"
-                                    : "bg-slate-50 dark:bg-zinc-900/60 border-slate-200/50 dark:border-zinc-800/80 hover:border-orange-500 hover:text-orange-500 cursor-pointer"
+                                  : hasPartialBooking
+                                    ? isCellSelected
+                                      ? "bg-orange-500 border-orange-500 text-white font-black shadow-md shadow-orange-500/20"
+                                      : "bg-amber-500/10 border-amber-400/40 text-amber-600 dark:text-amber-400 hover:border-orange-500 cursor-pointer"
+                                    : isCellSelected
+                                      ? "bg-orange-500 border-orange-500 text-white font-black shadow-md shadow-orange-500/20"
+                                      : "bg-slate-50 dark:bg-zinc-900/60 border-slate-200/50 dark:border-zinc-800/80 hover:border-orange-500 hover:text-orange-500 cursor-pointer"
                           }`}
                         >
                           <span className={`text-[11px] font-bold ${isToday(cell.day) && !isCellSelected ? "text-orange-500 underline decoration-2 decoration-orange-500/80" : ""}`}>
@@ -831,6 +951,10 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                                 <span className="text-rose-500">{t.busyDay}</span>
                               ) : cell.isPast ? (
                                 ""
+                              ) : hasPartialBooking ? (
+                                <span className={`opacity-90 ${isCellSelected ? "text-white" : "text-amber-500"}`}>
+                                  {language === "vi" ? "CÓ LỊCH" : "BUSY"}
+                                </span>
                               ) : (
                                 <span className={`opacity-80 ${isCellSelected ? "text-white" : "text-emerald-500 dark:text-emerald-400"}`}>{t.freeDay}</span>
                               )}
@@ -842,6 +966,123 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                   </div>
                 </>
               )}
+
+              {/* ─────────────────────────────────────────────────── */}
+              {/* Day Time-Slot Timeline – shows when selected date has bookings */}
+              {selectedDate && (() => {
+                const sd = selectedDate;
+                const dayBookingsForSelected = calendarBookings.filter((b) => {
+                  const dayStart = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate(), 0, 0, 0).getTime();
+                  const dayEnd   = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate(), 23, 59, 59).getTime();
+                  const bStart   = new Date(b.start).getTime();
+                  const bEnd     = b.end ? new Date(b.end).getTime() : bStart + 3600000;
+                  return bStart < dayEnd && bEnd > dayStart;
+                });
+
+                const WORK_START_H = 8;   // 08:00
+                const WORK_END_H   = 20;  // 20:00
+                const TOTAL_MINS   = (WORK_END_H - WORK_START_H) * 60;
+
+                // Build segments for the progress bar
+                const segments = [];
+                let cursorMs = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate(), WORK_START_H, 0, 0).getTime();
+                const endMs   = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate(), WORK_END_H,   0, 0).getTime();
+
+                // Merge & sort bookings clipped to work window
+                const clipped = dayBookingsForSelected
+                  .map(b => ({
+                    s: Math.max(new Date(b.start).getTime(), cursorMs),
+                    e: Math.min(b.end ? new Date(b.end).getTime() : new Date(b.start).getTime() + 3600000, endMs),
+                    title: b.title || "Lịch đã đặt",
+                  }))
+                  .filter(iv => iv.e > iv.s)
+                  .sort((a, b) => a.s - b.s);
+
+                // Build free/busy segments
+                let ptr = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate(), WORK_START_H, 0, 0).getTime();
+                const merged = [];
+                for (const iv of clipped) {
+                  if (iv.s > ptr) merged.push({ s: ptr, e: iv.s, busy: false });
+                  if (merged.length && merged[merged.length-1].busy && merged[merged.length-1].e >= iv.s) {
+                    merged[merged.length-1].e = Math.max(merged[merged.length-1].e, iv.e);
+                  } else {
+                    merged.push({ s: iv.s, e: iv.e, busy: true, title: iv.title });
+                  }
+                  ptr = Math.max(ptr, iv.e);
+                }
+                if (ptr < endMs) merged.push({ s: ptr, e: endMs, busy: false });
+
+                const fmt = (ms) => {
+                  const d = new Date(ms);
+                  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                };
+
+                return (
+                  <div className={`mt-4 p-4 rounded-2xl border ${isDark ? 'bg-zinc-900/60 border-zinc-800' : 'bg-slate-50/80 border-slate-200'}`}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Clock size={14} className="text-orange-500 shrink-0" />
+                      <div>
+                        <p className="text-xs font-black text-slate-800 dark:text-zinc-100">
+                          {t.timeSlotTitle} {sd.toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        </p>
+                        <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">{t.timeSlotSub}</p>
+                      </div>
+                    </div>
+
+                    {/* Hour labels */}
+                    <div className="flex justify-between text-[9px] font-bold text-slate-400 dark:text-zinc-600 mb-1 px-0.5">
+                      {Array.from({ length: WORK_END_H - WORK_START_H + 1 }, (_, i) => (
+                        <span key={i}>{String(WORK_START_H + i).padStart(2,'0')}h</span>
+                      ))}
+                    </div>
+
+                    {/* Timeline bar */}
+                    <div className="flex h-6 rounded-xl overflow-hidden w-full border border-slate-200/50 dark:border-zinc-800">
+                      {merged.map((seg, i) => {
+                        const widthPct = ((seg.e - seg.s) / (TOTAL_MINS * 60000)) * 100;
+                        return (
+                          <div
+                            key={i}
+                            title={seg.busy ? `🔴 ${fmt(seg.s)} – ${fmt(seg.e)}: ${t.slotBusy}` : `🟢 ${fmt(seg.s)} – ${fmt(seg.e)}: ${t.slotFree}`}
+                            className={`h-full transition-all ${
+                              seg.busy
+                                ? 'bg-rose-500 opacity-80'
+                                : 'bg-emerald-500/40'
+                            }`}
+                            style={{ width: `${widthPct}%` }}
+                          />
+                        );
+                      })}
+                    </div>
+
+                    {/* Legend */}
+                    <div className="flex items-center gap-4 mt-2 text-[10px] font-semibold text-slate-500 dark:text-zinc-400">
+                      <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-emerald-500/50 inline-block" />{t.slotFree}</span>
+                      <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-rose-500 inline-block" />{t.slotBusy}</span>
+                    </div>
+
+                    {/* Booked slot list */}
+                    {dayBookingsForSelected.length === 0 ? (
+                      <p className="mt-3 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 rounded-xl px-3 py-2">
+                        ✅ {t.noBookingToday}
+                      </p>
+                    ) : (
+                      <div className="mt-3 space-y-1.5">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-500">{t.bookedSlots}</p>
+                        {dayBookingsForSelected.map((b, i) => (
+                          <div key={i} className="flex items-center gap-2 text-[11px] font-semibold">
+                            <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                            <span className="text-rose-500 font-black tabular-nums">
+                              {fmt(new Date(b.start).getTime())} – {fmt(b.end ? new Date(b.end).getTime() : new Date(b.start).getTime() + 3600000)}
+                            </span>
+                            <span className="text-[10px] text-slate-400 dark:text-zinc-600 italic">{t.slotBusy}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -865,14 +1106,14 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                   </div>
                 )}
 
-                {/* Package selection */}
+                {/* Package selection — Dropdown */}
                 <div>
                   <label className={labelClass}>{t.packagesLabel}</label>
                   <div className="relative">
                     <Gift className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <select
                       value={selectedPackageId}
-                      onChange={(e) => setSelectedPackageId(e.target.value)}
+                      onChange={(e) => { setSelectedPackageId(e.target.value); setShowAllImages(false); }}
                       className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-orange-500 appearance-none font-semibold ${inputBgClass}`}
                       disabled={packagesLoading}
                     >
@@ -886,6 +1127,61 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                   </div>
                   {packagesLoading && <p className="text-xs text-slate-500 mt-1.5 animate-pulse">{t.loadingPackages}</p>}
                 </div>
+
+                {/* Package image gallery — hiển thị khi gói được chọn có ảnh */}
+                {selectedPackageId && (() => {
+                  const pkg = packages.find(p => p._id === selectedPackageId);
+                  const rawImages = Array.isArray(pkg?.images) ? pkg.images : [];
+                  if (rawImages.length === 0) return null;
+                  const urls = rawImages
+                    .map(img => typeof img === "string" ? img : img?.imageUrl || "")
+                    .filter(Boolean)
+                    .map(url => url.startsWith("http") ? url : `http://localhost:3000${url.startsWith("/") ? "" : "/"}${url}`);
+                  const MAX_VISIBLE = 6;
+                  const visibleUrls = showAllImages ? urls : urls.slice(0, MAX_VISIBLE);
+                  const remaining = urls.length - MAX_VISIBLE;
+                  return (
+                    <div className={`p-3 rounded-2xl border ${isDark ? "border-zinc-800 bg-zinc-900/40" : "border-slate-200 bg-slate-50/60"}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-500">
+                          🖼 {language === "vi" ? "Ảnh mẫu của gói" : "Package sample photos"}
+                          <span className="ml-1 normal-case font-semibold">({urls.length})</span>
+                        </p>
+                        {showAllImages && urls.length > MAX_VISIBLE && (
+                          <button
+                            type="button"
+                            onClick={() => setShowAllImages(false)}
+                            className="text-[10px] font-black text-orange-500 hover:text-orange-400 transition-colors"
+                          >
+                            {language === "vi" ? "Thu gọn ↑" : "Collapse ↑"}
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {visibleUrls.map((url, i) => (
+                          <div key={i} className="aspect-square rounded-xl overflow-hidden bg-slate-200 dark:bg-zinc-800">
+                            <img src={url} alt={`sample-${i}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                          </div>
+                        ))}
+                        {/* "Xem thêm" tile — ô cuối trong grid */}
+                        {!showAllImages && remaining > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setShowAllImages(true)}
+                            className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all hover:border-orange-500 hover:text-orange-500 ${
+                              isDark ? "border-zinc-700 text-zinc-400" : "border-slate-300 text-slate-500"
+                            }`}
+                          >
+                            <span className="text-lg font-black">+{remaining}</span>
+                            <span className="text-[9px] font-black uppercase tracking-wide">
+                              {language === "vi" ? "Xem thêm" : "See more"}
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Session Title */}
                 <div>
@@ -914,7 +1210,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                         type="datetime-local"
                         value={formData.start}
                         onChange={(e) => handleDateChange("start", e.target.value)}
-                        className={`w-full rounded-2xl pl-10 pr-3 py-3 outline-none border transition focus:border-orange-500 ${inputBgClass}`}
+                        className={`w-full rounded-2xl pl-10 pr-3 py-3 outline-none border transition focus:border-orange-500 ${inputBgClass} ${conflictWarning ? "border-rose-500 focus:border-rose-500" : ""}`}
                         required
                       />
                     </div>
@@ -930,13 +1226,36 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                         onChange={(e) => handleDateChange("end", e.target.value)}
                         className={`w-full rounded-2xl pl-10 pr-3 py-3 outline-none border transition focus:border-orange-500 ${inputBgClass} ${
                           selectedPackageId ? "opacity-60 cursor-not-allowed" : ""
-                        }`}
+                        } ${conflictWarning ? "border-rose-500 focus:border-rose-500" : ""}`}
                         required
                         disabled={!!selectedPackageId}
                       />
                     </div>
                   </div>
                 </div>
+
+                {/* Conflict Warning Banner */}
+                {conflictWarning && (() => {
+                  const fmt = (iso) => {
+                    const d = new Date(iso);
+                    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                  };
+                  const cs = fmt(conflictWarning.start);
+                  const ce = conflictWarning.end ? fmt(conflictWarning.end) : fmt(new Date(new Date(conflictWarning.start).getTime() + 3600000));
+                  return (
+                    <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold animate-pulse">
+                      <AlertCircle size={15} className="shrink-0 mt-0.5 text-rose-500" />
+                      <div>
+                        <p className="font-black">{t.timeConflict}</p>
+                        <p className="mt-0.5 opacity-80">
+                          {language === "vi" ? "Trùng với lịch" : "Conflicts with"}: <strong className="text-rose-500">{cs} – {ce}</strong>
+                          {conflictWarning.title && <span className="ml-1 italic">({conflictWarning.title})</span>}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
 
                 {/* Location */}
                 <div>

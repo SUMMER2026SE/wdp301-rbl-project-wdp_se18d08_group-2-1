@@ -29,6 +29,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { photographerMarketplaceService } from "../../services/photographerService";
+import ReviewList from "../review/ReviewList";
 
 const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }) => {
   const { getPhotographerDetail } = usePhotographers();
@@ -644,9 +645,8 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                 )}
 
                 {activeTab === "reviews" && (
-                  <div className="py-10 text-center">
-                    <Star size={40} className="mx-auto mb-3 text-slate-200 dark:text-zinc-700" />
-                    <p className="text-sm text-slate-400 dark:text-zinc-500">{t.noReviews}</p>
+                  <div className="max-h-[50vh] overflow-y-auto pr-1">
+                    <ReviewList photographerId={photographerId} language={language} />
                   </div>
                 )}
               </div>
