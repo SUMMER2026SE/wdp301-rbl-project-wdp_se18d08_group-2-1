@@ -82,6 +82,62 @@ class CustomerJobService {
     await job.save();
     return job;
   }
+
+  async updateJobPost(jobPostId, customerId, data, newImageUrls = []) {
+    const job = await JobPost.findOne({ _id: jobPostId, customer: customerId });
+    if (!job) {
+      throw new Error("Không tìm thấy job post hoặc bạn không có quyền chỉnh sửa.");
+    }
+
+    const { title, description, location, budget, style, date } = data;
+
+    if (!title || !description || !location || !budget || !style || !date) {
+      throw new Error("Vui lòng điền đầy đủ các trường bắt buộc.");
+    }
+
+    const budgetNum = Number(budget);
+    if (isNaN(budgetNum) || budgetNum <= 0) {
+      throw new Error("Ngân sách phải là số dương.");
+    }
+
+    const jobDate = new Date(date);
+    if (jobDate.toDateString() !== new Date(job.date).toDateString()) {
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      if (isNaN(jobDate.getTime()) || jobDate < startOfToday) {
+        throw new Error("Ngày chụp không hợp lệ hoặc đã qua.");
+      }
+    }
+
+    let existingImages = [];
+    if (data.existingImages) {
+      if (typeof data.existingImages === "string") {
+        try {
+          existingImages = JSON.parse(data.existingImages);
+        } catch {
+          existingImages = [data.existingImages];
+        }
+      } else if (Array.isArray(data.existingImages)) {
+        existingImages = data.existingImages;
+      }
+    }
+
+    const merged = [...existingImages, ...newImageUrls];
+    if (merged.length > 5) {
+      throw new Error("Tối đa 5 ảnh mẫu cho mỗi job post.");
+    }
+
+    job.title = title.trim();
+    job.description = description.trim();
+    job.location = location.trim();
+    job.budget = budgetNum;
+    job.style = style.trim();
+    job.date = jobDate;
+    job.referenceImages = merged;
+
+    await job.save();
+    return job;
+  }
 }
 
 module.exports = new CustomerJobService();

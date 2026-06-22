@@ -120,6 +120,8 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
   // Image state
   const [selectedFiles, setSelectedFiles] = useState([]);   // File objects
   const [previews, setPreviews] = useState([]);              // blob URLs for preview
+  const [editingJob, setEditingJob] = useState(null);
+  const [existingImages, setExistingImages] = useState([]);
   const fileInputRef = useRef(null);
 
   const t = {
@@ -142,6 +144,9 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
       cancelBtn: "Hủy",
       deleteBtn: "Xóa",
       closeBtn: "Đóng tin",
+      editBtn: "Sửa tin",
+      formTitleEdit: "Chỉnh sửa Job Post",
+      submitBtnEdit: "Cập nhật Job Post",
       noJobs: "Bạn chưa có job post nào",
       noJobsHint: "Hãy đăng tin để tìm nhiếp ảnh gia phù hợp!",
       budget: "Ngân sách",
@@ -184,6 +189,9 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
       cancelBtn: "Cancel",
       deleteBtn: "Delete",
       closeBtn: "Close Job",
+      editBtn: "Edit",
+      formTitleEdit: "Edit Job Post",
+      submitBtnEdit: "Update Job Post",
       noJobs: "You have no job posts yet",
       noJobsHint: "Post a job to find your perfect photographer!",
       budget: "Budget",
@@ -255,7 +263,8 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
   };
 
   const addFiles = (files) => {
-    const remaining = 5 - selectedFiles.length;
+    const currentTotal = (existingImages ? existingImages.length : 0) + selectedFiles.length;
+    const remaining = 5 - currentTotal;
     if (remaining <= 0) {
       Swal.fire({ icon: "warning", title: t.error, text: t.maxImages, timer: 2000, showConfirmButton: false });
       return;
@@ -267,9 +276,16 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
   };
 
   const removePreview = (idx) => {
-    URL.revokeObjectURL(previews[idx]);
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== idx));
-    setPreviews((prev) => prev.filter((_, i) => i !== idx));
+    const existingCount = existingImages ? existingImages.length : 0;
+    if (idx < existingCount) {
+      setExistingImages((prev) => prev.filter((_, i) => i !== idx));
+      setPreviews((prev) => prev.filter((_, i) => i !== idx));
+    } else {
+      const fileIdx = idx - existingCount;
+      URL.revokeObjectURL(previews[idx]);
+      setSelectedFiles((prev) => prev.filter((_, i) => i !== fileIdx));
+      setPreviews((prev) => prev.filter((_, i) => i !== idx));
+    }
   };
 
   // ─── Drag-and-drop ───
@@ -285,7 +301,6 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
     const { title, description, location, budget, style, date } = form;
     if (!title || !description || !location || !budget || !style || !date) {
       Swal.fire({ icon: "warning", title: t.error, text: language === "vi" ? "Vui lòng điền đầy đủ tất cả các trường." : "Please fill in all required fields.", background: isDark ? "#09090b" : "#fff", color: isDark ? "#fff" : "#000" });
@@ -298,9 +313,29 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
       Object.entries(form).forEach(([k, v]) => formData.append(k, v));
       selectedFiles.forEach((file) => formData.append("referenceImages", file));
 
-      const res = await customerJobService.createJobPost(formData);
+      if (editingJob) {
+        formData.append("existingImages", JSON.stringify(existingImages));
+      }
+
+      let res;
+      if (editingJob) {
+        res = await customerJobService.updateJobPost(editingJob._id, formData);
+      } else {
+        res = await customerJobService.createJobPost(formData);
+      }
+
       if (res.success) {
-        Swal.fire({ icon: "success", title: t.success, text: language === "vi" ? "Job post đã được đăng thành công!" : "Job post created successfully!", background: isDark ? "#09090b" : "#fff", color: isDark ? "#fff" : "#000", timer: 2000, showConfirmButton: false });
+        Swal.fire({
+          icon: "success",
+          title: t.success,
+          text: editingJob
+            ? (language === "vi" ? "Cập nhật Job Post thành công!" : "Job post updated successfully!")
+            : (language === "vi" ? "Job post đã được đăng thành công!" : "Job post created successfully!"),
+          background: isDark ? "#09090b" : "#fff",
+          color: isDark ? "#fff" : "#000",
+          timer: 2000,
+          showConfirmButton: false
+        });
         resetForm();
         fetchJobs();
       } else {
@@ -315,9 +350,15 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
 
   const resetForm = () => {
     setForm({ title: "", description: "", location: "", budget: "", style: "", date: "" });
-    previews.forEach((url) => URL.revokeObjectURL(url));
+    previews.forEach((url) => {
+      if (typeof url === "string" && url.startsWith("blob:")) {
+        URL.revokeObjectURL(url);
+      }
+    });
     setSelectedFiles([]);
     setPreviews([]);
+    setExistingImages([]);
+    setEditingJob(null);
     setShowForm(false);
   };
 
@@ -367,6 +408,24 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
     }
   };
 
+  // ─── Edit job ───
+  const handleEdit = (job) => {
+    setForm({
+      title: job.title || "",
+      description: job.description || "",
+      location: job.location || "",
+      budget: job.budget || "",
+      style: job.style || "",
+      date: job.date ? new Date(job.date).toISOString().split("T")[0] : "",
+    });
+    setExistingImages(job.referenceImages || []);
+    setPreviews(job.referenceImages || []);
+    setSelectedFiles([]);
+    setEditingJob(job);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // ─── RENDER ───
   return (
     <div className="space-y-6">
@@ -389,7 +448,9 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
       {showForm && (
         <div className={`${cardClass} border-cyan-500/30`}>
           <div className="mb-6">
-            <h3 className="text-xl font-black tracking-tight">{t.formTitle}</h3>
+            <h3 className="text-xl font-black tracking-tight">
+              {editingJob ? t.formTitleEdit : t.formTitle}
+            </h3>
             <p className={`text-sm mt-1 ${isDark ? "text-slate-500" : "text-slate-500"}`}>{t.formSubtitle}</p>
           </div>
 
@@ -510,7 +571,7 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
                 <Upload size={28} className={`mx-auto mb-2 ${isDark ? "text-slate-600" : "text-slate-400"}`} />
                 <p className={`text-sm font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}>{t.dragHint}</p>
                 <p className={`text-xs mt-1 ${isDark ? "text-slate-600" : "text-slate-400"}`}>
-                  JPG, PNG, WEBP · {selectedFiles.length}/5
+                  JPG, PNG, WEBP · {previews.length}/5
                 </p>
                 <input
                   ref={fileInputRef}
@@ -544,7 +605,7 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
                       </div>
                     </div>
                   ))}
-                  {selectedFiles.length < 5 && (
+                  {previews.length < 5 && (
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
@@ -574,7 +635,7 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
                 ) : (
                   <>
                     <Upload size={16} />
-                    {t.submitBtn}
+                    {editingJob ? t.submitBtnEdit : t.submitBtn}
                   </>
                 )}
               </button>
@@ -694,6 +755,15 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
               {/* Action buttons */}
               {job.status === "open" && (
                 <div className="flex gap-2 mt-4 pt-4 border-t border-white/[0.04]">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleEdit(job); }}
+                    className={`flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl transition ${
+                      isDark ? "bg-white/5 hover:bg-cyan-500/10 text-slate-400 hover:text-cyan-400" : "bg-slate-100 hover:bg-cyan-50 text-slate-500 hover:text-cyan-600"
+                    }`}
+                  >
+                    <FileText size={13} />
+                    {t.editBtn}
+                  </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleClose(job); }}
                     className={`flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl transition ${

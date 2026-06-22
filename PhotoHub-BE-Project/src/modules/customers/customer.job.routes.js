@@ -25,4 +25,10 @@ router.delete("/:id", customerJobController.deleteJobPost);
 
 router.patch("/:id/close", customerJobController.closeJobPost);
 
+router.put(
+  "/:id",
+  jobPostUpload.array("referenceImages", 5),
+  customerJobController.updateJobPost
+);
+
 module.exports = router;

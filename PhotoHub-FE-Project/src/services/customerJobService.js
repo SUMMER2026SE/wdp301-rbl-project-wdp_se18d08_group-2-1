@@ -42,4 +42,9 @@ export const customerJobService = {
     );
     return response.data;
   },
+
+  updateJobPost: async (jobId, formData) => {
+    const response = await axios.put(`${BASE_URL}/${jobId}`, formData, getAuthConfig(true));
+    return response.data;
+  },
 };

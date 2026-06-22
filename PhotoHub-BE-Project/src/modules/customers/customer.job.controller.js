@@ -65,6 +65,23 @@ class CustomerJobController {
       return ApiResponse.error(res, error.message, 400);
     }
   }
+
+  async updateJobPost(req, res) {
+    try {
+      const { id } = req.params;
+      const imageUrls = req.files ? req.files.map((f) => f.path) : [];
+      const job = await customerJobService.updateJobPost(
+        id,
+        req.user.id,
+        req.body,
+        imageUrls
+      );
+      return ApiResponse.success(res, job, "Job post đã được cập nhật thành công!");
+    } catch (error) {
+      console.error("Error updating job post:", error);
+      return ApiResponse.error(res, error.message, 400);
+    }
+  }
 }
 
 module.exports = new CustomerJobController();
