@@ -33,7 +33,7 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
       chartTitle: "Tăng Trưởng Doanh Thu Theo Tháng",
       noChartData: "Chưa có dữ liệu tăng trưởng",
       error: "Đã xảy ra lỗi",
-      currency: "$",
+      currency: "đ",
     },
     en: {
       title: "Revenue Dashboard",
@@ -46,7 +46,7 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
       chartTitle: "Monthly Revenue Growth",
       noChartData: "No billing data available",
       error: "An error occurred",
-      currency: "$",
+      currency: "đ",
     },
   }[language];
 
@@ -126,7 +126,7 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
                   {t.totalEarnings}
                 </p>
                 <h3 className="text-xl font-black mt-0.5">
-                  ${stats.totalRevenue}
+                  {Number(stats.totalRevenue || 0).toLocaleString('vi-VN')} đ
                 </h3>
                 <span className="text-[9px] font-bold text-slate-500 flex items-center gap-1 mt-1">
                   <CheckCircle size={10} className="text-emerald-500" />
@@ -151,12 +151,12 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
                   {t.totalWithdrawn}
                 </p>
                 <h3 className="text-xl font-black mt-0.5">
-                  ${stats.totalWithdrawn}
+                  {Number(stats.totalWithdrawn || 0).toLocaleString('vi-VN')} đ
                 </h3>
                 {stats.pendingWithdrawn > 0 && (
                   <span className="text-[9px] font-bold text-amber-500 flex items-center gap-1 mt-1">
                     <ShieldAlert size={10} />
-                    {t.pendingWithdrawn}: ${stats.pendingWithdrawn}
+                    {t.pendingWithdrawn}: {Number(stats.pendingWithdrawn || 0).toLocaleString('vi-VN')} đ
                   </span>
                 )}
               </div>
@@ -172,7 +172,7 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
                     {t.withdrawable}
                   </p>
                   <h3 className="text-2xl font-black text-orange-500 mt-0.5">
-                    ${stats.withdrawableAmount}
+                    {Number(stats.withdrawableAmount || 0).toLocaleString('vi-VN')} đ
                   </h3>
                 </div>
                 {onNavigateToWithdraw && stats.withdrawableAmount > 0 && (
@@ -285,7 +285,7 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
                           fontWeight="bold"
                           className="opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          ${d.revenue}
+                          {Number(d.revenue || 0).toLocaleString('vi-VN')}đ
                         </text>
                       </g>
                     );

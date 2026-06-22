@@ -16,7 +16,7 @@ export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", 
     vi: {
       title: "Chỉnh Sửa Báo Giá",
       proposalLabel: "Mô tả đề xuất công việc",
-      priceLabel: "Giá đề xuất của bạn ($)",
+      priceLabel: "Giá đề xuất của bạn (VNĐ)",
       timeLabel: "Thời gian hoàn thành ước tính",
       submitBtn: "Cập nhật báo giá",
       submitting: "Đang lưu...",
@@ -27,7 +27,7 @@ export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", 
     en: {
       title: "Edit Proposal & Bid",
       proposalLabel: "Proposal Description",
-      priceLabel: "Your Proposed Price ($)",
+      priceLabel: "Your Proposed Price (VND)",
       timeLabel: "Estimated Completion Time",
       submitBtn: "Update Bid",
       submitting: "Updating...",
@@ -91,7 +91,7 @@ export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fadeIn">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 animate-fadeIn">
       <div
         className={`relative max-w-lg w-full rounded-2xl p-5 border ${
           isDark ? "bg-[#121214] border-white/5 text-white" : "bg-white border-slate-200 text-slate-900"
@@ -162,7 +162,7 @@ export default function EditBidModal({ bid, onClose, onSuccess, theme = "dark", 
                 {t.priceLabel}
               </label>
               <div className="relative">
-                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">đ</span>
                 <input
                   type="number"
                   value={price}

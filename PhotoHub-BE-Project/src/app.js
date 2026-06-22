@@ -22,7 +22,8 @@ const packageRoutes = require("./modules/packages/routes/photographerPackage.rou
 const communityRoutes = require("./modules/community/community.routes");
 const bookingRoutes = require("./modules/bookings/routes/booking.routes");
 // Middlewares
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json({ limit: "300mb" }));
+app.use(express.urlencoded({ limit: "300mb", extended: true }));
 
 app.use(cors());
 

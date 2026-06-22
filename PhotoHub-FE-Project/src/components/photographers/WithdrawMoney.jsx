@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import { Landmark, CreditCard, User, AlertCircle, RefreshCw, Send, DollarSign, Clock, HelpCircle } from "lucide-react";
+import { Landmark, CreditCard, User, AlertCircle, RefreshCw, Send, Clock, HelpCircle } from "lucide-react";
 import { photographerMarketplaceService } from "../../services/photographerService";
 
 export default function WithdrawMoney({ theme = "dark", language = "vi" }) {
@@ -23,7 +23,7 @@ export default function WithdrawMoney({ theme = "dark", language = "vi" }) {
       title: "Rút Tiền Doanh Thu",
       balance: "Số dư khả dụng:",
       withdrawForm: "Tạo Yêu Cầu Rút Tiền",
-      amountLabel: "Số tiền muốn rút ($)",
+      amountLabel: "Số tiền muốn rút (VNĐ)",
       commission: "Phí hoa hồng hệ thống (10%):",
       payout: "Thực nhận:",
       bankName: "Tên ngân hàng",
@@ -47,7 +47,7 @@ export default function WithdrawMoney({ theme = "dark", language = "vi" }) {
       title: "Withdraw Earnings",
       balance: "Available Balance:",
       withdrawForm: "Request Payout",
-      amountLabel: "Amount to Withdraw ($)",
+      amountLabel: "Amount to Withdraw (VND)",
       commission: "System Commission (10%):",
       payout: "You'll Receive:",
       bankName: "Bank Name",
@@ -166,8 +166,8 @@ export default function WithdrawMoney({ theme = "dark", language = "vi" }) {
           {/* Balance Display */}
           <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/10 mb-4 text-center">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{t.balance}</p>
-            <h2 className="text-2xl font-black text-orange-500 mt-0.5">${balance}</h2>
-            <p className="mt-0.5 text-[10px] font-bold text-slate-500">Net after commission: ${netBalance}</p>
+            <h2 className="text-2xl font-black text-orange-500 mt-0.5">{Number(balance || 0).toLocaleString('vi-VN')} đ</h2>
+            <p className="mt-0.5 text-[10px] font-bold text-slate-500">Net after commission: {Number(netBalance || 0).toLocaleString('vi-VN')} đ</p>
           </div>
 
           <div className="mb-4 rounded-xl border border-white/5 bg-white/[0.02] p-2.5 text-xs text-slate-500">
@@ -185,7 +185,7 @@ export default function WithdrawMoney({ theme = "dark", language = "vi" }) {
                 {t.amountLabel}
               </label>
               <div className="relative">
-                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">đ</span>
                 <input
                   type="number"
                   value={amount}
@@ -208,11 +208,11 @@ export default function WithdrawMoney({ theme = "dark", language = "vi" }) {
               <div className="p-3 rounded-xl bg-white/[0.02] dark:border-white/[0.03] border text-xs space-y-1.5 text-slate-500 font-semibold">
                 <div className="flex justify-between">
                   <span>{t.commission}</span>
-                  <span>-${commValue.toFixed(2)}</span>
+                  <span>-{Number(commValue.toFixed(0)).toLocaleString('vi-VN')} đ</span>
                 </div>
                 <div className="flex justify-between text-orange-500 font-bold border-t border-slate-200 dark:border-white/[0.04] pt-1.5">
                   <span>{t.payout}</span>
-                  <span>+${payoutValue.toFixed(2)}</span>
+                  <span>+{Number(payoutValue.toFixed(0)).toLocaleString('vi-VN')} đ</span>
                 </div>
               </div>
             )}
@@ -332,9 +332,9 @@ export default function WithdrawMoney({ theme = "dark", language = "vi" }) {
                           {r.bankInfo?.accountNumber} - {r.bankInfo?.accountName}
                         </div>
                       </td>
-                      <td className="py-3 text-right font-bold text-slate-300">${r.amount}</td>
+                      <td className="py-3 text-right font-bold text-slate-300">{Number(r.amount || 0).toLocaleString('vi-VN')} đ</td>
                       <td className="py-3 text-right font-black text-orange-500">
-                        ${r.finalAmount}
+                        {Number(r.finalAmount || 0).toLocaleString('vi-VN')} đ
                       </td>
                       <td className="py-3 text-center">
                         <span

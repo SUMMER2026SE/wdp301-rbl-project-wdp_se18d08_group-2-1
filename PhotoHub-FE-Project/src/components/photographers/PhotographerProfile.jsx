@@ -30,6 +30,7 @@ import {
   DollarSign,
   Grid3X3,
   MessageSquare,
+  X,
 } from "lucide-react";
 
 const PhotographerProfile = ({ language = "en" }) => {
@@ -395,11 +396,11 @@ const PhotographerProfile = ({ language = "en" }) => {
               <div className="group rounded-2xl bg-white p-4 shadow-sm border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:bg-gray-800 dark:border-gray-700">
                 <div className="flex items-center gap-2.5 text-orange-600 dark:text-orange-400">
                   <span className="rounded-xl bg-orange-500/10 p-2 dark:bg-orange-500/20">
-                    <span className="text-lg font-black">$</span>
+                    <span className="text-lg font-black">đ</span>
                   </span>
                   <div>
                     <div className="text-xl font-black text-gray-900 dark:text-white">
-                      ${hourlyRate}
+                      {Number(hourlyRate).toLocaleString('vi-VN')} đ/giờ
                     </div>
                     <p className="text-xs font-medium text-gray-400">
                       {t.hourlyRate}
@@ -680,7 +681,7 @@ const PhotographerProfile = ({ language = "en" }) => {
       {/* ================= 👉 THÊM VÀO ĐÂY: LIGHTBOX MODAL FULL SCREEN ================= */}
       {selectedImg && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm transition-all duration-300 animate-fadeIn"
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm transition-all duration-300 animate-fadeIn"
           onClick={() => setSelectedImg(null)} // Click ra ngoài vùng ảnh để đóng
         >
           {/* Khung chứa ảnh Full Screen */}
@@ -691,6 +692,13 @@ const PhotographerProfile = ({ language = "en" }) => {
               className="max-h-[90vh] max-w-[95vw] object-contain rounded-2xl select-none"
               onClick={(e) => e.stopPropagation()} // Click vào chính bức ảnh thì không bị đóng nhầm
             />
+            <button
+              onClick={() => setSelectedImg(null)}
+              className="absolute top-4 right-4 h-10 w-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all border border-white/10"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
           </div>
         </div>
       )}

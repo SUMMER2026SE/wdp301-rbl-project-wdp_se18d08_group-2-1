@@ -140,7 +140,7 @@ export default function PhotographerRecommendedJobs({ theme = "dark", language =
                     </div>
                     <div className="flex items-center gap-2">
                       <DollarSign size={12} className="text-emerald-400 font-extrabold" />
-                      <span className="font-bold text-emerald-400">${job.budget}</span>
+                       <span className="font-bold text-emerald-400">{Number(job.budget || 0).toLocaleString('vi-VN')} đ</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar size={12} className="text-orange-500" />
@@ -242,7 +242,7 @@ export default function PhotographerRecommendedJobs({ theme = "dark", language =
                       <DollarSign size={15} className="text-emerald-400 font-extrabold" />
                       <span>
                         <strong>{t.budgetLabel}</strong>{" "}
-                        <span className="font-bold text-emerald-400">${selectedJob.budget}</span>
+                         <span className="font-bold text-emerald-400">{Number(selectedJob.budget || 0).toLocaleString('vi-VN')} đ</span>
                       </span>
                     </div>
                   </div>

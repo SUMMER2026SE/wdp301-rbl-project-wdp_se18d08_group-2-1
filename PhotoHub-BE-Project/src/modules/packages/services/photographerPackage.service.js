@@ -8,6 +8,21 @@ const PackageImage = require("../models/packageImage.model");
 const ShootingCategory = require("../../common/models/shootingCategory");
 const StyleTag = require("../../common/models/styleTag");
 
+
+const normalizeImageUrls = (images = []) => {
+  if (!Array.isArray(images)) return [];
+
+  return images
+    .map((image) => {
+      if (!image) return "";
+      if (typeof image === "string") return image;
+      return image.imageUrl || image.secure_url || image.url || "";
+    })
+    .map((url) => String(url || "").trim())
+    .filter(Boolean)
+    .filter((url, index, arr) => arr.indexOf(url) === index);
+};
+
 class PhotographerPackageService {
   async createPackage(data, photographerId) {
     const session = await mongoose.startSession();
@@ -89,9 +104,10 @@ class PhotographerPackageService {
       }
 
       // 4. Images
-      if (images.length) {
+      const imageUrls = normalizeImageUrls(images);
+      if (imageUrls.length) {
         await PackageImage.insertMany(
-          images.map((url) => ({
+          imageUrls.map((url) => ({
             packageId,
             imageUrl: url
           })),
@@ -143,7 +159,7 @@ class PhotographerPackageService {
       }
     ];
 
-    // 4. FILTER CATEGORY (chuẩn hơn bằng $expr + $in)
+    // 4. FILTER CATEGORY (chuáº©n hÆ¡n báº±ng $expr + $in)
     if (categoryIds.length > 0) {
       const catIds = categoryIds.map(id => new mongoose.Types.ObjectId(id));
 
@@ -158,7 +174,7 @@ class PhotographerPackageService {
       });
     }
 
-    // 5. FILTER STYLE (chuẩn hơn)
+    // 5. FILTER STYLE (chuáº©n hÆ¡n)
     if (styleTagIds.length > 0) {
       const styleIds = styleTagIds.map(id => new mongoose.Types.ObjectId(id));
 
@@ -222,7 +238,7 @@ class PhotographerPackageService {
   }
 
   /**
-   * 2. CẬP NHẬT PACKAGE (Bao gồm đồng bộ lại Categories, Styles và Images)
+   * 2. Cáº¬P NHáº¬T PACKAGE (Bao gá»“m Ä‘á»“ng bá»™ láº¡i Categories, Styles vĂ  Images)
    */
   async updatePackage(packageId, data) {
     const session = await mongoose.startSession();
@@ -244,7 +260,7 @@ class PhotographerPackageService {
         images
       } = data;
 
-      // Tìm và cập nhật các thông tin cơ bản của Package
+      // TĂ¬m vĂ  cáº­p nháº­t cĂ¡c thĂ´ng tin cÆ¡ báº£n cá»§a Package
       const updatedPkg = await PhotographerPackage.findByIdAndUpdate(
         packageId,
         {
@@ -263,14 +279,14 @@ class PhotographerPackageService {
         { new: true, session }
       );
 
-      if (!updatedPkg) throw new Error("Package không tồn tại");
+      if (!updatedPkg) throw new Error("Package khĂ´ng tá»“n táº¡i");
 
-      // Đồng bộ hóa danh mục nếu được gửi lên
+      // Äá»“ng bá»™ hĂ³a danh má»¥c náº¿u Ä‘Æ°á»£c gá»­i lĂªn
       if (categoryIds !== undefined) {
         await PackageCategory.deleteMany({ packageId }, { session });
         if (categoryIds.length > 0) {
           const categories = await ShootingCategory.find({ _id: { $in: categoryIds } });
-          if (categories.length !== categoryIds.length) throw new Error("Mã danh mục không hợp lệ");
+          if (categories.length !== categoryIds.length) throw new Error("MĂ£ danh má»¥c khĂ´ng há»£p lá»‡");
 
           await PackageCategory.insertMany(
             categoryIds.map(id => ({ packageId, categoryId: id })),
@@ -279,12 +295,12 @@ class PhotographerPackageService {
         }
       }
 
-      // Đồng bộ hóa phong cách nếu được gửi lên
+      // Äá»“ng bá»™ hĂ³a phong cĂ¡ch náº¿u Ä‘Æ°á»£c gá»­i lĂªn
       if (styleTagIds !== undefined) {
         await PackageStyle.deleteMany({ packageId }, { session });
         if (styleTagIds.length > 0) {
           const styles = await StyleTag.find({ _id: { $in: styleTagIds } });
-          if (styles.length !== styleTagIds.length) throw new Error("Mã phong cách không hợp lệ");
+          if (styles.length !== styleTagIds.length) throw new Error("MĂ£ phong cĂ¡ch khĂ´ng há»£p lá»‡");
 
           await PackageStyle.insertMany(
             styleTagIds.map(id => ({ packageId, styleTagId: id })),
@@ -293,12 +309,13 @@ class PhotographerPackageService {
         }
       }
 
-      // Đồng bộ hóa ảnh nếu được gửi lên
+      // Äá»“ng bá»™ hĂ³a áº£nh náº¿u Ä‘Æ°á»£c gá»­i lĂªn
       if (images !== undefined) {
         await PackageImage.deleteMany({ packageId }, { session });
-        if (images.length > 0) {
+        const imageUrls = normalizeImageUrls(images);
+        if (imageUrls.length > 0) {
           await PackageImage.insertMany(
-            images.map(url => ({ packageId, imageUrl: url })),
+            imageUrls.map(url => ({ packageId, imageUrl: url })),
             { session }
           );
         }
@@ -316,7 +333,7 @@ class PhotographerPackageService {
   }
 
   /**
-   * 3. SOFT-DELETE PACKAGE (Xóa tạm thời bài viết)
+   * 3. SOFT-DELETE PACKAGE (XĂ³a táº¡m thá»i bĂ i viáº¿t)
    */
   async softDeletePackage(packageId) {
     const pkg = await PhotographerPackage.findByIdAndUpdate(
@@ -324,18 +341,18 @@ class PhotographerPackageService {
       { $set: { isDeleted: true } },
       { new: true }
     );
-    if (!pkg) throw new Error("Package không tồn tại");
-    return { success: true, message: "Đã xóa tạm thời gói dịch vụ" };
+    if (!pkg) throw new Error("Package khĂ´ng tá»“n táº¡i");
+    return { success: true, message: "ÄĂ£ xĂ³a táº¡m thá»i gĂ³i dá»‹ch vá»¥" };
   }
 
   /**
-   * 4. BẬT/TẮT TRẠNG THÁI HOẠT ĐỘNG (Toggle active status)
+   * 4. Báº¬T/Táº®T TRáº NG THĂI HOáº T Äá»˜NG (Toggle active status)
    */
   async toggleStatusPackage(packageId) {
     const currentPkg = await PhotographerPackage.findById(packageId);
-    if (!currentPkg) throw new Error("Package không tồn tại");
+    if (!currentPkg) throw new Error("Package khĂ´ng tá»“n táº¡i");
 
-    // Đảo ngược trạng thái hoạt động hiện tại (Ví dụ: "ACTIVE" <=> "INACTIVE")
+    // Äáº£o ngÆ°á»£c tráº¡ng thĂ¡i hoáº¡t Ä‘á»™ng hiá»‡n táº¡i (VĂ­ dá»¥: "ACTIVE" <=> "INACTIVE")
     const nextStatus = currentPkg.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
 
     const updatedPkg = await PhotographerPackage.findByIdAndUpdate(

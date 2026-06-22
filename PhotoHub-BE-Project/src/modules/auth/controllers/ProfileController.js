@@ -3,7 +3,9 @@ const ApiResponse = require("../../../utils/ApiResponse");
 const bcrypt = require("bcryptjs");
 const path = require("path");
 const fs = require("fs");
-
+const {
+    uploadBufferToCloudinary,
+} = require("../../../utils/cloudinaryUpload");
 class ProfileController {
     async getProfile(req, res) {
         try {
@@ -102,23 +104,25 @@ class ProfileController {
 
             console.log("[uploadAvatar] user found:", user._id, "current avatar:", user.avatar);
 
-            // Xóa avatar cũ (chỉ file local)
-            if (user.avatar && user.avatar.startsWith("/uploads/")) {
-                const oldPath = path.join(
-                    __dirname,
-                    "..",
-                    "..",
-                    "..",
-                    user.avatar
-                );
-                console.log("[uploadAvatar] deleting old avatar:", oldPath);
-                fs.unlink(oldPath, () => { });
-            }
-
             // Lưu đường dẫn tương đối vào DB
-            const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+            const uploadResult = await uploadBufferToCloudinary(
+                req.file.buffer,
+                req.file.mimetype,
+                {
+                    folder: "photohub/avatars",
+                    localFolder: "avatars",
+                    originalName: req.file.originalname,
+                }
+            );
+
+            const avatarUrl =
+                uploadResult.secure_url || uploadResult.url;
+
             user.avatar = avatarUrl;
-            await user.save({ validateBeforeSave: true });
+
+            await user.save({
+                validateBeforeSave: true,
+            });
 
             console.log("[uploadAvatar] saved avatarUrl:", avatarUrl);
 

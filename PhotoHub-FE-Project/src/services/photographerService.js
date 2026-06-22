@@ -369,11 +369,20 @@ export const photographerMarketplaceService = {
     },
 
     // --- ALBUM ---
-    uploadAlbum: async (formData) => {
+    uploadAlbum: async (formData, onProgress) => {
+        const config = getAuthConfig(true);
+        // Timeout 10 phút cho album nhiều ảnh lớn
+        config.timeout = 10 * 60 * 1000;
+        if (typeof onProgress === "function") {
+            config.onUploadProgress = (e) => {
+                const pct = Math.round((e.loaded * 100) / e.total);
+                onProgress(pct);
+            };
+        }
         const response = await axios.post(
             `${MARKETPLACE_BASE_URL}/albums`,
             formData,
-            getAuthConfig(true)
+            config
         );
         return response.data;
     },

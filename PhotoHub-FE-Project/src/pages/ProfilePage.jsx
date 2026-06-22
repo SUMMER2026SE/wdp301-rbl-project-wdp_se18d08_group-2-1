@@ -318,7 +318,7 @@ export default function ProfilePage({
                     <div className="flex flex-col items-center">
                         <div className="relative">
                             <img
-                                src={user?.avatar ? `http://localhost:3000${user.avatar}` : "https://i.pravatar.cc/300"}
+                                src={user?.avatar ? `${user.avatar}` : "https://i.pravatar.cc/300"}
                                 alt="avatar"
                                 className="w-36 h-36 rounded-full object-cover border-4 border-orange-400"
                             />

@@ -620,7 +620,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
 
       {/* Lightbox */}
       {lightboxImg && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm"
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-sm"
           onClick={() => setLightboxImg(null)}>
           <img src={lightboxImg} alt="Fullscreen" className="max-h-[90vh] max-w-[95vw] rounded-2xl object-contain select-none"
             onClick={e => e.stopPropagation()} />

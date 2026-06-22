@@ -23,7 +23,8 @@ import {
     MessageSquare,
     Wallet,
     UploadCloud,
-    CreditCard
+    CreditCard,
+    X
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { photographerService } from "../services/photographerService";
@@ -138,7 +139,7 @@ export default function PhotographerDashboard({
             displayName: "Nghệ danh / Tên hiển thị",
             location: "Khu vực / Thành phố hoạt động",
             experienceYears: "Số năm kinh nghiệm thực chiến",
-            hourlyRate: "Mức chi phí theo giờ ($/h)",
+            hourlyRate: "Mức chi phí theo giờ (đ/h)",
             equipment: "Hệ thống thiết bị sử dụng chính",
             equipmentPlaceholder: "Ví dụ: Sony A7IV, Lens 24-70mm f2.8 GM II",
             stylesPlaceholder: "Wedding, Portrait, Streetlife, Concept, Dark Fantasy...",
@@ -200,7 +201,7 @@ export default function PhotographerDashboard({
             displayName: "Creative Stage Name",
             location: "Active Location / City",
             experienceYears: "Years of Active Experience",
-            hourlyRate: "Hourly Rate Base ($/h)",
+            hourlyRate: "Hourly Rate Base (đ/h)",
             equipment: "Primary Gear & Equipment Set",
             equipmentPlaceholder: "e.g., Sony A7IV, Lens 24-70mm f2.8 GM II",
             stylesPlaceholder: "Wedding, Portrait, Streetlife, Concept, Dark Fantasy...",
@@ -825,7 +826,7 @@ export default function PhotographerDashboard({
                             { label: t.rating, val: `${photographerData.averageRating}/5`, icon: Star, color: "from-amber-500 to-orange-500 shadow-amber-500/5" },
                             { label: t.bookings, val: photographerData.completedBookings, icon: CheckCircle, color: "from-green-500 to-emerald-500 shadow-emerald-500/5" },
                             { label: t.reviews, val: photographerData.totalReviews, icon: Briefcase, color: "from-purple-500 to-indigo-500 shadow-purple-500/5" },
-                            { label: t.earnings, val: `$${photographerData.totalEarnings}`, icon: DollarSign, color: "from-orange-500 to-amber-500 shadow-orange-500/5" }
+                            { label: t.earnings, val: `${Number(photographerData.totalEarnings || 0).toLocaleString('vi-VN')} đ`, icon: DollarSign, color: "from-orange-500 to-amber-500 shadow-orange-500/5" }
                         ].map((stat, i) => (
                             <div key={i} className={`${cardClass} !p-4 flex items-center gap-3.5 relative overflow-hidden group hover:-translate-y-1 shadow-md ${stat.color}`}>
                                 <div className="p-2.5 rounded-xl bg-slate-500/5 dark:bg-white/[0.03] text-orange-500 group-hover:scale-110 transition-transform duration-300">
@@ -1124,8 +1125,8 @@ export default function PhotographerDashboard({
 
                                     <div className="group">
                                         <label className={labelClass}>{t.hourlyRate}</label>
-                                        <div className="relative mt-1.5">
-                                            <DollarSign className={iconClass} size={18} />
+                                         <div className="relative mt-1.5">
+                                             <span className={`${iconClass} font-bold text-sm`} style={{ left: '16px' }}>đ</span>
                                             <input type="number" name="hourlyRate" value={photographerData.hourlyRate || 0} onChange={handleChange} className={inputClass} />
                                         </div>
                                     </div>
@@ -1322,21 +1323,29 @@ export default function PhotographerDashboard({
 
                 </div>
             </div>
-            {
-                zoomImage && (
-                    <div
-                        className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-6"
-                        onClick={() => setZoomImage(null)}
-                    >
+            {zoomImage && (
+                <div
+                    className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-6"
+                    onClick={() => setZoomImage(null)}
+                >
+                    <div className="relative max-w-[95vw] max-h-[95vh]">
                         <img
                             src={zoomImage}
                             alt="CCCD"
                             className="max-w-[95vw] max-h-[95vh] object-contain rounded-xl shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
                         />
+                        <button
+                            onClick={() => setZoomImage(null)}
+                            className="absolute top-4 right-4 h-10 w-10 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 transition-all border border-white/10"
+                            aria-label="Close"
+                        >
+                            <X size={20} />
+                        </button>
                     </div>
-                )
-            }
-        </div >
+                </div>
+            )}
+        </div>
 
     );
 }

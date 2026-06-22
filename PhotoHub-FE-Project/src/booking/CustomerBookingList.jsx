@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Calendar, MapPin, DollarSign, Clock, User, AlertCircle, CreditCard, Ban, FolderHeart, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Calendar, MapPin, DollarSign, Clock, User, AlertCircle, CreditCard, Ban, FolderHeart, Eye, ChevronLeft, ChevronRight, X } from "lucide-react";
 import Swal from "sweetalert2";
 import { bookingService } from "../services/bookingService";
 
@@ -440,45 +441,55 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
       )}
 
       {/* Album Viewer Modal */}
-      {showAlbumModal && selectedAlbum && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black/95 p-4 md:p-8 backdrop-blur-md justify-center">
+      {showAlbumModal && selectedAlbum && createPortal(
+        <div className="fixed inset-0 z-[110] flex flex-col bg-slate-950/98 p-6 md:p-10 backdrop-blur-2xl overflow-y-auto">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/10 pb-4 max-w-6xl w-full mx-auto text-white">
+          <div className="flex items-center justify-between border-b border-white/10 pb-5 max-w-6xl w-full mx-auto text-white">
             <div>
-              <h3 className="text-xl font-black tracking-tight">{t.albumTitle}</h3>
-              <p className="text-xs text-slate-400 mt-1">{selectedAlbum.title}</p>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-orange-400 border border-orange-500/15 mb-2">
+                <FolderHeart size={12} />
+                {t.albumTitle}
+              </span>
+              <h3 className="text-2xl font-black tracking-tight">{selectedAlbum.title}</h3>
             </div>
             <button
               onClick={() => {
                 setShowAlbumModal(false);
                 setSelectedAlbum(null);
               }}
-              className="p-2.5 rounded-xl border border-white/10 hover:bg-white/10 transition-all text-slate-300 hover:text-white"
+              className="p-3 rounded-full border border-white/10 bg-white/5 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-300 text-slate-300 flex items-center justify-center"
+              aria-label={t.close}
+              title={t.close}
             >
-              ✕ {t.close}
+              <X size={20} />
             </button>
           </div>
 
           {/* Album content */}
-          <div className="flex-1 max-w-6xl w-full mx-auto flex items-center justify-center overflow-hidden py-6">
+          <div className="flex-1 max-w-6xl w-full mx-auto overflow-y-auto py-8">
             {selectedAlbum.images.length === 0 ? (
-              <p className="text-slate-500 text-sm font-semibold">{t.albumEmpty}</p>
+              <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+                <FolderHeart size={48} className="mb-4 text-slate-600 animate-pulse" />
+                <p className="text-sm font-semibold">{t.albumEmpty}</p>
+              </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto max-h-[70vh] w-full p-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 p-2">
                 {selectedAlbum.images.map((img, index) => (
                   <div
                     key={img._id || index}
                     onClick={() => setLightboxIndex(index)}
-                    className="group relative aspect-square overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-orange-500/50 hover:shadow-lg hover:shadow-orange-500/10 cursor-pointer transition-all duration-300"
+                    className="group relative aspect-square overflow-hidden rounded-3xl bg-zinc-900 border border-white/5 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(249,115,22,0.25)] cursor-pointer transition-all duration-500 ease-out"
                   >
                     <img
-                      src={getFullUrl(img.image_url)}
+                      src={getFullUrl(img.url || img.image_url)}
                       alt={img.caption || `Photo ${index + 1}`}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                      <Eye size={20} className="text-white" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                      <span className="p-3 rounded-full bg-white/10 border border-white/20 text-white scale-90 group-hover:scale-100 transition-all duration-300">
+                        <Eye size={20} />
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -489,7 +500,7 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
           {/* Lightbox for fullscreen image */}
           {lightboxIndex !== null && selectedAlbum.images[lightboxIndex] && (
             <div
-              className="fixed inset-0 z-[60] bg-black/98 flex items-center justify-center p-4"
+              className="fixed inset-0 z-[120] bg-black/98 flex items-center justify-center p-4 animate-fadeIn"
               onClick={() => setLightboxIndex(null)}
             >
               <button
@@ -498,20 +509,20 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
                   setLightboxIndex(prev => Math.max(0, prev - 1));
                 }}
                 disabled={lightboxIndex === 0}
-                className="absolute left-4 p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white disabled:opacity-20 transition-all"
+                className="absolute left-6 p-4 rounded-full bg-white/5 border border-white/10 hover:bg-orange-500 hover:border-orange-500 text-white disabled:opacity-20 transition-all hover:scale-105 active:scale-95 shadow-lg"
               >
-                <ChevronLeft size={24} />
+                <ChevronLeft size={28} />
               </button>
 
               <div className="relative max-h-[85vh] max-w-[85vw] flex flex-col items-center">
                 <img
-                  src={getFullUrl(selectedAlbum.images[lightboxIndex].image_url)}
+                  src={getFullUrl(selectedAlbum.images[lightboxIndex].url || selectedAlbum.images[lightboxIndex].image_url)}
                   alt="Fullscreen"
-                  className="max-h-[80vh] max-w-[80vw] object-contain rounded-2xl select-none"
+                  className="max-h-[80vh] max-w-[80vw] object-contain rounded-3xl select-none shadow-[0_24px_70px_rgba(0,0,0,0.85)] border border-white/10"
                   onClick={(e) => e.stopPropagation()}
                 />
                 {selectedAlbum.images[lightboxIndex].caption && (
-                  <p className="text-white/90 text-sm font-semibold bg-black/60 px-4 py-2 rounded-xl mt-4 max-w-md text-center">
+                  <p className="text-white/90 text-sm font-semibold bg-black/75 backdrop-blur-md px-5 py-2.5 rounded-2xl mt-5 max-w-md text-center border border-white/5">
                     {selectedAlbum.images[lightboxIndex].caption}
                   </p>
                 )}
@@ -523,20 +534,22 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
                   setLightboxIndex(prev => Math.min(selectedAlbum.images.length - 1, prev + 1));
                 }}
                 disabled={lightboxIndex === selectedAlbum.images.length - 1}
-                className="absolute right-4 p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 text-white disabled:opacity-20 transition-all"
+                className="absolute right-6 p-4 rounded-full bg-white/5 border border-white/10 hover:bg-orange-500 hover:border-orange-500 text-white disabled:opacity-20 transition-all hover:scale-105 active:scale-95 shadow-lg"
               >
-                <ChevronRight size={24} />
+                <ChevronRight size={28} />
               </button>
 
               <button
                 onClick={() => setLightboxIndex(null)}
-                className="absolute top-4 right-4 text-white text-lg font-black hover:opacity-80 transition"
+                className="absolute top-6 right-6 h-12 w-12 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white hover:bg-orange-500 hover:border-orange-500 hover:scale-105 active:scale-95 transition-all shadow-lg"
+                aria-label="Close"
               >
-                ✕ Close
+                <X size={24} />
               </button>
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
