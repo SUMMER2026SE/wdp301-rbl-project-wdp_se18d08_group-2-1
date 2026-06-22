@@ -21,15 +21,17 @@ class AlbumController {
         const uploaded = await uploadBufferToCloudinary(file.buffer, file.mimetype, {
           folder: "photohub/albums",
         });
+        const imageUrl = uploaded.secure_url || uploaded.url;
+        const publicId = uploaded.public_id || uploaded.publicId || `${bookingId}_${index}_${Date.now()}`;
 
         console.log(`[Album] Image ${index + 1}/${req.files.length} uploaded ✅ (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
 
         return {
-          url: uploaded.secure_url,
-          previewUrl: uploaded.secure_url,
-          watermarkUrl: uploaded.secure_url,
-          downloadUrl: uploaded.secure_url,
-          publicId: uploaded.public_id,
+          url: imageUrl,
+          previewUrl: imageUrl,
+          watermarkUrl: imageUrl,
+          downloadUrl: imageUrl,
+          publicId,
           originalName: file.originalname,
           size: file.size,
           mimetype: file.mimetype,

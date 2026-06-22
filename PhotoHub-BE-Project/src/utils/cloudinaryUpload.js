@@ -52,10 +52,11 @@ function saveBufferToLocalUploads(buffer, mimetype, options = {}) {
   fs.writeFileSync(finalPath, buffer);
 
   const publicUrl = ("/uploads/" + folder + "/" + filename).replace(/\\/g, "/");
+  const publicId = `${folder}/${path.basename(filename, "." + ext)}`;
   return {
     secure_url: publicUrl,
     url: publicUrl,
-    public_id: null,
+    public_id: publicId,
     storage: "local",
   };
 }
