@@ -5,8 +5,8 @@ const authenticate = require("../../../middlewares/authenticate");
 const ApiResponse = require("../../../utils/ApiResponse");
 
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../../../config/cloudinary");
 
 // Controllers
 const AuthController = require("../../../modules/auth/controllers/AuthController");
@@ -16,38 +16,25 @@ const ProfileController = require("../../../modules/auth/controllers/ProfileCont
 const auth = new AuthController();
 const profile = new ProfileController();
 
-// ── Upload avatar config ────────────────────────────────────────────────
-const UPLOADS_DIR = path.join(__dirname, "..", "..", "..", "uploads", "avatars");
-
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || ".jpg";
-
-    cb(
-      null,
-      `avatar_${Date.now()}_${Math.random()
-        .toString(36)
-        .slice(2)}${ext}`
-    );
+// ── Upload avatar config ─ Cloudinary ────────────────────────────────────
+const avatarStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "photohub/avatars",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto" }],
   },
 });
 
 const uploadAvatarMulter = multer({
-  storage,
+  storage: avatarStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype?.startsWith("image/")) {
-      return cb(null, true);
-    }
-
+    if (file.mimetype?.startsWith("image/")) return cb(null, true);
     cb(new Error("Chỉ chấp nhận file ảnh"));
   },
 }).single("avatar");
+
 
 // ================= AUTH =================
 router.post("/register", (req, res) => auth.register(req, res));

@@ -1,8 +1,6 @@
 const { User } = require("../models/User");
 const ApiResponse = require("../../../utils/ApiResponse");
 const bcrypt = require("bcryptjs");
-const path = require("path");
-const fs = require("fs");
 
 class ProfileController {
     async getProfile(req, res) {
@@ -74,25 +72,15 @@ class ProfileController {
         }
     }
 
-    /** Upload avatar — lưu file vào uploads/avatars, chỉ lưu URL vào DB */
+    /** Upload avatar lên Cloudinary và lưu URL vào DB */
     async uploadAvatar(req, res) {
         try {
-            console.log("[uploadAvatar] req.user:", req.user);
-            console.log("[uploadAvatar] req.file:", req.file ? {
-                fieldname: req.file.fieldname,
-                originalname: req.file.originalname,
-                mimetype: req.file.mimetype,
-                size: req.file.size,
-                filename: req.file.filename,
-                path: req.file.path,
-            } : "NO FILE");
-
             if (!req.file) {
                 return ApiResponse.error(res, "Không có file ảnh", 400);
             }
 
             if (!req.user?.id) {
-                return ApiResponse.error(res, "Unauthorized - no user id", 401);
+                return ApiResponse.error(res, "Unauthorized", 401);
             }
 
             const user = await User.findById(req.user.id);
@@ -100,32 +88,14 @@ class ProfileController {
                 return ApiResponse.error(res, "Người dùng không tồn tại", 404);
             }
 
-            console.log("[uploadAvatar] user found:", user._id, "current avatar:", user.avatar);
-
-            // Xóa avatar cũ (chỉ file local)
-            if (user.avatar && user.avatar.startsWith("/uploads/")) {
-                const oldPath = path.join(
-                    __dirname,
-                    "..",
-                    "..",
-                    "..",
-                    user.avatar
-                );
-                console.log("[uploadAvatar] deleting old avatar:", oldPath);
-                fs.unlink(oldPath, () => { });
-            }
-
-            // Lưu đường dẫn tương đối vào DB
-            const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+            // req.file.path = Cloudinary HTTPS URL (do multer-storage-cloudinary xử lý)
+            const avatarUrl = req.file.path;
             user.avatar = avatarUrl;
             await user.save({ validateBeforeSave: true });
-
-            console.log("[uploadAvatar] saved avatarUrl:", avatarUrl);
 
             const updated = await User.findById(req.user.id).select(
                 "-password -resetPasswordOTP -resetPasswordExpires"
             );
-            console.log("[uploadAvatar] updated user avatar:", updated.avatar);
 
             return ApiResponse.success(res, updated, "Cập nhật ảnh đại diện thành công", 200);
         } catch (e) {

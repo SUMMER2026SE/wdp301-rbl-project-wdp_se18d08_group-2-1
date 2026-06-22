@@ -37,6 +37,10 @@ const jobPostSchema = new mongoose.Schema(
       enum: ["open", "closed", "completed"],
       default: "open",
     },
+    referenceImages: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,

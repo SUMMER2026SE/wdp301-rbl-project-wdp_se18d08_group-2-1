@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import { Search, MapPin, Grid, DollarSign, Calendar, Info, Send, Clock, User, AlertCircle } from "lucide-react";
+import { Search, MapPin, Grid, DollarSign, Calendar, Info, Send, Clock, User, AlertCircle, Image, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { photographerMarketplaceService } from "../../services/photographerService";
 import SubmitBidModal from "./SubmitBidModal";
 
@@ -10,6 +10,7 @@ export default function PhotographerJobPosts({ theme = "dark", language = "vi" }
   const [loading, setLoading] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [showBidModal, setShowBidModal] = useState(false);
+  const [lightbox, setLightbox] = useState(null); // { images, index }
 
   // Filter states
   const [location, setLocation] = useState("");
@@ -89,6 +90,20 @@ export default function PhotographerJobPosts({ theme = "dark", language = "vi" }
     setSelectedJob(null);
     fetchJobs();
   };
+
+  // ── Lightbox keyboard nav ──
+  useEffect(() => {
+    if (!lightbox) return;
+    const handler = (e) => {
+      if (e.key === "ArrowLeft")
+        setLightbox((lb) => ({ ...lb, index: (lb.index - 1 + lb.images.length) % lb.images.length }));
+      if (e.key === "ArrowRight")
+        setLightbox((lb) => ({ ...lb, index: (lb.index + 1) % lb.images.length }));
+      if (e.key === "Escape") setLightbox(null);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [lightbox]);
 
   return (
     <div className="space-y-6">
@@ -321,6 +336,40 @@ export default function PhotographerJobPosts({ theme = "dark", language = "vi" }
                       {selectedJob.description}
                     </p>
                   </div>
+
+                  {/* ── Reference Images (UC20) ── */}
+                  {selectedJob.referenceImages && selectedJob.referenceImages.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                        <Image size={12} />
+                        {language === "vi" ? "Ảnh mẫu concept" : "Reference Images"}
+                        <span className="font-normal normal-case">({selectedJob.referenceImages.length})</span>
+                      </h4>
+                      <div className="grid grid-cols-3 gap-2">
+                        {selectedJob.referenceImages.map((url, idx) => (
+                          <div
+                            key={idx}
+                            className="relative aspect-square cursor-pointer group"
+                            onClick={() => setLightbox({ images: selectedJob.referenceImages, index: idx })}
+                          >
+                            <img
+                              src={url}
+                              alt={`Ref ${idx + 1}`}
+                              className="w-full h-full object-cover rounded-xl border border-white/10 group-hover:scale-105 group-hover:brightness-90 transition-all duration-200 shadow-md"
+                            />
+                            {idx === 2 && selectedJob.referenceImages.length > 3 && (
+                              <div className="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center">
+                                <span className="text-white font-black text-sm">+{selectedJob.referenceImages.length - 3}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-slate-500 italic">
+                        {language === "vi" ? "Click ảnh để xem fullscreen" : "Click image to view fullscreen"}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -352,6 +401,46 @@ export default function PhotographerJobPosts({ theme = "dark", language = "vi" }
           theme={theme}
           language={language}
         />
+      )}
+
+      {/* ── Lightbox (UC20 reference images) ── */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            onClick={() => setLightbox(null)}
+            className="absolute top-5 right-5 text-white bg-white/10 hover:bg-white/20 rounded-full p-2 transition"
+          >
+            <X size={22} />
+          </button>
+          {lightbox.images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); setLightbox((lb) => ({ ...lb, index: (lb.index - 1 + lb.images.length) % lb.images.length })); }}
+                className="absolute left-5 text-white bg-white/10 hover:bg-white/20 rounded-full p-3 transition"
+              >
+                <ChevronLeft size={22} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setLightbox((lb) => ({ ...lb, index: (lb.index + 1) % lb.images.length })); }}
+                className="absolute right-5 text-white bg-white/10 hover:bg-white/20 rounded-full p-3 transition"
+              >
+                <ChevronRight size={22} />
+              </button>
+            </>
+          )}
+          <img
+            src={lightbox.images[lightbox.index]}
+            alt={`Reference ${lightbox.index + 1}`}
+            className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <div className="absolute bottom-5 text-white/60 text-sm font-medium">
+            {lightbox.index + 1} / {lightbox.images.length}
+          </div>
+        </div>
       )}
     </div>
   );

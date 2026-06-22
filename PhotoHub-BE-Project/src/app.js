@@ -1,4 +1,4 @@
-﻿const express = require("express");
+const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const passport = require("passport");
@@ -20,6 +20,7 @@ const shootingCategoryRoutes = require("./modules/common/routes/shootingCategory
 const styleTagRoutes = require("./modules/common/routes/styleTag.routes");
 const packageRoutes = require("./modules/packages/routes/photographerPackage.routes");
 const communityRoutes = require("./modules/community/community.routes");
+const customerJobRoutes = require("./modules/customers/customer.job.routes");
 // Middlewares
 app.use(express.json({ limit: "50mb" }));
 
@@ -57,6 +58,7 @@ app.use("/api/style-tags", styleTagRoutes);
 app.use("/api/packages", packageRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/upload", require("./utils/upload.routes"));
+app.use("/api/customer/jobs", customerJobRoutes);
 
 // Health check
 app.get("/", (_req, res) => {
