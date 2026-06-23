@@ -116,7 +116,8 @@ class CustomerBookingController {
       const result = await bookingService.syncPaymentStatus(
         req.params.id,
         req.user.id,
-        req.query.orderCode || req.body.orderCode
+        req.query.orderCode || req.body.orderCode,
+        req.query.canceled === "true" || req.body.canceled === true
       );
       return ApiResponse.success(res, result, "Payment status synchronized successfully");
     } catch (error) {
@@ -128,7 +129,11 @@ class CustomerBookingController {
   async syncPaymentStatusByOrderCode(req, res) {
     try {
       const orderCode = req.query.orderCode || req.body.orderCode;
-      const result = await bookingService.syncPaymentStatusByOrderCode(orderCode, req.user.id);
+      const result = await bookingService.syncPaymentStatusByOrderCode(
+        orderCode,
+        req.user.id,
+        req.query.canceled === "true" || req.body.canceled === true
+      );
       return ApiResponse.success(res, result, "Payment status synchronized successfully");
     } catch (error) {
       console.error("[CustomerBooking] syncPaymentStatusByOrderCode:", error.message);

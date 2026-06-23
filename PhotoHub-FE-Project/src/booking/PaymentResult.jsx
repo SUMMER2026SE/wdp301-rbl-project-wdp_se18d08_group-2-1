@@ -47,7 +47,7 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
   useEffect(() => {
     let mounted = true;
     const sync = async () => {
-      if ((!bookingId && !orderCode) || isCanceled) {
+      if (!bookingId && !orderCode) {
         setChecking(false);
         setPaid(false);
         return;
@@ -55,8 +55,8 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
       setChecking(true);
       try {
         const res = bookingId
-          ? await bookingService.syncPaymentStatus(bookingId, orderCode)
-          : await bookingService.syncPaymentStatusByOrderCode(orderCode);
+          ? await bookingService.syncPaymentStatus(bookingId, orderCode, isCanceled)
+          : await bookingService.syncPaymentStatusByOrderCode(orderCode, isCanceled);
         const isPaid = Boolean(res.data?.paid || res.data?.booking?.paymentStatus === "paid");
         if (!mounted) return;
         setPaid(isPaid);
