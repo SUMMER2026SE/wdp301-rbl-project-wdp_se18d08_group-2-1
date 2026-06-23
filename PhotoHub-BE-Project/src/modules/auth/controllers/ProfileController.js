@@ -76,25 +76,15 @@ class ProfileController {
         }
     }
 
-    /** Upload avatar — lưu file vào uploads/avatars, chỉ lưu URL vào DB */
+    /** Upload avatar lên Cloudinary và lưu URL vào DB */
     async uploadAvatar(req, res) {
         try {
-            console.log("[uploadAvatar] req.user:", req.user);
-            console.log("[uploadAvatar] req.file:", req.file ? {
-                fieldname: req.file.fieldname,
-                originalname: req.file.originalname,
-                mimetype: req.file.mimetype,
-                size: req.file.size,
-                filename: req.file.filename,
-                path: req.file.path,
-            } : "NO FILE");
-
             if (!req.file) {
                 return ApiResponse.error(res, "Không có file ảnh", 400);
             }
 
             if (!req.user?.id) {
-                return ApiResponse.error(res, "Unauthorized - no user id", 401);
+                return ApiResponse.error(res, "Unauthorized", 401);
             }
 
             const user = await User.findById(req.user.id);
@@ -124,12 +114,9 @@ class ProfileController {
                 validateBeforeSave: true,
             });
 
-            console.log("[uploadAvatar] saved avatarUrl:", avatarUrl);
-
             const updated = await User.findById(req.user.id).select(
                 "-password -resetPasswordOTP -resetPasswordExpires"
             );
-            console.log("[uploadAvatar] updated user avatar:", updated.avatar);
 
             return ApiResponse.success(res, updated, "Cập nhật ảnh đại diện thành công", 200);
         } catch (e) {

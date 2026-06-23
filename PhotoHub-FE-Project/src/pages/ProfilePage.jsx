@@ -17,6 +17,7 @@ import Swal from "sweetalert2";
 import { profileService } from "../services/profileService";
 import CustomerBookingList from "../booking/CustomerBookingList";
 import PhotographerChat from "../components/photographers/PhotographerChat";
+import CustomerJobPostsManager from "../components/customer/CustomerJobPostsManager";
 
 export default function ProfilePage({
     language = "vi",
@@ -106,8 +107,6 @@ export default function ProfilePage({
         try {
             setLoading(true);
             const result = await profileService.getProfile();
-            console.log("Fetch profile result:", result);
-
             if (result.success) {
                 setUser(result.data);
                 setFormData({
@@ -318,7 +317,13 @@ export default function ProfilePage({
                     <div className="flex flex-col items-center">
                         <div className="relative">
                             <img
-                                src={user?.avatar ? `${user.avatar}` : "https://i.pravatar.cc/300"}
+                                src={
+                                    user?.avatar
+                                        ? user.avatar.startsWith("http")
+                                            ? user.avatar                                  // Cloudinary URL đầy đủ
+                                            : `http://localhost:3000${user.avatar}`        // Đường dẫn local cũ
+                                        : "https://i.pravatar.cc/300"                     // Fallback
+                                }
                                 alt="avatar"
                                 className="w-36 h-36 rounded-full object-cover border-4 border-orange-400"
                             />
@@ -557,6 +562,20 @@ export default function ProfilePage({
                             <PhotographerChat theme={theme} language={language} initialActiveConvId={initialConvId} />
                         </div>
                     )}
+
+                    {(() => {
+                        const apiRole = user?.role;
+                        const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+                        const localRole = localUser?.role;
+                        const effectiveRole = apiRole || localRole;
+                        return effectiveRole === "customer" ? (
+                            <div className={`border rounded-3xl p-8 transition-all ${
+                                isDark ? "bg-white/5 border-white/10" : "bg-slate-50/50 border-slate-200/80 shadow-sm"
+                            }`}>
+                                <CustomerJobPostsManager theme={theme} language={language} />
+                            </div>
+                        ) : null;
+                    })()}
                 </div>
             </div>
         </div>
