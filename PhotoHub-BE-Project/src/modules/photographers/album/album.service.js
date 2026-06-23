@@ -9,6 +9,27 @@ const SUCCESS_PAYMENT_STATUS = "SUCCESS";
 
 const getBookingAmount = (booking) => Number(booking.price || booking.totalPrice || 0);
 
+const normalizeAlbumImage = (image, fallbackPublicId = "") => {
+  if (!image) return null;
+
+  const url = image.url || image.previewUrl || image.watermarkUrl || image.downloadUrl || image.imageUrl || "";
+  const publicId = image.publicId || image.public_id || fallbackPublicId || "";
+
+  if (!url || !publicId) return null;
+
+  return {
+    url,
+    previewUrl: image.previewUrl || url,
+    watermarkUrl: image.watermarkUrl || image.previewUrl || url,
+    downloadUrl: image.downloadUrl || url,
+    publicId,
+    originalName: image.originalName,
+    size: image.size,
+    mimetype: image.mimetype,
+    uploadedAt: image.uploadedAt || new Date(),
+  };
+};
+
 const isPrivilegedAlbumViewer = async (booking, user) => {
   if (!user) return false;
   const userId = String(user.id);
@@ -33,15 +54,26 @@ class AlbumService {
     }
 
     let album = await Album.findOne({ bookingId });
+    const normalizedNewImages = Array.isArray(newImages)
+      ? newImages
+          .map((image, index) => normalizeAlbumImage(image, `${bookingId}_${index}`))
+          .filter(Boolean)
+      : [];
 
     if (!album) {
       album = new Album({
         bookingId,
         photographerId: photographerUserId,
-        images: newImages,
+        images: normalizedNewImages,
       });
     } else {
-      album.images.push(...newImages);
+      const existingImages = Array.isArray(album.images)
+        ? album.images
+            .map((image, index) => normalizeAlbumImage(image, image?.publicId || `${bookingId}_${index}`))
+            .filter(Boolean)
+        : [];
+
+      album.images = [...existingImages, ...normalizedNewImages];
     }
 
     const savedAlbum = await album.save();
