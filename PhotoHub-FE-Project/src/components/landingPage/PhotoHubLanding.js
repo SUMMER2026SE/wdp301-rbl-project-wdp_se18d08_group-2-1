@@ -62,7 +62,7 @@ const landingCopy = {
       shortlistEyebrow: "AI shortlist",
       shortlistTitle: "18 verified creators",
       shoots: [
-        ["Editorial portrait", "Ho Chi Minh", "94% match", "cyan"],
+        ["Editorial portrait", "Ho Chi Minh", "94% match", "orange"],
         ["Wedding ceremony", "Da Nang", "Escrow held", "violet"],
         ["Product launch", "District 1", "Final review", "silver"],
       ],
@@ -71,7 +71,7 @@ const landingCopy = {
       stages: ["RAW sync", "Watermark", "Client picks"],
       stageLabel: "Stage",
       metrics: [
-        ["Booked value", "$48k", CircleDollarSign],
+        ["Booked value", "1.2B đ", CircleDollarSign],
         ["Trust score", "98.4", Fingerprint],
         ["Avg reply", "7 min", Clock3],
       ],
@@ -291,7 +291,7 @@ const landingCopy = {
       shortlistEyebrow: "Danh sách AI",
       shortlistTitle: "18 creator đã xác thực",
       shoots: [
-        ["Chân dung editorial", "TP. Hồ Chí Minh", "Khớp 94%", "cyan"],
+        ["Chân dung editorial", "TP. Hồ Chí Minh", "Khớp 94%", "orange"],
         ["Lễ cưới", "Đà Nẵng", "Đã giữ ký quỹ", "violet"],
         ["Ra mắt sản phẩm", "Quận 1", "Duyệt cuối", "silver"],
       ],
@@ -300,7 +300,7 @@ const landingCopy = {
       stages: ["Đồng bộ RAW", "Watermark", "Khách chọn ảnh"],
       stageLabel: "Bước",
       metrics: [
-        ["Giá trị đã đặt", "$48k", CircleDollarSign],
+        ["Giá trị đã đặt", "1.2 tỷ đ", CircleDollarSign],
         ["Điểm tin cậy", "98.4", Fingerprint],
         ["Phản hồi TB", "7 phút", Clock3],
       ],
@@ -532,8 +532,8 @@ function SectionIntro({ eyebrow, title, copy, align = "center" }) {
         variants={fadeUp}
         className={
           align === "left"
-            ? "mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200/80"
-            : "mb-4 inline-flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200/80"
+            ? "mb-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-orange-200/80"
+            : "mb-4 inline-flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-orange-200/80"
         }
       >
         <Sparkles className="h-4 w-4" {...iconProps} />
@@ -559,7 +559,7 @@ function GradientButton({ children, className = "" }) {
     <button
       className={`group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-[0_0_50px_rgba(34,211,238,0.18)] transition-all duration-500 hover:-translate-y-0.5 hover:shadow-[0_0_70px_rgba(139,92,246,0.35)] ${className}`}
     >
-      <span className="absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-cyan-200/60 to-transparent transition-transform duration-700 group-hover:translate-x-[120%]" />
+      <span className="absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-orange-200/60 to-transparent transition-transform duration-700 group-hover:translate-x-[120%]" />
 
       <span className="relative flex items-center gap-2 font-semibold text-slate-900">
         {children}
@@ -570,7 +570,7 @@ function GradientButton({ children, className = "" }) {
 }
 function GhostButton({ children }) {
   return (
-    <button className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition-all duration-500 hover:border-cyan-300/40 hover:bg-white/[0.08]">
+    <button className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white backdrop-blur-md transition-all duration-500 hover:border-orange-300/40 hover:bg-white/[0.08]">
       {children}
       <ChevronRight className="h-4 w-4" {...iconProps} />
     </button>
@@ -583,7 +583,7 @@ function DashboardMockup({ copy, scale, y, opacity }) {
       style={{ scale, y, opacity }}
       className="relative mx-auto mt-12 w-full max-w-6xl origin-top"
     >
-      <div className="absolute -inset-x-8 top-8 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent" />
+      <div className="absolute -inset-x-8 top-8 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
       <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-slate-950/65 shadow-[0_40px_160px_rgba(0,0,0,0.75)] backdrop-blur-md">
         <div className="theme-dashboard-aura absolute inset-0 bg-[linear-gradient(120deg,rgba(139,92,246,0.18),transparent_30%,rgba(34,211,238,0.14)_70%,transparent)]" />
         <div className="relative border-b border-white/10 px-4 py-3 sm:px-6">
@@ -591,12 +591,12 @@ function DashboardMockup({ copy, scale, y, opacity }) {
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-rose-400/70" />
               <span className="h-3 w-3 rounded-full bg-amber-300/70" />
-              <span className="h-3 w-3 rounded-full bg-cyan-300/70" />
+              <span className="h-3 w-3 rounded-full bg-orange-300/70" />
             </div>
             <div className="hidden rounded-full border border-white/10 bg-black/25 px-4 py-1.5 text-xs text-slate-300 sm:block">
               {copy.label}
             </div>
-            <div className="flex items-center gap-2 text-xs text-cyan-200">
+            <div className="flex items-center gap-2 text-xs text-orange-200">
               <LockKeyhole className="h-4 w-4" {...iconProps} />
               {copy.secured}
             </div>
@@ -615,7 +615,7 @@ function DashboardMockup({ copy, scale, y, opacity }) {
                     {copy.shortlistTitle}
                   </h3>
                 </div>
-                <div className="rounded-full border border-cyan-300/20 bg-cyan-300/10 p-3 text-cyan-200">
+                <div className="rounded-full border border-orange-300/20 bg-orange-300/10 p-3 text-orange-200">
                   <Radar className="h-5 w-5" {...iconProps} />
                 </div>
               </div>
@@ -633,8 +633,8 @@ function DashboardMockup({ copy, scale, y, opacity }) {
                       </p>
                     </div>
                     <span
-                      className={`self-start rounded-full px-2.5 py-1 text-[11px] font-semibold ${color === "cyan"
-                        ? "bg-cyan-300/10 text-cyan-200"
+                      className={`self-start rounded-full px-2.5 py-1 text-[11px] font-semibold ${color === "orange"
+                        ? "bg-orange-300/10 text-orange-200"
                         : color === "violet"
                           ? "bg-violet-400/10 text-violet-200"
                           : "bg-slate-200/10 text-slate-200"
@@ -650,13 +650,13 @@ function DashboardMockup({ copy, scale, y, opacity }) {
             <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm font-medium text-slate-300">{copy.balance}</p>
-                <ShieldCheck className="h-5 w-5 text-cyan-200" {...iconProps} />
+                <ShieldCheck className="h-5 w-5 text-orange-200" {...iconProps} />
               </div>
               <p className="text-3xl font-semibold tracking-tight text-white">
-                $12,840
+                321.000.000 đ
               </p>
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
-                <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-violet-500 via-slate-200 to-cyan-300" />
+                <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-orange-500 via-amber-200 to-orange-400" />
               </div>
             </div>
           </div>
@@ -695,7 +695,7 @@ function DashboardMockup({ copy, scale, y, opacity }) {
                   key={label}
                   className="rounded-2xl border border-white/10 bg-white/[0.035] p-4"
                 >
-                  <Icon className="mb-4 h-5 w-5 text-cyan-200" {...iconProps} />
+                  <Icon className="mb-4 h-5 w-5 text-orange-200" {...iconProps} />
                   <p className="text-2xl font-semibold text-white">{value}</p>
                   <p className="mt-1 text-xs text-slate-400">{label}</p>
                 </div>
@@ -755,7 +755,7 @@ function HeroSection({ copy }) {
     >
       <div className="theme-hero-aura absolute inset-0 bg-[radial-gradient(circle_at_50%_-15%,rgba(139,92,246,0.22),transparent_36%),linear-gradient(180deg,rgba(2,6,23,0)_0%,#020617_82%)]" />
       <HeroImageAtmosphere />
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange-300/50 to-transparent" />
       <motion.div
         variants={stagger}
         initial="hidden"
@@ -766,7 +766,7 @@ function HeroSection({ copy }) {
           variants={fadeUp}
           className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-medium uppercase tracking-[0.22em] text-slate-300 backdrop-blur-md"
         >
-          <ShieldCheck className="h-4 w-4 text-cyan-200" {...iconProps} />
+          <ShieldCheck className="h-4 w-4 text-orange-200" {...iconProps} />
           {copy.eyebrow}
         </motion.div>
         <motion.h1
@@ -774,7 +774,7 @@ function HeroSection({ copy }) {
           className="mx-auto max-w-5xl text-5xl font-semibold leading-[0.98] tracking-tight text-white sm:text-7xl lg:text-8xl"
         >
           {copy.titleLead}{" "}
-          <span className="hero-title-accent bg-gradient-to-r from-violet-400 via-slate-100 to-cyan-300 bg-clip-text text-transparent">
+          <span className="hero-title-accent bg-gradient-to-r from-orange-400 via-amber-100 to-orange-300 bg-clip-text text-transparent">
             {copy.titleAccent}
           </span>
         </motion.h1>
@@ -789,15 +789,15 @@ function HeroSection({ copy }) {
         <motion.div
           variants={fadeUp}
           onClick={() => navigate("/ai-search")}
-          className="mx-auto mt-10 max-w-xl group relative flex items-center justify-between gap-3 rounded-[22px] border border-white/10 bg-white/[0.04] p-2 pl-5 backdrop-blur-md transition-all duration-300 hover:border-cyan-400/40 hover:bg-white/[0.08] cursor-pointer shadow-[0_0_50px_rgba(34,211,238,0.03)] hover:shadow-[0_0_50px_rgba(34,211,238,0.12)] select-none"
+          className="mx-auto mt-10 max-w-xl group relative flex items-center justify-between gap-3 rounded-[22px] border border-white/10 bg-white/[0.04] p-2 pl-5 backdrop-blur-md transition-all duration-300 hover:border-orange-400/40 hover:bg-white/[0.08] cursor-pointer shadow-[0_0_50px_rgba(34,211,238,0.03)] hover:shadow-[0_0_50px_rgba(34,211,238,0.12)] select-none"
         >
           <div className="flex items-center gap-3 truncate text-left">
-            <WandSparkles className="h-5 w-5 text-cyan-300 animate-pulse shrink-0" />
+            <WandSparkles className="h-5 w-5 text-orange-300 animate-pulse shrink-0" />
             <span className="text-sm font-semibold text-slate-300 truncate">
               {copy.searchPrompt}
             </span>
           </div>
-          <div className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-cyan-500/20 group-hover:scale-[1.02] active:scale-95 shrink-0 transition-transform">
+          <div className="rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md shadow-orange-500/20 group-hover:scale-[1.02] active:scale-95 shrink-0 transition-transform">
             {copy.searchBtn}
           </div>
         </motion.div>
@@ -879,12 +879,12 @@ function AIScannerCard({ copy }) {
   return (
     <motion.div
       variants={fadeUp}
-      className="relative min-h-[420px] overflow-hidden rounded-3xl border border-cyan-200/20 bg-black/45 p-6 shadow-[0_30px_120px_rgba(34,211,238,0.12)] backdrop-blur-md sm:p-8 lg:col-span-2"
+      className="relative min-h-[420px] overflow-hidden rounded-3xl border border-orange-200/20 bg-black/45 p-6 shadow-[0_30px_120px_rgba(34,211,238,0.12)] backdrop-blur-md sm:p-8 lg:col-span-2"
     >
       <div className="theme-ai-aura absolute inset-0 bg-[linear-gradient(135deg,rgba(139,92,246,0.18),transparent_38%,rgba(34,211,238,0.14))]" />
       <div className="relative z-10 flex h-full flex-col justify-between gap-10 lg:flex-row lg:items-center">
         <div className="max-w-lg">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-200/20 bg-cyan-200/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-100">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-orange-200/20 bg-orange-200/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-orange-100">
             <Zap className="h-4 w-4" {...iconProps} />
             {copy.eyebrow}
           </div>
@@ -899,7 +899,7 @@ function AIScannerCard({ copy }) {
         <div className="mx-auto w-full max-w-[360px]">
           <div className="relative aspect-square w-full">
             <div className="absolute inset-0 rounded-full border border-white/10 bg-white/[0.03]" />
-            <div className="absolute inset-[12%] rounded-full border border-cyan-200/20" />
+            <div className="absolute inset-[12%] rounded-full border border-orange-200/20" />
             <div className="absolute inset-[24%] rounded-full border border-violet-300/20" />
             <motion.div
               className="absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,transparent_0deg,rgba(34,211,238,0.55)_34deg,transparent_72deg)]"
@@ -909,7 +909,7 @@ function AIScannerCard({ copy }) {
             <div className="absolute inset-[36%] rounded-full border border-white/10 bg-slate-950/80 backdrop-blur-md" />
             <div className="absolute inset-0 z-10 flex items-center justify-center">
               <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-center backdrop-blur-md">
-                <Radar className="mx-auto h-9 w-9 text-cyan-200 sm:h-11 sm:w-11" {...iconProps} />
+                <Radar className="mx-auto h-9 w-9 text-orange-200 sm:h-11 sm:w-11" {...iconProps} />
                 <p className="mt-2 text-sm font-medium text-white">{copy.match}</p>
                 <p className="mt-1 max-w-[9rem] text-xs leading-5 text-slate-400">{copy.brief}</p>
               </div>
@@ -969,12 +969,12 @@ function EcosystemSection({ copy }) {
               <motion.div
                 key={item.title}
                 variants={fadeUp}
-                className="group rounded-3xl border border-white/10 bg-white/[0.035] p-6 backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:border-cyan-200/25 hover:bg-white/[0.055]"
+                className="group rounded-3xl border border-white/10 bg-white/[0.035] p-6 backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:border-orange-200/25 hover:bg-white/[0.055]"
               >
-                <Icon className="h-7 w-7 text-cyan-200" {...iconProps} />
+                <Icon className="h-7 w-7 text-orange-200" {...iconProps} />
                 <h3 className="mt-6 text-xl font-semibold text-white">{item.title}</h3>
                 <p className="mt-4 text-sm leading-7 text-slate-400">{item.copy}</p>
-                <p className="mt-8 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 transition-colors duration-500 group-hover:text-cyan-200">
+                <p className="mt-8 text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 transition-colors duration-500 group-hover:text-orange-200">
                   {item.meta}
                 </p>
               </motion.div>
@@ -1032,11 +1032,11 @@ function SecuritySection({ copy }) {
             const Icon = step.icon;
             return (
               <motion.div key={step.title} variants={fadeUp} className="relative">
-                <TiltCard className="h-full min-h-[240px] transition-colors duration-500 hover:border-cyan-200/30">
+                <TiltCard className="h-full min-h-[240px] transition-colors duration-500 hover:border-orange-200/30">
                   <div className="flex h-full flex-col justify-between">
                     <div>
                       <div className="mb-6 flex items-center justify-between">
-                        <div className="rounded-2xl border border-white/10 bg-black/30 p-3 text-cyan-200">
+                        <div className="rounded-2xl border border-white/10 bg-black/30 p-3 text-orange-200">
                           <Icon className="h-6 w-6" {...iconProps} />
                         </div>
                         <span className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
@@ -1046,11 +1046,11 @@ function SecuritySection({ copy }) {
                       <h3 className="text-xl font-semibold text-white">{step.title}</h3>
                       <p className="mt-4 text-sm leading-7 text-slate-400">{step.copy}</p>
                     </div>
-                    <div className="mt-8 h-1 rounded-full bg-gradient-to-r from-violet-500 via-slate-200 to-cyan-300" />
+                    <div className="mt-8 h-1 rounded-full bg-gradient-to-r from-orange-500 via-amber-200 to-orange-400" />
                   </div>
                 </TiltCard>
                 {index < copy.flow.length - 1 && (
-                  <div className="pointer-events-none absolute left-full top-1/2 z-10 hidden h-px w-5 bg-gradient-to-r from-cyan-300/60 to-transparent lg:block" />
+                  <div className="pointer-events-none absolute left-full top-1/2 z-10 hidden h-px w-5 bg-gradient-to-r from-orange-300/60 to-transparent lg:block" />
                 )}
               </motion.div>
             );
@@ -1086,7 +1086,7 @@ function WorkflowSection({ copy }) {
           <div className="absolute left-6 top-0 h-full w-px bg-white/10 sm:left-1/2" />
           <motion.div
             style={{ scaleY: lineScale, transformOrigin: "top" }}
-            className="absolute left-6 top-0 h-full w-px bg-gradient-to-b from-violet-500 via-slate-200 to-cyan-300 sm:left-1/2"
+            className="absolute left-6 top-0 h-full w-px bg-gradient-to-b from-orange-500 via-amber-200 to-orange-400 sm:left-1/2"
           />
           <motion.div
             variants={stagger}
@@ -1113,7 +1113,7 @@ function WorkflowSection({ copy }) {
                       className={`mb-4 flex items-center gap-3 ${isRight ? "" : "sm:justify-end"
                         }`}
                     >
-                      <Icon className="h-5 w-5 text-cyan-200" {...iconProps} />
+                      <Icon className="h-5 w-5 text-orange-200" {...iconProps} />
                       <span className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
                         {copy.stepLabel} 0{index + 1}
                       </span>
@@ -1121,7 +1121,7 @@ function WorkflowSection({ copy }) {
                     <h3 className="text-xl font-semibold text-white">{step.title}</h3>
                     <p className="mt-3 text-sm leading-7 text-slate-400">{step.copy}</p>
                   </div>
-                  <div className="absolute left-[18px] top-8 h-4 w-4 rounded-full border border-cyan-200/40 bg-slate-950 shadow-[0_0_24px_rgba(34,211,238,0.45)] sm:left-1/2 sm:-translate-x-1/2" />
+                  <div className="absolute left-[18px] top-8 h-4 w-4 rounded-full border border-orange-200/40 bg-slate-950 shadow-[0_0_24px_rgba(34,211,238,0.45)] sm:left-1/2 sm:-translate-x-1/2" />
                 </motion.div>
               );
             })}
@@ -1141,9 +1141,9 @@ function TestimonialCard({ item }) {
         className="h-16 w-16 rounded-2xl object-cover"
       />
       <div className="min-w-0">
-        <div className="mb-2 flex text-cyan-200">
+        <div className="mb-2 flex text-orange-200">
           {Array.from({ length: 5 }).map((_, index) => (
-            <Star key={index} className="h-3.5 w-3.5 fill-cyan-200" {...iconProps} />
+            <Star key={index} className="h-3.5 w-3.5 fill-orange-200" {...iconProps} />
           ))}
         </div>
         <p className="line-clamp-2 text-sm leading-6 text-slate-200">{item.quote}</p>
@@ -1232,10 +1232,10 @@ function PricingSection({ copy }) {
               className="grid gap-8 md:grid-cols-[0.9fr_1.1fr] md:items-center"
             >
               <div>
-                <div className="mb-5 inline-flex rounded-2xl border border-cyan-200/20 bg-cyan-200/10 p-3 text-cyan-100">
+                <div className="mb-5 inline-flex rounded-2xl border border-orange-200/20 bg-orange-200/10 p-3 text-orange-100">
                   <Icon className="h-7 w-7" {...iconProps} />
                 </div>
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-cyan-200">
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-orange-200">
                   {active.eyebrow}
                 </p>
                 <h3 className="mt-3 text-4xl font-semibold tracking-tight text-white">
@@ -1249,7 +1249,7 @@ function PricingSection({ copy }) {
                     key={stat}
                     className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/25 p-4"
                   >
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-200/10 text-cyan-100">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-200/10 text-orange-100">
                       <Check className="h-4 w-4" {...iconProps} />
                     </span>
                     <span className="font-medium text-slate-100">{stat}</span>
@@ -1273,7 +1273,7 @@ function FinalCTASection({ copy }) {
         whileInView={{ x: "30%" }}
         viewport={{ once: false }}
         transition={{ duration: 8, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
-        className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-cyan-300/10 to-transparent blur-3xl"
+        className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-orange-300/10 to-transparent blur-3xl"
       />
       <motion.div
         variants={stagger}
@@ -1284,7 +1284,7 @@ function FinalCTASection({ copy }) {
       >
         <motion.div
           variants={fadeUp}
-          className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-cyan-100 backdrop-blur-md"
+          className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-orange-100 backdrop-blur-md"
         >
           <ShieldCheck className="h-8 w-8" {...iconProps} />
         </motion.div>

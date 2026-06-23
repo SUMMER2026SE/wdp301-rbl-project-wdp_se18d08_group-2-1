@@ -1,5 +1,5 @@
 const Album = require("./album.model");
-const Booking = require("../booking/booking.model");
+const { Booking } = require("../../bookings/models/booking.model");
 const Payment = require("../../admin/models/Payment");
 const Dispute = require("../../admin/models/Dispute");
 const { getPhotographerIdentity } = require("../utils/photographerIdentity");

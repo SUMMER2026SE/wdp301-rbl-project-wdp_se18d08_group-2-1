@@ -7,7 +7,6 @@ import {
   MapPin,
   Star,
   Award,
-  BookOpen,
   Heart,
   CalendarCheck,
   Camera,
@@ -22,20 +21,15 @@ import {
   Globe,
   CheckCircle,
   Eye,
+  MessageSquare,
 } from "lucide-react";
 import usePhotographers from "../../hooks/usePhotographers";
 import { useFavorite } from "../../hooks/useFavorite";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-
-const dummyGallery = [
-  "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1554080353-a576cf803bda?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1520390138845-12006b42937c?auto=format&fit=crop&w=800&q=80",
-];
+import Swal from "sweetalert2";
+import { photographerMarketplaceService } from "../../services/photographerService";
+import ReviewList from "../review/ReviewList";
 
 const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }) => {
   const { getPhotographerDetail } = usePhotographers();
@@ -44,9 +38,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
   const [activeTab, setActiveTab] = useState("photos");
   const [showMoreBio, setShowMoreBio] = useState(false);
   const [lightboxImg, setLightboxImg] = useState(null);
-  const navigate = useNavigate();
-  const [realPortfolios, setRealPortfolios] = useState([]);
-  const [albums, setAlbums] = useState([]);
+  const navigate = useNavigate();  const [albums, setAlbums] = useState([]);
   const [selectedAlbumImages, setSelectedAlbumImages] = useState(null); // null | { album, images }
 
 
@@ -63,24 +55,31 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
       up: "Up to",
       title: "Photographer Profile",
       loading: "Loading...",
-      experience: "years exp.",
+      experience: "years experience",
       likes: "likes",
-      bookBtn: "Book This Photographer",
-      likeBtn: "Like",
+      bookBtn: "Book this photographer",
+      likeBtn: "Favorite",
       intro: "Introduction",
       equipment: "Equipment",
-      styles: "Photography Styles",
+      styles: "Photography styles",
       showMore: "See more",
       showLess: "Show less",
-      tabPhotos: "Photos Taken",
+      tabPhotos: "Albums",
       tabReviews: "Reviews",
       available: "Available",
       unavailable: "Unavailable",
       verified: "Verified Pro",
       hourlyRate: "/ hour",
       completedBookings: "completed shoots",
-      noPhotos: "No photos yet",
+      noPhotos: "No albums yet",
       noReviews: "No reviews yet",
+      over: "Over",
+      messageBtn: "Message",
+      rating: "Rating",
+      backAlbums: "Back to albums",
+      emptyAlbum: "This album has no photos yet",
+      currency: "VND",
+      favoriteLogin: "Please sign in to favorite this photographer. Press OK to go to login.",
     },
     vi: {
       up: "Lên đến",
@@ -104,6 +103,13 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
       completedBookings: "buổi chụp",
       noPhotos: "Chưa có ảnh",
       noReviews: "Chưa có đánh giá",
+      over: "Tr\u00ean",
+      messageBtn: "Nh\u1eafn tin",
+      rating: "\u0110\u00e1nh gi\u00e1",
+      backAlbums: "Quay l\u1ea1i album",
+      emptyAlbum: "Album ch\u01b0a c\u00f3 \u1ea3nh",
+      currency: "VN\u0110",
+      favoriteLogin: "B\u1ea1n c\u1ea7n \u0111\u0103ng nh\u1eadp \u0111\u1ec3 y\u00eau th\u00edch. Nh\u1ea5n OK \u0111\u1ec3 \u0111\u1ebfn trang \u0111\u0103ng nh\u1eadp.",
     },
   };
   const t = labels[language] || labels.en;
@@ -164,6 +170,68 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
     return `http://localhost:3000${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
   };
 
+  const handleStartChat = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      Swal.fire({
+        title: language === "vi" ? "Y\u00eau c\u1ea7u \u0111\u0103ng nh\u1eadp" : "Login required",
+        text: language === "vi" ? "Vui l\u00f2ng \u0111\u0103ng nh\u1eadp \u0111\u1ec3 b\u1eaft \u0111\u1ea7u tr\u00f2 chuy\u1ec7n." : "Please login to start chatting.",
+        icon: "warning",
+        confirmButtonText: language === "vi" ? "\u0110\u0103ng nh\u1eadp" : "Login",
+        confirmButtonColor: "#f97316",
+        showCancelButton: true,
+        cancelButtonText: language === "vi" ? "H\u1ee7y" : "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          onClose();
+          navigate("/login");
+        }
+      });
+      return;
+    }
+
+    try {
+      const recipientId = photographer?.user?._id;
+      if (!recipientId) {
+        Swal.fire(
+          language === "vi" ? "L\u1ed7i" : "Error",
+          language === "vi" ? "Kh\u00f4ng t\u00ecm th\u1ea5y th\u00f4ng tin t\u00e0i kho\u1ea3n nhi\u1ebfp \u1ea3nh gia." : "Photographer account details not found.",
+          "error"
+        );
+        return;
+      }
+
+      const currentUserId = localStorage.getItem("userId");
+      if (currentUserId === recipientId) {
+        Swal.fire(
+          language === "vi" ? "Th\u00f4ng b\u00e1o" : "Notice",
+          language === "vi" ? "B\u1ea1n kh\u00f4ng th\u1ec3 tr\u00f2 chuy\u1ec7n v\u1edbi ch\u00ednh m\u00ecnh." : "You cannot chat with yourself.",
+          "info"
+        );
+        return;
+      }
+
+      Swal.fire({
+        title: language === "vi" ? "\u0110ang k\u1ebft n\u1ed1i..." : "Connecting...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      const res = await photographerMarketplaceService.createConversation(recipientId);
+      Swal.close();
+
+      if (res && res.success && res.data) {
+        onClose();
+        navigate(res.data?._id ? `/chat?conversationId=${res.data._id}` : "/chat");
+      } else {
+        throw new Error(res?.message || "Failed to start conversation");
+      }
+    } catch (err) {
+      Swal.close();
+      console.error(err);
+      Swal.fire(language === "vi" ? "L\u1ed7i" : "Error", err.response?.data?.message || err.message, "error");
+    }
+  };
   if (!isOpen) return null;
 
   return createPortal(
@@ -224,7 +292,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
               </button>
 
               {/* --- COVER IMAGE --- */}
-              <div className="relative h-44 w-full bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 shrink-0">
+              <div className="relative h-44 w-full bg-gradient-to-br from-orange-500 via-amber-500 to-orange-700 shrink-0">
                 {avatarUrl && (
                   <img
                     src={avatarUrl}
@@ -239,7 +307,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
               <div className="relative px-5 pb-4">
                 {/* Avatar nổi lên trên cover */}
                 <div className="relative -mt-14 mb-3 flex items-end gap-3">
-                  <div className="h-[76px] w-[76px] shrink-0 overflow-hidden rounded-full border-4 border-white dark:border-zinc-900 shadow-xl bg-gradient-to-br from-cyan-400 to-purple-500">
+                  <div className="h-[76px] w-[76px] shrink-0 overflow-hidden rounded-full border-4 border-white dark:border-zinc-900 shadow-xl bg-gradient-to-br from-orange-400 to-amber-500">
                     {avatarUrl ? (
                       <img
                         src={avatarUrl}
@@ -260,7 +328,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                         {displayName}
                       </h2>
                       {verificationStatus === "VERIFIED" && (
-                        <CheckCircle size={16} className="text-blue-500 fill-blue-100" />
+                        <CheckCircle size={16} className="text-orange-500 fill-orange-100" />
                       )}
                     </div>
                     <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 dark:text-zinc-400 mt-0.5 flex-wrap">
@@ -272,7 +340,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                       )}
                       {totalReviews > 0 && (
                         <span className="flex items-center gap-1">
-                          <Heart size={11} className="text-pink-500" />
+                          <Heart size={11} className="text-orange-500" />
                           {totalReviews} {t.likes}
                         </span>
                       )}
@@ -302,7 +370,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                       <Star size={13} className="fill-amber-500" />
                       {averageRating ? averageRating.toFixed(1) : "5.0"}
                     </span>
-                    <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wide mt-0.5">Rating</span>
+                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mt-0.5">{t.rating}</span>
                   </div>
                   <div className="flex flex-col items-center py-3">
                     <span className="font-black text-base text-slate-800 dark:text-white">
@@ -311,8 +379,8 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                     <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wide mt-0.5">{t.completedBookings}</span>
                   </div>
                   <div className="flex flex-col items-center py-3">
-                    <span className="font-black text-base text-purple-600 dark:text-purple-400">
-                      {hourlyRate ? `$${hourlyRate}` : "--"}
+                    <span className="font-black text-base text-orange-700 dark:text-orange-200">
+                      {hourlyRate ? `${Number(hourlyRate).toLocaleString('vi-VN')} đ/h` : "--"}
                     </span>
                     <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wide mt-0.5">{t.hourlyRate}</span>
                   </div>
@@ -325,28 +393,41 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                     onClick={async () => {
                       const result = await toggleFavorite();
                       if (result?.requireLogin) {
-                        const ok = window.confirm(
-                          "Bạn cần đăng nhập để yêu thích.\nNhấn OK để đến trang đăng nhập."
-                        );
+                        const ok = window.confirm(t.favoriteLogin);
                         if (ok) navigate("/login");
                       }
                     }}
                     disabled={favLoading}
                     className={`flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-bold transition-all duration-200 ${isFavorited
-                        ? "border-pink-500 bg-pink-50 text-pink-600 dark:bg-pink-500/10 dark:text-pink-400"
-                        : "border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:border-pink-400 hover:text-pink-500"
+                        ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-200"
+                        : "border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:border-orange-400 hover:text-orange-600 dark:hover:text-orange-200"
                       } ${favLoading ? "animate-pulse cursor-not-allowed opacity-70" : ""}`}
                   >
                     <Heart
                       size={16}
-                      className={isFavorited ? "fill-pink-500 text-pink-500" : ""}
+                      className={isFavorited ? "fill-orange-500 text-orange-500" : ""}
                     />
                     {t.likeBtn}
                   </button>
 
+                  {/* Nhắn tin */}
+                  <button
+                    onClick={handleStartChat}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-orange-500 bg-white hover:bg-orange-50 dark:bg-transparent dark:hover:bg-orange-500/10 py-2.5 text-sm font-bold text-orange-500 transition-all duration-200 active:scale-[0.98]"
+                  >
+                    <MessageSquare size={16} />
+                    {t.messageBtn}
+                  </button>
+                </div>
+
+                <div className="mb-5">
                   {/* Đặt lịch */}
                   <button
-                    className={`flex flex-[2] items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition-all duration-200 shadow-md active:scale-[0.98] ${isAvailable
+                    onClick={() => {
+                      onClose();
+                      navigate(`/booking/${photographerId}`);
+                    }}
+                    className={`w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition-all duration-200 shadow-md active:scale-[0.98] ${isAvailable
                         ? "bg-orange-500 hover:bg-orange-600 shadow-orange-400/30"
                         : "bg-slate-400 cursor-not-allowed"
                       }`}
@@ -359,10 +440,10 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
 
                 {/* Availability badge */}
                 <div className={`mb-5 flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold w-fit ${isAvailable
-                    ? "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-500/20"
+                    ? "bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-200 border border-orange-200 dark:border-orange-500/25"
                     : "bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 border border-slate-200 dark:border-zinc-700"
                   }`}>
-                  <span className={`h-2 w-2 rounded-full ${isAvailable ? "bg-green-500 animate-pulse" : "bg-slate-400"}`} />
+                  <span className={`h-2 w-2 rounded-full ${isAvailable ? "bg-orange-500 animate-pulse" : "bg-slate-400"}`} />
                   {isAvailable ? t.available : t.unavailable}
                 </div>
 
@@ -370,7 +451,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                 {bioText && (
                   <div className="mb-5">
                     <h3 className="mb-2 flex items-center gap-1.5 text-sm font-black text-slate-800 dark:text-white">
-                      <Camera size={15} className="text-blue-500" />
+                      <Camera size={15} className="text-orange-500" />
                       {t.intro}
                     </h3>
                     <p className="text-sm leading-relaxed text-slate-600 dark:text-zinc-300 whitespace-pre-line">
@@ -379,7 +460,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                     {bioText.length > 180 && (
                       <button
                         onClick={() => setShowMoreBio(!showMoreBio)}
-                        className="mt-1.5 flex items-center gap-1 text-xs font-bold text-blue-500 hover:text-blue-600 transition-colors"
+                        className="mt-1.5 flex items-center gap-1 text-xs font-bold text-orange-500 hover:text-orange-600 transition-colors"
                       >
                         {showMoreBio ? (
                           <><ChevronUp size={13} /> {t.showLess}</>
@@ -395,7 +476,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                 {equipment && (
                   <div className="mb-5">
                     <h3 className="mb-2 flex items-center gap-1.5 text-sm font-black text-slate-800 dark:text-white">
-                      <Cpu size={15} className="text-green-500" />
+                      <Cpu size={15} className="text-orange-500" />
                       {t.equipment}
                     </h3>
                     <p className="text-sm text-slate-600 dark:text-zinc-300">{equipment}</p>
@@ -406,7 +487,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                 {styles && styles.length > 0 && (
                   <div className="mb-5">
                     <h3 className="mb-2.5 flex items-center gap-1.5 text-sm font-black text-slate-800 dark:text-white">
-                      <Layers size={15} className="text-purple-500" />
+                      <Layers size={15} className="text-orange-500" />
                       {t.styles}
                     </h3>
                     <div className="flex flex-wrap gap-2">
@@ -427,20 +508,20 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                   <div className="mb-5 flex gap-2">
                     {socialLinks.facebook && (
                       <a href={socialLinks.facebook} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:border-blue-400 hover:text-blue-500 transition-all">
-                        <Facebook size={14} className="text-blue-600" /> Facebook
+                        className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:border-orange-300 hover:text-orange-600 transition-all">
+                        <Facebook size={14} className="text-orange-600" /> Facebook
                       </a>
                     )}
                     {socialLinks.instagram && (
                       <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:border-pink-400 hover:text-pink-500 transition-all">
-                        <Instagram size={14} className="text-pink-500" /> Instagram
+                        className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:border-orange-400 hover:text-orange-600 dark:hover:text-orange-200 transition-all">
+                        <Instagram size={14} className="text-orange-500" /> Instagram
                       </a>
                     )}
                     {socialLinks.website && (
                       <a href={socialLinks.website} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:border-indigo-400 hover:text-indigo-500 transition-all">
-                        <Globe size={14} className="text-indigo-500" /> Website
+                        className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:border-orange-300 hover:text-orange-600 transition-all">
+                        <Globe size={14} className="text-orange-500" /> Website
                       </a>
                     )}
                   </div>
@@ -457,7 +538,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                   {user?.phoneNumber && (
                     <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-zinc-400">
                       <Phone size={14} className="text-slate-400" />
-                      <a href={`tel:${user.phoneNumber}`} className="hover:text-blue-500 transition-colors">
+                      <a href={`tel:${user.phoneNumber}`} className="hover:text-orange-500 transition-colors">
                         {user.phoneNumber}
                       </a>
                     </div>
@@ -498,11 +579,11 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                       <div>
                         <button onClick={() => setSelectedAlbumImages(null)}
                           className="flex items-center gap-1.5 mb-4 text-xs font-bold text-orange-500 hover:text-orange-600 transition-colors">
-                          <ChevronDown size={13} className="rotate-90" /> Quay lại Albums
+                          <ChevronDown size={13} className="rotate-90" /> {t.backAlbums}
                         </button>
                         <p className="font-black text-sm mb-1">{selectedAlbumImages.album?.title}</p>
                         {selectedAlbumImages.album?.price_package && (
-                          <p className="text-xs font-bold text-cyan-500 mb-3">{selectedAlbumImages.album.price_package.toLocaleString()} VNĐ</p>
+                          <p className="text-xs font-bold text-orange-600 mb-3">{selectedAlbumImages.album.price_package.toLocaleString()} {t.currency}</p>
                         )}
                         {selectedAlbumImages.images?.length > 0 ? (
                           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -520,7 +601,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                             ))}
                           </div>
                         ) : (
-                          <p className="text-center py-6 text-sm text-slate-400">Album chưa có ảnh</p>
+                          <p className="text-center py-6 text-sm text-slate-400">{t.emptyAlbum}</p>
                         )}
                       </div>
                     ) : (
@@ -552,7 +633,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                             </div>
                             <div className="p-2">
                               <p className="text-[11px] font-black truncate text-slate-800 dark:text-zinc-100">{album.title}</p>
-                              <p className="text-[9px] font-bold text-cyan-500 mt-0.5">{album.price_package?.toLocaleString()} VNĐ</p>
+                              <p className="text-[9px] font-bold text-orange-600 mt-0.5">{album.price_package?.toLocaleString()} {t.currency}</p>
                             </div>
                           </div>
                         ))}
@@ -564,9 +645,8 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                 )}
 
                 {activeTab === "reviews" && (
-                  <div className="py-10 text-center">
-                    <Star size={40} className="mx-auto mb-3 text-slate-200 dark:text-zinc-700" />
-                    <p className="text-sm text-slate-400 dark:text-zinc-500">{t.noReviews}</p>
+                  <div className="max-h-[50vh] overflow-y-auto pr-1">
+                    <ReviewList photographerId={photographerId} language={language} />
                   </div>
                 )}
               </div>
@@ -603,3 +683,4 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
 };
 
 export default PhotographerDrawer;
+

@@ -435,10 +435,7 @@ class AdminController {
 
       const bookings = await Booking.find(query)
         .populate("customer", "fullName email avatar phoneNumber")
-        .populate({
-          path: "photographer",
-          populate: { path: "user", select: "fullName email avatar" }
-        })
+        .populate("photographer", "displayName")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit);

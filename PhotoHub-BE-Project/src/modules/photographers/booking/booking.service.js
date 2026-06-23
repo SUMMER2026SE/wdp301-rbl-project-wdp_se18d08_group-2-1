@@ -326,13 +326,14 @@ class BookingService {
     pushStatusLog(booking, "PAYMENT_PENDING", "Customer created a PayOS payment link");
     await booking.save();
 
+    const photographerUserId = await resolvePhotographerUserId(booking.photographer);
     await Payment.findOneAndUpdate(
       { booking: booking._id, transactionId: String(orderCode), paymentType: "DEPOSIT" },
       {
         $setOnInsert: {
           booking: booking._id,
           sender: booking.customer,
-          receiver: booking.photographer,
+          receiver: photographerUserId,
           amount,
           paymentType: "DEPOSIT",
           paymentMethod: "PAYOS",
@@ -389,6 +390,7 @@ class BookingService {
       paymentType: { $in: ["DEPOSIT", "FINAL"] },
     });
 
+    const photographerUserId = await resolvePhotographerUserId(booking.photographer);
     if (!existingSuccessfulPayment) {
       await Payment.findOneAndUpdate(
         {
@@ -400,7 +402,7 @@ class BookingService {
           $set: {
             booking: booking._id,
             sender: booking.customer,
-            receiver: booking.photographer,
+            receiver: photographerUserId,
             amount,
             paymentType: paymentPayload.paymentType || "DEPOSIT",
             paymentMethod: paymentPayload.paymentMethod || "PAYOS",

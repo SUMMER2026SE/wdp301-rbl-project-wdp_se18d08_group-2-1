@@ -3,10 +3,7 @@ const router = express.Router();
 
 const authenticate = require("../../../middlewares/authenticate");
 const ApiResponse = require("../../../utils/ApiResponse");
-
-const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("../../../config/cloudinary");
+const upload = require("../../../middlewares/upload.middleware");
 
 // Controllers
 const AuthController = require("../../../modules/auth/controllers/AuthController");
@@ -15,27 +12,6 @@ const ProfileController = require("../../../modules/auth/controllers/ProfileCont
 
 const auth = new AuthController();
 const profile = new ProfileController();
-
-// ── Upload avatar config ─ Cloudinary ────────────────────────────────────
-const avatarStorage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "photohub/avatars",
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
-    transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto" }],
-  },
-});
-
-const uploadAvatarMulter = multer({
-  storage: avatarStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    if (file.mimetype?.startsWith("image/")) return cb(null, true);
-    cb(new Error("Chỉ chấp nhận file ảnh"));
-  },
-}).single("avatar");
-
-
 // ================= AUTH =================
 router.post("/register", (req, res) => auth.register(req, res));
 
@@ -57,6 +33,11 @@ router.post("/reset-password", (req, res) =>
   auth.resetPassword(req, res)
 );
 
+router.post(
+    "/verify-reset-otp",
+    auth.verifyResetOTP
+);
+
 // ================= PROFILE =================
 router.get("/profile", authenticate, (req, res) =>
   profile.getProfile(req, res)
@@ -66,20 +47,14 @@ router.put("/profile", authenticate, (req, res) =>
   profile.updateProfile(req, res)
 );
 
-router.post("/profile/avatar", authenticate, (req, res) => {
-  uploadAvatarMulter(req, res, (err) => {
-    if (err) {
-      const msg =
-        err.code === "LIMIT_FILE_SIZE"
-          ? "Ảnh tối đa 5MB"
-          : err.message || "Upload thất bại";
-
-      return ApiResponse.error(res, msg, 400);
-    }
-
+router.post(
+  "/profile/avatar",
+  authenticate,
+  upload.single("avatar"),
+  (req, res) => {
     profile.uploadAvatar(req, res);
-  });
-});
+  }
+);
 
 router.put("/change-password", authenticate, (req, res) =>
   profile.changePassword(req, res)

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Send, Clock, DollarSign, FileText, Sparkles, CheckCircle } from "lucide-react";
+import { X, Send, Clock, FileText, Sparkles, CheckCircle } from "lucide-react";
 import Swal from "sweetalert2";
 import { photographerMarketplaceService } from "../../services/photographerService";
 
@@ -139,20 +139,20 @@ export default function SubmitBidModal({ job, jobPostId, onClose, onSuccess, the
     }
   };
 
-  const inputClass = `w-full rounded-xl pl-10 pr-4 py-3 outline-none border font-medium transition-all duration-300 ${
+  const inputClass = `w-full rounded-xl pl-10 pr-4 py-2 text-sm outline-none border font-medium transition-all duration-300 ${
     isDark
-      ? "bg-[#09090b] border-white/5 text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10"
-      : "bg-slate-50 border-slate-200 text-slate-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/5"
+      ? "bg-[#09090b] border-white/5 text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10"
+      : "bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/5"
   }`;
 
-  const labelClass = `text-xs font-semibold uppercase tracking-wider mb-1.5 block ${
+  const labelClass = `text-[11px] font-semibold uppercase tracking-wider mb-1 block ${
     isDark ? "text-slate-400" : "text-slate-600"
   }`;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+    <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-[110] animate-fadeIn">
       <div
-        className={`w-full max-w-lg rounded-3xl p-6 relative border transition-colors duration-300 ${
+        className={`w-full max-w-lg rounded-2xl p-5 relative border transition-colors duration-300 ${
           isDark
             ? "bg-[#121214] border-white/5 text-white shadow-2xl shadow-black"
             : "bg-white border-slate-100 text-slate-900 shadow-xl"
@@ -161,17 +161,17 @@ export default function SubmitBidModal({ job, jobPostId, onClose, onSuccess, the
         {/* Close Button */}
         <button
           onClick={onClose}
-          className={`absolute top-4 right-4 p-2 rounded-full transition-colors ${
+          className={`absolute top-4 right-4 p-1.5 rounded-full transition-colors ${
             isDark ? "hover:bg-white/5 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-500 hover:text-slate-900"
           }`}
         >
-          <X size={20} />
+          <X size={18} />
         </button>
 
         {/* Title */}
-        <div className="mb-6">
-          <h3 className="text-xl font-bold tracking-tight">Gửi Đề Xuất Báo Giá</h3>
-          <p className={`text-xs mt-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+        <div className="mb-4">
+          <h3 className="text-lg font-bold tracking-tight">Gửi Đề Xuất Báo Giá</h3>
+          <p className={`text-[11px] mt-0.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
             Điền các chi tiết và mức chi phí mong muốn để gửi cho khách hàng.
           </p>
         </div>
@@ -180,39 +180,39 @@ export default function SubmitBidModal({ job, jobPostId, onClose, onSuccess, the
           type="button"
           onClick={handleAssist}
           disabled={assistLoading || !resolvedJobPostId}
-          className="mb-5 flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-3 text-sm font-bold text-cyan-300 transition hover:bg-cyan-500/15 disabled:opacity-50"
+          className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border border-orange-500/30 bg-orange-500/10 px-4 py-2.5 text-xs font-bold text-orange-600 dark:text-orange-400 transition hover:bg-orange-500/15 disabled:opacity-50"
         >
-          <Sparkles size={16} />
+          <Sparkles size={14} />
           {assistLoading ? "Generating smart proposal..." : "Generate smart proposal, price, and delivery time"}
         </button>
 
         {assistNotes.length > 0 && (
-          <div className="mb-5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-300">
+          <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-2.5 text-[11px] text-emerald-300">
             {assistNotes.map((note, index) => (
-              <div key={index} className="flex gap-2 py-1">
-                <CheckCircle size={13} className="mt-0.5 shrink-0" />
+              <div key={index} className="flex gap-2 py-0.5">
+                <CheckCircle size={12} className="mt-0.5 shrink-0" />
                 <span>{note}</span>
               </div>
             ))}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Proposal / Cover Letter */}
           <div>
             <label className={labelClass}>Thư Đề Xuất / Giới Thiệu Bản Thân</label>
             <div className="relative">
-              <FileText className="absolute left-3.5 top-3.5 text-slate-500" size={18} />
+              <FileText className="absolute left-3.5 top-3 text-slate-500" size={16} />
               <textarea
                 name="proposal"
                 value={formData.proposal}
                 onChange={handleChange}
-                rows={4}
+                rows={3}
                 placeholder="Hãy giới thiệu kinh nghiệm của bạn phù hợp thế nào với dự án này..."
-                className={`w-full rounded-xl pl-10 pr-4 py-3 outline-none border font-medium transition-all duration-300 ${
+                className={`w-full rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none border font-medium transition-all duration-300 ${
                   isDark
-                    ? "bg-[#09090b] border-white/5 text-white focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10"
-                    : "bg-slate-50 border-slate-200 text-slate-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/5"
+                    ? "bg-[#09090b] border-white/5 text-white focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10"
+                    : "bg-slate-50 border-slate-200 text-slate-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/5"
                 }`}
               />
             </div>
@@ -221,9 +221,9 @@ export default function SubmitBidModal({ job, jobPostId, onClose, onSuccess, the
           <div className="grid grid-cols-2 gap-4">
             {/* Price Proposal */}
             <div>
-              <label className={labelClass}>Mức Chi Phí ($)</label>
+              <label className={labelClass}>Mức Chi Phí (VNĐ)</label>
               <div className="relative">
-                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-500">đ</span>
                 <input
                   type="number"
                   name="price"
@@ -239,7 +239,7 @@ export default function SubmitBidModal({ job, jobPostId, onClose, onSuccess, the
             <div>
               <label className={labelClass}>Thời Gian Thực Hiện</label>
               <div className="relative">
-                <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
                 <input
                   type="text"
                   name="estimatedTime"
@@ -254,17 +254,17 @@ export default function SubmitBidModal({ job, jobPostId, onClose, onSuccess, the
 
           {formData.packageName && (
             <div
-              className={`rounded-xl border p-3 text-xs ${
+              className={`rounded-xl border p-2.5 text-[11px] ${
                 isDark
                   ? "border-white/5 bg-white/[0.03] text-slate-300"
                   : "border-slate-200 bg-slate-50 text-slate-600"
               }`}
             >
-              <div className="font-bold text-cyan-400">{formData.packageName}</div>
+              <div className="font-bold text-orange-500">{formData.packageName}</div>
               {formData.deliverables?.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {formData.deliverables.map((item) => (
-                    <span key={item} className="rounded-lg bg-cyan-500/10 px-2 py-1 text-[10px] font-bold text-cyan-300">
+                    <span key={item} className="rounded bg-orange-500/10 px-1.5 py-0.5 text-[9px] font-bold text-orange-600 dark:text-orange-400">
                       {item}
                     </span>
                   ))}
@@ -274,11 +274,11 @@ export default function SubmitBidModal({ job, jobPostId, onClose, onSuccess, the
           )}
 
           {/* Form Actions */}
-          <div className="flex gap-3 justify-end pt-4 border-t border-white/5 mt-4">
+          <div className="flex gap-2.5 justify-end pt-3 border-t border-white/5 mt-3">
             <button
               type="button"
               onClick={onClose}
-              className={`px-5 py-3 rounded-xl font-bold transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 isDark ? "bg-white/5 hover:bg-white/10 text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"
               }`}
             >
@@ -287,9 +287,9 @@ export default function SubmitBidModal({ job, jobPostId, onClose, onSuccess, the
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white px-6 py-3 rounded-xl font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-5 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-sm shadow-orange-500/10"
             >
-              <Send size={16} />
+              <Send size={14} />
               {loading ? "Đang gửi..." : "Gửi báo giá"}
             </button>
           </div>

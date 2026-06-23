@@ -39,14 +39,14 @@ body {
 
 :root[data-theme="dark"] body {
   background:
-    radial-gradient(circle at 50% -20%, rgba(139, 92, 246, 0.24), transparent 34%),
+    radial-gradient(circle at 50% -20%, rgba(217, 119, 6, 0.24), transparent 34%),
     linear-gradient(180deg, #020617 0%, #000000 100%);
 }
 
 :root[data-theme="light"] body {
   background:
-    radial-gradient(circle at 50% -18%, rgba(34, 211, 238, 0.22), transparent 34%),
-    radial-gradient(circle at 85% 12%, rgba(139, 92, 246, 0.16), transparent 28%),
+    radial-gradient(circle at 50% -18%, rgba(249, 115, 22, 0.22), transparent 34%),
+    radial-gradient(circle at 85% 12%, rgba(217, 119, 6, 0.16), transparent 28%),
     #ffffff;
 }
 
@@ -77,7 +77,7 @@ html {
 }
 
 .text-glow {
-  text-shadow: 0 0 28px rgba(34, 211, 238, 0.4);
+  text-shadow: 0 0 28px rgba(249, 115, 22, 0.4);
 }
 
 .hero-title-accent {
@@ -108,7 +108,7 @@ html {
 
 .btn-primary::after {
   content: '';
-  @apply absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-cyan-200/60 to-transparent transition-transform duration-500;
+  @apply absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-orange-200/60 to-transparent transition-transform duration-500;
 }
 
 .btn-primary:hover::after {
@@ -122,6 +122,10 @@ html {
 
 .animate-premium-fade {
   animation: fadeIn 0.8s cubic-bezier(0.2, 1, 0.3, 1) forwards;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes marquee {
@@ -152,7 +156,7 @@ html {
 
 .theme-light {
   background:
-    radial-gradient(circle at 50% -18%, rgba(34, 211, 238, 0.2), transparent 34%),
+    radial-gradient(circle at 50% -18%, rgba(249, 115, 22, 0.2), transparent 34%),
     linear-gradient(180deg, #f8fafc 0%, #eef6ff 50%, #ffffff 100%);
   color: #0f172a;
 }
@@ -208,8 +212,41 @@ html {
   color: #0f172a !important;
 }
 
+/* Maintain white text on buttons and colored backgrounds in light mode */
+.theme-light .text-white.bg-orange-500,
+.theme-light .text-white.bg-orange-600,
+.theme-light .text-white.bg-gradient-to-r,
+.theme-light .text-white.bg-gradient-to-tr,
+.theme-light .text-white.bg-orange-500,
+.theme-light .text-white.bg-orange-600,
+.theme-light .text-white.bg-purple-500,
+.theme-light .text-white.bg-emerald-500,
+.theme-light .text-white.bg-slate-900,
+.theme-light .text-white.bg-slate-950,
+.theme-light .bg-orange-500 .text-white,
+.theme-light .bg-orange-600 .text-white,
+.theme-light .bg-gradient-to-r .text-white,
+.theme-light .bg-gradient-to-tr .text-white,
+.theme-light .bg-orange-500 .text-white,
+.theme-light .bg-orange-600 .text-white,
+.theme-light .bg-purple-500 .text-white,
+.theme-light .bg-purple-600 .text-white,
+.theme-light .bg-emerald-500 .text-white,
+.theme-light .bg-emerald-600 .text-white,
+.theme-light .bg-slate-900 .text-white,
+.theme-light .bg-slate-950 .text-white,
+.theme-light button .text-white,
+.theme-light button.bg-orange-500,
+.theme-light button.bg-gradient-to-r,
+.theme-light a.bg-orange-500 .text-white,
+.theme-light a.bg-gradient-to-r .text-white,
+.theme-light .sweet-alert .text-white,
+.theme-light .swal2-popup .text-white {
+  color: #ffffff !important;
+}
+
 .theme-light .text-slate-950 {
-  color: #f8fafc !important;
+  color: #020617 !important;
 }
 
 .theme-light .text-slate-100,
@@ -227,13 +264,13 @@ html {
   color: #64748b !important;
 }
 
-.theme-light .text-cyan-100,
-.theme-light .text-cyan-200 {
-  color: #0891b2 !important;
+.theme-light .text-orange-100,
+.theme-light .text-orange-200 {
+  color: #ea580c !important;
 }
 
 .theme-light .hero-title-accent {
-  background-image: linear-gradient(90deg, #6d28d9 0%, #334155 48%, #0e7490 100%) !important;
+  background-image: linear-gradient(90deg, #ea580c 0%, #334155 48%, #c2410c 100%) !important;
   filter: saturate(0.88);
 }
 
@@ -247,11 +284,11 @@ html {
   border-color: rgba(15, 23, 42, 0.12) !important;
 }
 
-.theme-light .border-cyan-200\/20,
-.theme-light .border-cyan-200\/25,
-.theme-light .border-cyan-200\/40,
-.theme-light .hover\:border-cyan-200\/40:hover,
-.theme-light .hover\:border-cyan-300\/40:hover {
+.theme-light .border-orange-200\/20,
+.theme-light .border-orange-200\/25,
+.theme-light .border-orange-200\/40,
+.theme-light .hover\:border-orange-200\/40:hover,
+.theme-light .hover\:border-orange-300\/40:hover {
   border-color: rgba(8, 145, 178, 0.32) !important;
 }
 
@@ -270,8 +307,8 @@ html {
 
 .theme-light .theme-hero-aura {
   background:
-    radial-gradient(circle at 50% -15%, rgba(34, 211, 238, 0.24), transparent 36%),
-    linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, rgba(238, 246, 255, 0.82) 82%) !important;
+    radial-gradient(circle at 50% -15%, rgba(249, 115, 22, 0.24), transparent 36%),
+    linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, rgba(255, 247, 237, 0.82) 82%) !important;
 }
 
 .theme-light .hero-backdrop-photo {
@@ -290,14 +327,14 @@ html {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(238, 246, 255, 0.12));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 247, 237, 0.12));
 }
 
 .theme-light .theme-dashboard-aura,
 .theme-light .theme-ai-aura,
 .theme-light .theme-final-aura {
   background:
-    linear-gradient(135deg, rgba(139, 92, 246, 0.1), transparent 38%, rgba(34, 211, 238, 0.16)) !important;
+    linear-gradient(135deg, rgba(217, 119, 6, 0.1), transparent 38%, rgba(249, 115, 22, 0.16)) !important;
 }
 
 .theme-light .bg-gradient-to-tr.from-black.via-slate-950\/40.to-transparent {

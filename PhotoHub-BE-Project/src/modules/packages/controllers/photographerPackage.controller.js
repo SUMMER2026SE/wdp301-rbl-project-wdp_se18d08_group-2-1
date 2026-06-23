@@ -125,6 +125,33 @@ class PhotographerPackageController {
             });
         }
     }
+    // MỚI: Lấy danh sách packages của một photographer bất kỳ (dành cho Customer xem)
+    async getPhotographerPackages(req, res) {
+        try {
+            const { photographerId } = req.params;
+            const { categoryIds, styleTagIds } = req.query;
+
+            const filters = {
+                categoryIds: categoryIds ? categoryIds.split(",") : [],
+                styleTagIds: styleTagIds ? styleTagIds.split(",") : []
+            };
+
+            const result = await PackageService.getMyPackages(
+                photographerId,
+                filters
+            );
+
+            return ApiResponse.success(res, {
+                message: "Get photographer packages successfully",
+                data: result
+            });
+        } catch (err) {
+            return ApiResponse.error(res, {
+                statusCode: 400,
+                message: err.message
+            });
+        }
+    }
 }
 
 module.exports = new PhotographerPackageController();

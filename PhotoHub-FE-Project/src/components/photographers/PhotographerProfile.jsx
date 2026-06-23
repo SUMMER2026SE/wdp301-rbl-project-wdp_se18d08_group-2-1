@@ -1,8 +1,13 @@
 // src/components/photographers/PhotographerProfile.jsx
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import usePhotographers from "../../hooks/usePhotographers";
 import { aiRecommendService } from "../../services/aiRecommendService";
+import BookingModal from "../../booking/BookingModal";
+import Swal from "sweetalert2";
+import { photographerMarketplaceService } from "../../services/photographerService";
+import { bookingService } from "../../services/bookingService";
+import ReviewList from "../review/ReviewList";
 
 import {
   Star,
@@ -26,26 +31,93 @@ import {
   Tag,
   DollarSign,
   Grid3X3,
+  MessageSquare,
+  X,
 } from "lucide-react";
 
 const PhotographerProfile = ({ language = "en" }) => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const routerLocation = useLocation();
   const { getPhotographerDetail, loading, error } = usePhotographers();
   const [photographer, setPhotographer] = useState(null);
   const [selectedImg, setSelectedImg] = useState(null);
   const [albums, setAlbums] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [selectedAlbumDetail, setSelectedAlbumDetail] = useState(null); // { album, images }
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+
+  const handleStartChat = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      Swal.fire({
+        title: language === "vi" ? "Yêu cầu đăng nhập" : "Login required",
+        text: language === "vi" ? "Vui lòng đăng nhập để bắt đầu trò chuyện." : "Please login to start chatting.",
+        icon: "warning",
+        confirmButtonText: language === "vi" ? "Đăng nhập" : "Login",
+        confirmButtonColor: "#ff6b3b",
+        showCancelButton: true,
+        cancelButtonText: language === "vi" ? "Hủy" : "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/login");
+        }
+      });
+      return;
+    }
+
+    try {
+      const recipientId = photographer?.user?._id;
+      if (!recipientId) {
+        Swal.fire(
+          language === "vi" ? "Lỗi" : "Error",
+          language === "vi" ? "Không tìm thấy thông tin tài khoản nhiếp ảnh gia." : "Photographer account details not found.",
+          "error"
+        );
+        return;
+      }
+
+      // Check if current user is trying to chat with themselves
+      const storedUser = (() => { try { return JSON.parse(localStorage.getItem("user") || "{}"); } catch (_error) { return {}; } })();
+      const currentUserId = localStorage.getItem("userId") || storedUser._id || storedUser.id || storedUser.userId;
+      if (String(currentUserId || "") === String(recipientId)) {
+        Swal.fire(
+          language === "vi" ? "Thông báo" : "Notice",
+          language === "vi" ? "Bạn không thể trò chuyện với chính mình." : "You cannot chat with yourself.",
+          "info"
+        );
+        return;
+      }
+
+      Swal.fire({
+        title: language === "vi" ? "Đang kết nối..." : "Connecting...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
+      const res = await photographerMarketplaceService.createConversation(recipientId);
+      Swal.close();
+
+      if (res && res.success && res.data) {
+        navigate(res.data?._id ? `/chat?conversationId=${res.data._id}` : "/chat");
+      } else {
+        throw new Error(res?.message || "Failed to start conversation");
+      }
+    } catch (err) {
+      Swal.close();
+      console.error(err);
+      Swal.fire(
+        language === "vi" ? "Lỗi" : "Error",
+        err.response?.data?.message || err.message,
+        "error"
+      );
+    }
+  };
 
 
-  // Giả lập danh sách ảnh portfolio nếu DB chưa có (Thay bằng data thật từ photographer.portfolio sau này)
-  const dummyGallery = [
-    "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1554080353-a576cf803bda?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1520390138845-12006b42937c?auto=format&fit=crop&w=800&q=80",
-  ];
+
 
   const labels = {
     en: {
@@ -125,10 +197,30 @@ const PhotographerProfile = ({ language = "en" }) => {
       } catch (err) {
         console.error("Lỗi khi tải albums:", err);
       }
+
+      // Tải danh sách Reviews
+      try {
+        const reviewRes = await bookingService.getPhotographerReviews(id);
+        if (reviewRes.success && reviewRes.data) {
+          setReviews(reviewRes.data.reviews || []);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải reviews:", err);
+      }
     };
     loadPhotographer();
   }
 }, [id, getPhotographerDetail]);
+
+  useEffect(() => {
+    if (
+      photographer &&
+      (routerLocation.state?.openBooking ||
+        new URLSearchParams(routerLocation.search).get("book") === "true")
+    ) {
+      navigate(`/booking/${id}`, { replace: true });
+    }
+  }, [routerLocation, photographer, navigate, id]);
 
   const openAlbumDetail = async (album) => {
     try {
@@ -144,7 +236,7 @@ const PhotographerProfile = ({ language = "en" }) => {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader className="animate-spin text-blue-500" size={48} />
+          <Loader className="animate-spin text-orange-500" size={48} />
           <p className="text-sm font-medium text-gray-500 animate-pulse">{t.loading}</p>
         </div>
       </div>
@@ -200,7 +292,7 @@ const PhotographerProfile = ({ language = "en" }) => {
 
       {/* ================= HERO & HEADER SECTION ================= */}
       <div className="relative overflow-hidden rounded-3xl bg-white shadow-xl dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700/50">
-        <div className="relative h-80 w-full overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-600">
+        <div className="relative h-80 w-full overflow-hidden bg-gradient-to-br from-orange-500 via-orange-600 to-amber-500">
           {avatarUrl && (
             <img
               src={avatarUrl}
@@ -214,7 +306,7 @@ const PhotographerProfile = ({ language = "en" }) => {
 
         <div className="relative -mt-24 px-6 pb-8 sm:px-8 flex flex-col md:flex-row items-center md:items-end justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-5 text-center sm:text-left w-full md:w-auto">
-            <div className="relative h-36 w-36 shrink-0 overflow-hidden rounded-2xl border-4 border-white bg-gradient-to-br from-blue-400 to-purple-500 shadow-2xl dark:border-gray-800 group">
+            <div className="relative h-36 w-36 shrink-0 overflow-hidden rounded-2xl border-4 border-white bg-gradient-to-br from-orange-400 to-amber-500 shadow-2xl dark:border-gray-800 group">
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
@@ -234,8 +326,8 @@ const PhotographerProfile = ({ language = "en" }) => {
                   {displayName}
                 </h1>
                 {verificationStatus === "VERIFIED" && (
-                  <span className="flex items-center gap-1 rounded-full bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-600 backdrop-blur-md dark:bg-blue-400/10 dark:text-blue-400 border border-blue-500/20">
-                    <CheckCircle size={14} className="fill-blue-500/10" />
+                  <span className="flex items-center gap-1 rounded-full bg-orange-500/10 px-3 py-1 text-xs font-semibold text-orange-600 backdrop-blur-md dark:bg-orange-400/10 dark:text-orange-400 border border-orange-500/20">
+                    <CheckCircle size={14} className="fill-orange-500/10 text-orange-500" />
                     {t.verified}
                   </span>
                 )}
@@ -282,8 +374,8 @@ const PhotographerProfile = ({ language = "en" }) => {
             </div>
 
             <div className="group rounded-2xl bg-white p-4 shadow-sm border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center gap-2.5 text-green-600 dark:text-green-400">
-                <span className="rounded-xl bg-green-500/10 p-2 dark:bg-green-500/20">
+              <div className="flex items-center gap-2.5 text-orange-600 dark:text-orange-400">
+                <span className="rounded-xl bg-orange-500/10 p-2 dark:bg-orange-500/20">
                   <Award size={20} />
                 </span>
                 <div>
@@ -298,8 +390,8 @@ const PhotographerProfile = ({ language = "en" }) => {
             </div>
 
             <div className="group rounded-2xl bg-white p-4 shadow-sm border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:bg-gray-800 dark:border-gray-700">
-              <div className="flex items-center gap-2.5 text-blue-600 dark:text-blue-400">
-                <span className="rounded-xl bg-blue-500/10 p-2 dark:bg-blue-500/20">
+              <div className="flex items-center gap-2.5 text-orange-600 dark:text-orange-400">
+                <span className="rounded-xl bg-orange-500/10 p-2 dark:bg-orange-500/20">
                   <BookOpen size={20} />
                 </span>
                 <div>
@@ -315,13 +407,13 @@ const PhotographerProfile = ({ language = "en" }) => {
 
             {hourlyRate && (
               <div className="group rounded-2xl bg-white p-4 shadow-sm border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:bg-gray-800 dark:border-gray-700">
-                <div className="flex items-center gap-2.5 text-purple-600 dark:text-purple-400">
-                  <span className="rounded-xl bg-purple-500/10 p-2 dark:bg-purple-500/20">
-                    <span className="text-lg font-black">$</span>
+                <div className="flex items-center gap-2.5 text-orange-600 dark:text-orange-400">
+                  <span className="rounded-xl bg-orange-500/10 p-2 dark:bg-orange-500/20">
+                    <span className="text-lg font-black">đ</span>
                   </span>
                   <div>
                     <div className="text-xl font-black text-gray-900 dark:text-white">
-                      ${hourlyRate}
+                      {Number(hourlyRate).toLocaleString('vi-VN')} đ/giờ
                     </div>
                     <p className="text-xs font-medium text-gray-400">
                       {t.hourlyRate}
@@ -345,7 +437,7 @@ const PhotographerProfile = ({ language = "en" }) => {
           {bio && (
             <div className="rounded-3xl bg-white p-6 sm:p-8 shadow-md dark:bg-gray-800 border border-gray-100/50 dark:border-gray-700/40 transition-all duration-300 hover:shadow-lg">
               <h2 className="mb-4 flex items-center gap-2 text-xl font-black text-gray-900 dark:text-white">
-                <Camera size={22} className="text-blue-500" />
+                <Camera size={22} className="text-orange-500" />
                 {t.about}
               </h2>
               <p className="leading-relaxed text-gray-600 dark:text-gray-300 whitespace-pre-line font-medium text-sm sm:text-base">
@@ -363,18 +455,18 @@ const PhotographerProfile = ({ language = "en" }) => {
                   <div className="mb-5 flex items-center justify-between flex-wrap gap-3">
                     <button
                       onClick={() => setSelectedAlbumDetail(null)}
-                      className="flex items-center gap-1.5 text-sm font-bold text-indigo-500 hover:text-indigo-700 transition-colors"
+                      className="flex items-center gap-1.5 text-sm font-bold text-orange-500 hover:text-orange-700 transition-colors"
                     >
                       <ArrowLeft size={15} /> Quay lại Albums
                     </button>
                     <div className="flex flex-wrap gap-1.5">
                       {selectedAlbumDetail.album?.category?.name && (
-                        <span className="flex items-center gap-1 text-xs font-bold text-indigo-500 bg-indigo-500/10 rounded-full px-2.5 py-0.5 border border-indigo-500/15">
+                        <span className="flex items-center gap-1 text-xs font-bold text-orange-500 bg-orange-500/10 rounded-full px-2.5 py-0.5 border border-orange-500/15">
                           <Tag size={9} /> {selectedAlbumDetail.album.category.name}
                         </span>
                       )}
                       {selectedAlbumDetail.album?.styleTags?.map(tag => (
-                        <span key={tag._id || tag} className="text-[10px] font-bold rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-0.5 border border-purple-500/15">
+                        <span key={tag._id || tag} className="text-[10px] font-bold rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 px-2 py-0.5 border border-orange-500/15">
                           #{tag.name || tag}
                         </span>
                       ))}
@@ -382,14 +474,14 @@ const PhotographerProfile = ({ language = "en" }) => {
                   </div>
                   <div className="mb-4">
                     <h3 className="flex items-center gap-2 text-lg font-black text-gray-900 dark:text-white">
-                      <ImageIcon size={20} className="text-indigo-500" />
+                      <ImageIcon size={20} className="text-orange-500" />
                       {selectedAlbumDetail.album?.title}
                     </h3>
                     {selectedAlbumDetail.album?.description && (
                       <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{selectedAlbumDetail.album.description}</p>
                     )}
                     {selectedAlbumDetail.album?.price_package && (
-                      <p className="flex items-center gap-1 text-sm font-black text-cyan-600 dark:text-cyan-400 mt-2">
+                      <p className="flex items-center gap-1 text-sm font-black text-orange-600 dark:text-orange-400 mt-2">
                         <DollarSign size={13} /> {selectedAlbumDetail.album.price_package.toLocaleString()} VNĐ
                       </p>
                     )}
@@ -424,7 +516,7 @@ const PhotographerProfile = ({ language = "en" }) => {
                 <div>
                   <div className="mb-6 flex items-center justify-between">
                     <h3 className="flex items-center gap-2 text-xl font-black text-gray-900 dark:text-white">
-                      <ImageIcon size={22} className="text-indigo-500" />
+                      <ImageIcon size={22} className="text-orange-500" />
                       {t.gallery}
                     </h3>
                     <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-500 dark:bg-gray-700 dark:text-gray-400">
@@ -456,11 +548,11 @@ const PhotographerProfile = ({ language = "en" }) => {
                         <div className="p-4">
                           <p className="font-black text-sm text-gray-900 dark:text-white truncate">{album.title}</p>
                           {album.category?.name && (
-                            <p className="flex items-center gap-1 text-[10px] font-semibold text-indigo-500 mt-1">
+                            <p className="flex items-center gap-1 text-[10px] font-semibold text-orange-500 mt-1">
                               <Tag size={9} /> {album.category.name}
                             </p>
                           )}
-                          <p className="text-xs font-black text-cyan-600 dark:text-cyan-400 mt-1.5">
+                          <p className="text-xs font-black text-orange-600 dark:text-orange-400 mt-1.5">
                             {album.price_package?.toLocaleString()} VNĐ
                           </p>
                         </div>
@@ -483,9 +575,9 @@ const PhotographerProfile = ({ language = "en" }) => {
                 {styles.map((style, idx) => (
                   <span
                     key={idx}
-                    className="rounded-xl bg-gradient-to-r from-blue-500/5 to-purple-500/5 hover:from-blue-500/10 hover:to-purple-500/10 px-4 py-2 text-sm font-semibold text-blue-700 border border-blue-500/10 dark:text-blue-300 dark:border-blue-400/20 transition-all duration-300 cursor-default"
+                    className="rounded-xl bg-gradient-to-r from-orange-500/5 to-orange-600/5 hover:from-orange-500/10 hover:to-orange-600/10 px-4 py-2 text-sm font-semibold text-orange-700 border border-orange-500/10 dark:text-orange-300 dark:border-orange-400/20 transition-all duration-300 cursor-default"
                   >
-                    #{style}
+                    #{style.name}
                   </span>
                 ))}
               </div>
@@ -504,6 +596,15 @@ const PhotographerProfile = ({ language = "en" }) => {
               </p>
             </div>
           )}
+
+          {/* Đánh giá từ khách hàng */}
+          <div className="rounded-3xl bg-white p-6 sm:p-8 shadow-md dark:bg-gray-800 border border-gray-100/50 dark:border-gray-700/40 transition-all duration-300 hover:shadow-lg">
+            <h3 className="mb-5 flex items-center gap-2 text-xl font-black text-gray-900 dark:text-white">
+              <Star size={22} className="text-amber-500 fill-amber-500" />
+              {language === "vi" ? "Đánh giá từ khách hàng" : "Client Reviews"}
+            </h3>
+            <ReviewList reviews={reviews} language={language} />
+          </div>
         </div>
 
         {/* Khối liên hệ bên phải (Sidebar) */}
@@ -529,7 +630,7 @@ const PhotographerProfile = ({ language = "en" }) => {
                     <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Phone Call</p>
                     <a
                       href={`tel:${user.phoneNumber}`}
-                      className="font-semibold text-gray-700 hover:text-blue-500 dark:text-gray-200 dark:hover:text-blue-400 transition"
+                      className="font-semibold text-gray-700 hover:text-orange-500 dark:text-gray-200 dark:hover:text-orange-400 transition"
                     >
                       {user.phoneNumber}
                     </a>
@@ -582,8 +683,19 @@ const PhotographerProfile = ({ language = "en" }) => {
             </div>
           )}
 
-          <button className="w-full rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 px-6 py-4 font-bold text-white shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 hover:brightness-110 active:scale-[0.98] transition-all duration-300 tracking-wide text-base">
+          <button 
+            onClick={() => navigate(`/booking/${id}`)}
+            className="w-full rounded-2xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 px-6 py-4 font-bold text-white shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 hover:brightness-110 active:scale-[0.98] transition-all duration-300 tracking-wide text-base"
+          >
             {t.bookNow}
+          </button>
+
+          <button 
+            onClick={handleStartChat}
+            className="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-orange-500 bg-white hover:bg-orange-50 dark:bg-transparent dark:hover:bg-orange-500/10 px-6 py-3.5 font-bold text-orange-500 shadow-md hover:shadow-lg hover:shadow-orange-500/5 active:scale-[0.98] transition-all duration-300 tracking-wide text-base"
+          >
+            <MessageSquare size={18} />
+            {language === "vi" ? "Trò chuyện ngay" : "Chat Now"}
           </button>
         </div>
 
@@ -591,7 +703,7 @@ const PhotographerProfile = ({ language = "en" }) => {
       {/* ================= 👉 THÊM VÀO ĐÂY: LIGHTBOX MODAL FULL SCREEN ================= */}
       {selectedImg && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm transition-all duration-300 animate-fadeIn"
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm transition-all duration-300 animate-fadeIn"
           onClick={() => setSelectedImg(null)} // Click ra ngoài vùng ảnh để đóng
         >
           {/* Khung chứa ảnh Full Screen */}
@@ -602,6 +714,13 @@ const PhotographerProfile = ({ language = "en" }) => {
               className="max-h-[90vh] max-w-[95vw] object-contain rounded-2xl select-none"
               onClick={(e) => e.stopPropagation()} // Click vào chính bức ảnh thì không bị đóng nhầm
             />
+            <button
+              onClick={() => setSelectedImg(null)}
+              className="absolute top-4 right-4 h-10 w-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all border border-white/10"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
           </div>
         </div>
       )}
@@ -610,3 +729,4 @@ const PhotographerProfile = ({ language = "en" }) => {
 };
 
 export default PhotographerProfile;
+

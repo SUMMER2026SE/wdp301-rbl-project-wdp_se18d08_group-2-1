@@ -26,6 +26,7 @@ export default function AdminBookings() {
       if (res.success) {
         setBookings(res.data.bookings);
         setTotalPages(res.data.pagination.pages);
+        console.log(res.data.bookings)
       } else {
         Swal.fire("Lỗi", res.message || "Không thể tải danh sách lịch đặt", "error");
       }
@@ -118,7 +119,7 @@ export default function AdminBookings() {
         <select 
           value={status} 
           onChange={(e) => { setStatus(e.target.value); setPage(1); setSelectedBooking(null); }}
-          className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
+          className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-orange-500"
         >
           <option value="">Tất cả trạng thái</option>
           <option value="PENDING">Chờ nhiếp ảnh gia đồng ý (PENDING)</option>
@@ -150,12 +151,12 @@ export default function AdminBookings() {
               {loading ? (
                 <tr>
                   <td colSpan="5" className="text-center py-12">
-                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-cyan-500 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-orange-500 mx-auto"></div>
                   </td>
                 </tr>
               ) : bookings.length > 0 ? (
                 bookings.map((b) => {
-                  let statusColor = "text-cyan-400 bg-cyan-500/10";
+                  let statusColor = "text-orange-400 bg-orange-500/10";
                   if (b.status === "COMPLETED") statusColor = "text-emerald-400 bg-emerald-500/10";
                   if (b.status === "CANCELLED") statusColor = "text-red-400 bg-red-500/10";
                   if (b.status === "DISPUTED") statusColor = "text-orange-400 bg-orange-500/10 animate-pulse";
@@ -171,7 +172,7 @@ export default function AdminBookings() {
                         <div className="font-semibold text-white">{b.photographer?.displayName || "Nhiếp ảnh gia"}</div>
                         <div className="text-[11px] text-slate-500">{b.photographer?.user?.email}</div>
                       </td>
-                      <td className="py-3 px-3 text-cyan-400 font-bold">{formatCurrency(b.totalPrice)}</td>
+                      <td className="py-3 px-3 text-orange-400 font-bold">{formatCurrency(b.price)}</td>
                       <td className="py-3 px-3">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusColor}`}>
                           {b.status}
@@ -237,7 +238,7 @@ export default function AdminBookings() {
           
           {selectedBooking ? (
             <div className="space-y-4 text-sm">
-              <div className="flex items-center gap-2 text-cyan-400 font-bold">
+              <div className="flex items-center gap-2 text-orange-400 font-bold">
                 <CalendarRange className="h-4.5 w-4.5" />
                 Hợp đồng: {selectedBooking.booking._id}
               </div>
@@ -254,11 +255,11 @@ export default function AdminBookings() {
                 <span className="text-slate-400 text-xs uppercase font-bold tracking-wide">Chi tiết tài chính</span>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Tổng giá trị hợp đồng:</span>
-                  <span className="text-white font-semibold">{formatCurrency(selectedBooking.booking.totalPrice)}</span>
+                  <span className="text-white font-semibold">{formatCurrency(selectedBooking.booking.price)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Ký quỹ đặt cọc (Deposit):</span>
-                  <span className="text-cyan-400 font-bold">{formatCurrency(selectedBooking.booking.depositAmount)}</span>
+                  <span className="text-orange-400 font-bold">{formatCurrency(selectedBooking.booking.depositAmount)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Tỷ lệ chiết khấu hệ thống:</span>
@@ -286,7 +287,7 @@ export default function AdminBookings() {
                           <p className="text-slate-500 mt-0.5">{new Date(p.createdAt).toLocaleDateString("vi-VN")}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-cyan-400">{formatCurrency(p.amount)}</p>
+                          <p className="font-bold text-orange-400">{formatCurrency(p.amount)}</p>
                           <p className={`font-semibold ${p.status === "SUCCESS" ? "text-emerald-400" : "text-yellow-500"}`}>{p.status}</p>
                         </div>
                       </div>
@@ -303,7 +304,7 @@ export default function AdminBookings() {
                     {selectedBooking.booking.statusLogs.map((log, i) => (
                       <div key={i} className="text-xs bg-slate-950 p-2 rounded-lg border border-slate-800">
                         <div className="flex justify-between text-slate-400 font-semibold">
-                          <span className="text-cyan-400">{log.status}</span>
+                          <span className="text-orange-400">{log.status}</span>
                           <span>{new Date(log.updatedAt).toLocaleString("vi-VN")}</span>
                         </div>
                         <p className="text-slate-300 mt-1 italic">"{log.note || "Không có ghi chú"}"</p>

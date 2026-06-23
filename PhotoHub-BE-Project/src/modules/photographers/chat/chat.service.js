@@ -1,12 +1,26 @@
 const Conversation = require("./conversation.model");
 const Message = require("./message.model");
 
+const USER_SELECT = "fullName email avatar role";
+
 class ChatService {
+  async populateConversation(conversation) {
+    if (!conversation) return null;
+    return await conversation.populate([
+      { path: "participants", select: USER_SELECT },
+      { path: "lastMessage", populate: { path: "senderId", select: USER_SELECT } },
+    ]);
+  }
+
   async getConversations(userId) {
     return await Conversation.find({ participants: userId })
-      .populate("participants", "fullName email avatar role")
-      .populate("lastMessage")
+      .populate("participants", USER_SELECT)
+      .populate({ path: "lastMessage", populate: { path: "senderId", select: USER_SELECT } })
       .sort({ updatedAt: -1 });
+  }
+
+  async getConversationById(conversationId) {
+    return await Conversation.findById(conversationId);
   }
 
   async getMessages(conversationId, userId = null) {
@@ -19,7 +33,9 @@ class ChatService {
       throw new Error("You are not part of this conversation");
     }
 
-    return await Message.find({ conversationId }).sort({ createdAt: 1 });
+    return await Message.find({ conversationId })
+      .populate("senderId", USER_SELECT)
+      .sort({ createdAt: 1 });
   }
 
   async createMessage(conversationId, senderId, payload = {}) {
@@ -58,14 +74,17 @@ class ChatService {
     conversation.lastMessage = savedMessage._id;
     await conversation.save();
 
-    return savedMessage;
+    return await Message.findById(savedMessage._id).populate("senderId", USER_SELECT);
   }
 
   async findOrCreateConversation(participants, bookingId = null, jobPostId = null) {
-    const sortedParticipants = [...participants].sort();
+    const sortedParticipants = [...new Set(participants.map((id) => id.toString()))].sort();
+    if (sortedParticipants.length < 2) {
+      throw new Error("Conversation requires two different participants");
+    }
 
-    let query = {
-      participants: { $all: sortedParticipants, $size: sortedParticipants.length }
+    const query = {
+      participants: { $all: sortedParticipants, $size: sortedParticipants.length },
     };
 
     if (bookingId) query.bookingId = bookingId;
@@ -82,7 +101,7 @@ class ChatService {
       await conversation.save();
     }
 
-    return conversation;
+    return await this.populateConversation(conversation);
   }
 }
 

@@ -1,7 +1,11 @@
 const { User } = require("../models/User");
 const ApiResponse = require("../../../utils/ApiResponse");
 const bcrypt = require("bcryptjs");
-
+const path = require("path");
+const fs = require("fs");
+const {
+    uploadBufferToCloudinary,
+} = require("../../../utils/cloudinaryUpload");
 class ProfileController {
     async getProfile(req, res) {
         try {
@@ -88,10 +92,26 @@ class ProfileController {
                 return ApiResponse.error(res, "Người dùng không tồn tại", 404);
             }
 
-            // req.file.path = Cloudinary HTTPS URL (do multer-storage-cloudinary xử lý)
-            const avatarUrl = req.file.path;
+            console.log("[uploadAvatar] user found:", user._id, "current avatar:", user.avatar);
+
+            // Lưu đường dẫn tương đối vào DB
+            const uploadResult = await uploadBufferToCloudinary(
+                req.file.buffer,
+                req.file.mimetype,
+                {
+                    folder: "photohub/avatars",
+                    localFolder: "avatars",
+                    originalName: req.file.originalname,
+                }
+            );
+
+            const avatarUrl =
+                uploadResult.secure_url || uploadResult.url;
             user.avatar = avatarUrl;
-            await user.save({ validateBeforeSave: true });
+
+            await user.save({
+                validateBeforeSave: true,
+            });
 
             const updated = await User.findById(req.user.id).select(
                 "-password -resetPasswordOTP -resetPasswordExpires"
@@ -138,6 +158,7 @@ class ProfileController {
             return ApiResponse.error(res, e.message, 500);
         }
     }
+
 }
 
 module.exports = ProfileController;

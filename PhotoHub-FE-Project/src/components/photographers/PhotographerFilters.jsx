@@ -1,7 +1,18 @@
 // src/components/photographers/PhotographerFilters.jsx
 import { useState, useEffect, useRef } from "react";
-import { Search, SlidersHorizontal, AlignJustify, X, ChevronDown, Star } from "lucide-react";
-import { createPortal } from "react-dom"; // eslint-disable-line no-unused-vars
+import {
+  Search,
+  SlidersHorizontal,
+  AlignJustify,
+  X,
+  ChevronDown,
+  Star,
+  Camera,
+  Heart,
+  Grid2X2,
+  List,
+} from "lucide-react";
+import { createPortal } from "react-dom";
 
 const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], categories = [], locations = [], language }) => {
   const labels = {
@@ -10,52 +21,60 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], catego
       filterBtn: "Filter",
       sortBtn: "Sort",
       filterTitle: "Filters",
-      clearBtn: "Clear Filters",
+      clearBtn: "Clear filters",
       applyBtn: "Apply",
-      experienceLabel: "Years of Experience",
-      expAll: "All", expUnder1: "Under 1 year",
-      exp1to3: "1-3 years", expOver3: "Over 3 years", expOver5: "Over 5 years",
-      stylesLabel: "Photography Styles",
-      locationLabel: "Working Location",
-      allLocations: "All Locations",
-      ratingLabel: "Minimum Rating",
+      experienceLabel: "Years of experience",
+      expAll: "All",
+      expUnder1: "Under 1 year",
+      exp1to3: "1-3 years",
+      expOver3: "Over 3 years",
+      expOver5: "Over 5 years",
+      stylesLabel: "Photography styles",
+      locationLabel: "Working location",
+      allLocations: "All locations",
+      ratingLabel: "Minimum rating",
       ratingAll: "All",
       sortNewest: "Newest",
-      sortBookings: "Bookings",
-      sortLikes: "Likes",
+      sortExperience: "Experience",
+      sortLikes: "Favorites",
       sortRating: "Rating",
-      descending: "High to Low",
-      ascending: "Low to High",
+      descending: "High to low",
+      ascending: "Low to high",
       clearAll: "Clear all",
+      grid: "Grid",
+      list: "List",
     },
     vi: {
-      searchPlaceholder: "Tìm kiếm nhiếp ảnh gia...",
-      filterBtn: "Bộ lọc",
-      sortBtn: "Sắp xếp",
-      filterTitle: "Bộ lọc",
-      clearBtn: "Bỏ lọc",
-      applyBtn: "Lọc",
-      experienceLabel: "Số năm kinh nghiệm",
-      expAll: "Tất cả", expUnder1: "Dưới 1 năm",
-      exp1to3: "Từ 1-3 năm", expOver3: "Trên 3 năm", expOver5: "Trên 5 năm",
-      stylesLabel: "Thể loại chụp",
-      locationLabel: "Địa điểm làm việc",
-      allLocations: "Tất cả địa điểm",
-      ratingLabel: "Số điểm đánh giá",
-      ratingAll: "Tất cả",
-      sortNewest: "Mới cập nhật",
-      sortBookings: "Số buổi chụp",
-      sortLikes: "Số lượt yêu thích",
-      sortRating: "Số điểm đánh giá",
-      descending: "Giảm dần",
-      ascending: "Tăng dần",
-      clearAll: "Hủy tất cả",
+      searchPlaceholder: "T\u00ecm ki\u1ebfm nhi\u1ebfp \u1ea3nh gia...",
+      filterBtn: "B\u1ed9 l\u1ecdc",
+      sortBtn: "S\u1eafp x\u1ebfp",
+      filterTitle: "B\u1ed9 l\u1ecdc",
+      clearBtn: "B\u1ecf l\u1ecdc",
+      applyBtn: "\u00c1p d\u1ee5ng",
+      experienceLabel: "S\u1ed1 n\u0103m kinh nghi\u1ec7m",
+      expAll: "T\u1ea5t c\u1ea3",
+      expUnder1: "D\u01b0\u1edbi 1 n\u0103m",
+      exp1to3: "T\u1eeb 1-3 n\u0103m",
+      expOver3: "Tr\u00ean 3 n\u0103m",
+      expOver5: "Tr\u00ean 5 n\u0103m",
+      stylesLabel: "Phong c\u00e1ch ch\u1ee5p",
+      locationLabel: "Khu v\u1ef1c l\u00e0m vi\u1ec7c",
+      allLocations: "T\u1ea5t c\u1ea3 khu v\u1ef1c",
+      ratingLabel: "\u0110\u00e1nh gi\u00e1 t\u1ed1i thi\u1ec3u",
+      ratingAll: "T\u1ea5t c\u1ea3",
+      sortNewest: "M\u1edbi nh\u1ea5t",
+      sortExperience: "Kinh nghi\u1ec7m",
+      sortLikes: "Y\u00eau th\u00edch",
+      sortRating: "\u0110\u00e1nh gi\u00e1",
+      descending: "Cao \u0111\u1ebfn th\u1ea5p",
+      ascending: "Th\u1ea5p \u0111\u1ebfn cao",
+      clearAll: "X\u00f3a t\u1ea5t c\u1ea3",
+      grid: "D\u1ea1ng l\u01b0\u1edbi",
+      list: "D\u1ea1ng danh s\u00e1ch",
     },
   };
 
-  const t = labels[language] || labels.vi;
-
-  // ── State ──────────────────────────────────────────────────────────────
+  const t = labels[language] || labels.en;
   const [searchValue, setSearchValue] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
@@ -79,11 +98,10 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], catego
     minExperience: 0,
   });
 
+  const [viewMode, setViewMode] = useState("grid");
   const sortRef = useRef(null);
   const [sortPos, setSortPos] = useState({ top: 0, right: 0 });
 
-
-  // ── Experience mapping ─────────────────────────────────────────────────
   const experienceOptions = [
     { value: "all", label: t.expAll, minExp: 0 },
     { value: "under1", label: t.expUnder1, minExp: 0 },
@@ -94,45 +112,39 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], catego
 
   const ratingOptions = [
     { value: 0, label: t.ratingAll },
-    { value: 3, label: "3+ ⭐" },
-    { value: 3.5, label: "3.5+ ⭐" },
-    { value: 4, label: "4+ ⭐" },
-    { value: 4.5, label: "4.5+ ⭐" },
+    { value: 3, label: "3+ stars" },
+    { value: 3.5, label: "3.5+ stars" },
+    { value: 4, label: "4+ stars" },
+    { value: 4.5, label: "4.5+ stars" },
   ];
 
-  // ── Debounce search ────────────────────────────────────────────────────
   useEffect(() => {
     const timer = setTimeout(() => {
-      onFilterChange({
-        search: searchValue,
-        ...appliedFilters,
-        sortBy: currentSort,
-      });
+      onFilterChange({ search: searchValue, ...appliedFilters, sortBy: currentSort });
     }, 400);
     return () => clearTimeout(timer);
   }, [searchValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Đóng sort dropdown khi click ngoài ────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
-      if (sortRef.current && !sortRef.current.contains(e.target)) {
-        setSortOpen(false);
-      }
+      if (sortRef.current && !sortRef.current.contains(e.target)) setSortOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // ── Đóng sort dropdown khi scroll ───────────────────────────────────
   useEffect(() => {
-    const handleScroll = () => { if (sortOpen) setSortOpen(false); };
+    const handleScroll = () => {
+      if (sortOpen) setSortOpen(false);
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [sortOpen]);
 
-  // ── Đóng filter panel bằng Escape ─────────────────────────────────────
   useEffect(() => {
-    const handler = (e) => { if (e.key === "Escape") setFilterOpen(false); };
+    const handler = (e) => {
+      if (e.key === "Escape") setFilterOpen(false);
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
@@ -188,7 +200,11 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], catego
     onFilterChange({ search: searchValue, ...appliedFilters, sortBy: sortValue });
   };
 
-  // ── Đếm số filter đang active ─────────────────────────────────────────
+  const handleViewMode = (mode) => {
+    setViewMode(mode);
+    onViewChange?.(mode);
+  };
+
   const activeCount = [
     appliedFilters.location !== "",
     appliedFilters.styles.length > 0,
@@ -196,46 +212,32 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], catego
     appliedFilters.minRating > 0,
     appliedFilters.minExperience > 0,
   ].filter(Boolean).length;
-
   const hasAnyActive = activeCount > 0 || searchValue.trim() !== "" || currentSort !== "relevance";
 
-  // ── Render ─────────────────────────────────────────────────────────────
+  const toolbarButton = "flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition-all duration-200 select-none";
+  const inactiveButton = "border-orange-100 bg-white text-slate-700 hover:border-orange-300 hover:bg-orange-50 dark:border-orange-500/20 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-orange-500/10";
+  const activeButton = "border-orange-400 bg-orange-50 text-orange-700 dark:border-orange-400/60 dark:bg-orange-500/15 dark:text-orange-200";
+
   return (
     <>
-      {/* ═══ TOOLBAR ═══ */}
       <div className="flex flex-wrap items-center gap-3">
-
-        {/* Search */}
-        <div className="relative flex-1 min-w-[180px] max-w-xs">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 pointer-events-none" />
+        <div className="relative min-w-[210px] flex-1 max-w-sm">
+          <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-orange-500/80" />
           <input
             type="text"
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             placeholder={t.searchPlaceholder}
-            className="w-full rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 pl-9 pr-3 py-2.5 text-sm text-slate-800 dark:text-zinc-200 placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/20 dark:focus:border-orange-500 transition-all"
+            className="w-full rounded-xl border border-orange-100 bg-white py-2.5 pl-9 pr-3 text-sm font-medium text-slate-900 placeholder-slate-400 transition-all focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/20 dark:border-orange-500/20 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
           />
         </div>
 
-        {/* Bộ lọc button */}
-        <button
-          onClick={() => { setFilterOpen(true); setSortOpen(false); }}
-          className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200 select-none
-            ${activeCount > 0
-              ? "border-orange-400 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400"
-              : "border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-600"
-            }`}
-        >
+        <button onClick={() => { setFilterOpen(true); setSortOpen(false); }} className={`${toolbarButton} ${activeCount > 0 ? activeButton : inactiveButton}`}>
           <SlidersHorizontal size={15} />
           {t.filterBtn}
-          {activeCount > 0 && (
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white">
-              {activeCount}
-            </span>
-          )}
+          {activeCount > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-black text-white">{activeCount}</span>}
         </button>
 
-        {/* Sắp xếp button */}
         <div className="relative" ref={sortRef}>
           <button
             onClick={() => {
@@ -246,95 +248,46 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], catego
               setSortOpen(!sortOpen);
               setFilterOpen(false);
             }}
-
-            className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200 select-none
-              ${sortOpen
-                ? "border-orange-400 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400"
-                : "border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-600"
-              }`}
+            className={`${toolbarButton} ${sortOpen ? activeButton : inactiveButton}`}
           >
             <AlignJustify size={15} />
             {t.sortBtn}
           </button>
 
-          {/* Sort Dropdown — portal để thoát stacking context của card */}
           {sortOpen && createPortal(
-            <div
-              style={{ position: "fixed", top: sortPos.top, right: sortPos.right, zIndex: 99999, width: "240px" }}
-              className="rounded-2xl border border-slate-100 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl shadow-slate-200/60 dark:shadow-black/50 overflow-hidden"
-            >
-
-
-              {/* Mới cập nhật */}
-              <button
-                onClick={() => handleSortSelect("relevance")}
-                className={`flex w-full items-center gap-2.5 px-4 py-3 text-sm font-semibold border-b border-slate-50 dark:border-zinc-800 transition-colors
-                  ${currentSort === "relevance" ? "text-orange-500 bg-orange-50 dark:bg-orange-500/10" : "text-slate-700 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-800"}`}
-              >
-                <AlignJustify size={14} className="opacity-60" />
+            <div style={{ position: "fixed", top: sortPos.top, right: sortPos.right, zIndex: 99999, width: "244px" }} className="overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-xl shadow-orange-100/80 dark:border-orange-500/20 dark:bg-slate-900 dark:shadow-black/50">
+              <button onClick={() => handleSortSelect("relevance")} className={`flex w-full items-center gap-2.5 border-b border-orange-50 px-4 py-3 text-sm font-bold transition-colors dark:border-orange-500/10 ${currentSort === "relevance" ? "bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-200" : "text-slate-700 hover:bg-orange-50 dark:text-slate-200 dark:hover:bg-orange-500/10"}`}>
+                <AlignJustify size={14} className="opacity-70" />
                 {t.sortNewest}
               </button>
 
-              {/* Số buổi chụp */}
-              <div className="border-b border-slate-50 dark:border-zinc-800">
-                <p className="px-4 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                  {t.sortBookings}
-                </p>
-                <button
-                  onClick={() => handleSortSelect("experience")}
-                  className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors
-                    ${currentSort === "experience" ? "text-orange-500 bg-orange-50 dark:bg-orange-500/10" : "text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800"}`}
-                >
-                  <span className="text-base leading-none">📷</span> {t.descending}
+              <div className="border-b border-orange-50 dark:border-orange-500/10">
+                <p className="px-4 pb-1 pt-3 text-[10px] font-black uppercase tracking-wide text-orange-500/80">{t.sortExperience}</p>
+                <button onClick={() => handleSortSelect("experience")} className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${currentSort === "experience" ? "bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-200" : "text-slate-600 hover:bg-orange-50 dark:text-slate-300 dark:hover:bg-orange-500/10"}`}>
+                  <Camera size={14} /> {t.descending}
                 </button>
-                <button
-                  onClick={() => handleSortSelect("bookings_asc")}
-                  className={`flex w-full items-center gap-2.5 px-4 py-2.5 pb-3 text-sm transition-colors
-                    ${currentSort === "bookings_asc" ? "text-orange-500 bg-orange-50 dark:bg-orange-500/10" : "text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800"}`}
-                >
-                  <span className="text-base leading-none">👤</span> {t.ascending}
+                <button onClick={() => handleSortSelect("bookings_asc")} className={`flex w-full items-center gap-2.5 px-4 py-2.5 pb-3 text-sm transition-colors ${currentSort === "bookings_asc" ? "bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-200" : "text-slate-600 hover:bg-orange-50 dark:text-slate-300 dark:hover:bg-orange-500/10"}`}>
+                  <Camera size={14} /> {t.ascending}
                 </button>
               </div>
 
-              {/* Số lượt yêu thích */}
-              <div className="border-b border-slate-50 dark:border-zinc-800">
-                <p className="px-4 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                  {t.sortLikes}
-                </p>
-                <button
-                  onClick={() => handleSortSelect("likes_desc")}
-                  className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors
-                    ${currentSort === "likes_desc" ? "text-orange-500 bg-orange-50 dark:bg-orange-500/10" : "text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800"}`}
-                >
-                  <span className="text-base leading-none">♡</span> {t.descending}
+              <div className="border-b border-orange-50 dark:border-orange-500/10">
+                <p className="px-4 pb-1 pt-3 text-[10px] font-black uppercase tracking-wide text-orange-500/80">{t.sortLikes}</p>
+                <button onClick={() => handleSortSelect("likes_desc")} className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${currentSort === "likes_desc" ? "bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-200" : "text-slate-600 hover:bg-orange-50 dark:text-slate-300 dark:hover:bg-orange-500/10"}`}>
+                  <Heart size={14} /> {t.descending}
                 </button>
-                <button
-                  onClick={() => handleSortSelect("likes_asc")}
-                  className={`flex w-full items-center gap-2.5 px-4 py-2.5 pb-3 text-sm transition-colors
-                    ${currentSort === "likes_asc" ? "text-orange-500 bg-orange-50 dark:bg-orange-500/10" : "text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800"}`}
-                >
-                  <span className="text-base leading-none">♡</span> {t.ascending}
+                <button onClick={() => handleSortSelect("likes_asc")} className={`flex w-full items-center gap-2.5 px-4 py-2.5 pb-3 text-sm transition-colors ${currentSort === "likes_asc" ? "bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-200" : "text-slate-600 hover:bg-orange-50 dark:text-slate-300 dark:hover:bg-orange-500/10"}`}>
+                  <Heart size={14} /> {t.ascending}
                 </button>
               </div>
 
-              {/* Số điểm đánh giá */}
               <div>
-                <p className="px-4 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                  {t.sortRating}
-                </p>
-                <button
-                  onClick={() => handleSortSelect("rating")}
-                  className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors
-                    ${currentSort === "rating" ? "text-orange-500 bg-orange-50 dark:bg-orange-500/10" : "text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800"}`}
-                >
-                  <Star size={13} className="opacity-60" /> {t.descending}
+                <p className="px-4 pb-1 pt-3 text-[10px] font-black uppercase tracking-wide text-orange-500/80">{t.sortRating}</p>
+                <button onClick={() => handleSortSelect("rating")} className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${currentSort === "rating" ? "bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-200" : "text-slate-600 hover:bg-orange-50 dark:text-slate-300 dark:hover:bg-orange-500/10"}`}>
+                  <Star size={14} /> {t.descending}
                 </button>
-                <button
-                  onClick={() => handleSortSelect("price")}
-                  className={`flex w-full items-center gap-2.5 px-4 py-2.5 pb-3 text-sm transition-colors
-                    ${currentSort === "price" ? "text-orange-500 bg-orange-50 dark:bg-orange-500/10" : "text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800"}`}
-                >
-                  <Star size={13} className="opacity-60" /> {t.ascending}
+                <button onClick={() => handleSortSelect("price")} className={`flex w-full items-center gap-2.5 px-4 py-2.5 pb-3 text-sm transition-colors ${currentSort === "price" ? "bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-200" : "text-slate-600 hover:bg-orange-50 dark:text-slate-300 dark:hover:bg-orange-500/10"}`}>
+                  <Star size={14} /> {t.ascending}
                 </button>
               </div>
             </div>,
@@ -342,67 +295,47 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], catego
           )}
         </div>
 
-        {/* Nút hủy tất cả — góc phải, chỉ hiện khi có filter active */}
+        <div className="flex rounded-xl border border-orange-100 bg-white p-1 dark:border-orange-500/20 dark:bg-slate-900">
+          <button type="button" onClick={() => handleViewMode("grid")} className={`flex h-9 w-9 items-center justify-center rounded-lg transition-all ${viewMode === "grid" ? "bg-orange-500 text-white" : "text-slate-500 hover:bg-orange-50 hover:text-orange-700 dark:text-slate-300 dark:hover:bg-orange-500/10"}`} title={t.grid} aria-label={t.grid}>
+            <Grid2X2 size={15} />
+          </button>
+          <button type="button" onClick={() => handleViewMode("list")} className={`flex h-9 w-9 items-center justify-center rounded-lg transition-all ${viewMode === "list" ? "bg-orange-500 text-white" : "text-slate-500 hover:bg-orange-50 hover:text-orange-700 dark:text-slate-300 dark:hover:bg-orange-500/10"}`} title={t.list} aria-label={t.list}>
+            <List size={16} />
+          </button>
+        </div>
+
         {hasAnyActive && (
-          <button
-            onClick={handleClearFilters}
-            className="ml-auto flex items-center gap-1.5 rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 transition-all duration-200 select-none"
-          >
+          <button onClick={handleClearFilters} className="ml-auto flex items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-bold text-orange-700 transition-all hover:bg-orange-100 dark:border-orange-500/25 dark:bg-orange-500/10 dark:text-orange-200 dark:hover:bg-orange-500/20">
             <X size={14} />
             {t.clearAll}
           </button>
         )}
       </div>
 
-      {/* ═══ FILTER PANEL (right-side overlay) ═══ */}
       {filterOpen && createPortal(
         <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
-            style={{ zIndex: 9998 }}
-            onClick={() => setFilterOpen(false)}
-          />
-          {/* Panel */}
-          <div className="fixed top-0 right-0 flex h-full w-full max-w-[400px] flex-col bg-white dark:bg-zinc-900 shadow-2xl"
-            style={{ zIndex: 9999 }}>
-            {/* Header */}
-            <div className="flex shrink-0 items-center justify-between border-b border-slate-100 dark:border-zinc-800 px-5 py-4">
-              <h3 className="text-base font-black text-slate-900 dark:text-white">{t.filterTitle}</h3>
-              <button
-                onClick={() => setFilterOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all"
-              >
+          <div className="fixed inset-0 bg-black/45 backdrop-blur-sm" style={{ zIndex: 9998 }} onClick={() => setFilterOpen(false)} />
+          <div className="fixed right-0 top-0 flex h-full w-full max-w-[400px] flex-col border-l border-orange-100 bg-white shadow-2xl dark:border-orange-500/20 dark:bg-slate-950" style={{ zIndex: 9999 }}>
+            <div className="flex shrink-0 items-center justify-between border-b border-orange-100 px-5 py-4 dark:border-orange-500/15">
+              <h3 className="text-base font-black text-slate-950 dark:text-white">{t.filterTitle}</h3>
+              <button onClick={() => setFilterOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-all hover:bg-orange-50 hover:text-orange-700 dark:text-slate-300 dark:hover:bg-orange-500/10">
                 <X size={18} />
               </button>
             </div>
 
-            {/* Body - scrollable */}
-            <div className="flex-1 overflow-y-auto px-5 py-5 space-y-7">
-
-              {/* ── Số năm kinh nghiệm ── */}
+            <div className="flex-1 space-y-7 overflow-y-auto px-5 py-5">
               <div>
-                <p className="mb-3 text-sm font-bold text-slate-800 dark:text-zinc-200">{t.experienceLabel}</p>
+                <p className="mb-3 text-sm font-black text-slate-900 dark:text-slate-100">{t.experienceLabel}</p>
                 <div className="flex flex-wrap gap-2">
                   {experienceOptions.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setTempFilters((prev) => ({ ...prev, experienceRange: opt.value }))}
-                      className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-all ${tempFilters.experienceRange === opt.value
-                        ? "border-orange-500 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400"
-                        : "border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:border-orange-300"
-                        }`}
-                    >
-                      {tempFilters.experienceRange === opt.value && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-orange-500 shrink-0" />
-                      )}
+                    <button key={opt.value} onClick={() => setTempFilters((prev) => ({ ...prev, experienceRange: opt.value }))} className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-bold transition-all ${tempFilters.experienceRange === opt.value ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-200" : "border-orange-100 text-slate-600 hover:border-orange-300 hover:bg-orange-50 dark:border-orange-500/20 dark:text-slate-300 dark:hover:bg-orange-500/10"}`}>
+                      {tempFilters.experienceRange === opt.value && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" />}
                       {opt.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* ── Thể loại chụp (Styles từ API) ── */}
               {styles.length > 0 && (
                 <div>
                   <p className="mb-3 text-sm font-bold text-slate-800 dark:text-zinc-200">{t.stylesLabel}</p>
@@ -456,61 +389,37 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], catego
                 </div>
               )}
 
-              {/* ── Đánh giá tối thiểu ── */}
               <div>
-                <p className="mb-3 text-sm font-bold text-slate-800 dark:text-zinc-200">{t.ratingLabel}</p>
+                <p className="mb-3 text-sm font-black text-slate-900 dark:text-slate-100">{t.ratingLabel}</p>
                 <div className="flex flex-wrap gap-2">
                   {ratingOptions.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setTempFilters((prev) => ({ ...prev, minRating: opt.value }))}
-                      className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-all ${tempFilters.minRating === opt.value
-                        ? "border-orange-500 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400"
-                        : "border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:border-orange-300"
-                        }`}
-                    >
-                      {tempFilters.minRating === opt.value && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-orange-500 shrink-0" />
-                      )}
+                    <button key={opt.value} onClick={() => setTempFilters((prev) => ({ ...prev, minRating: opt.value }))} className={`flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-bold transition-all ${tempFilters.minRating === opt.value ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-200" : "border-orange-100 text-slate-600 hover:border-orange-300 hover:bg-orange-50 dark:border-orange-500/20 dark:text-slate-300 dark:hover:bg-orange-500/10"}`}>
+                      {tempFilters.minRating === opt.value && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" />}
                       {opt.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* ── Địa điểm làm việc ── */}
               {locations.length > 0 && (
                 <div>
-                  <p className="mb-3 text-sm font-bold text-slate-800 dark:text-zinc-200">{t.locationLabel}</p>
+                  <p className="mb-3 text-sm font-black text-slate-900 dark:text-slate-100">{t.locationLabel}</p>
                   <div className="relative">
-                    <select
-                      value={tempFilters.location}
-                      onChange={(e) => setTempFilters((prev) => ({ ...prev, location: e.target.value }))}
-                      className="w-full appearance-none rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 pr-9 text-sm text-slate-700 dark:text-zinc-300 focus:outline-none focus:border-orange-400 transition-all"
-                    >
+                    <select value={tempFilters.location} onChange={(e) => setTempFilters((prev) => ({ ...prev, location: e.target.value }))} className="w-full appearance-none rounded-xl border border-orange-100 bg-white px-4 py-2.5 pr-9 text-sm font-medium text-slate-700 transition-all focus:border-orange-400 focus:outline-none dark:border-orange-500/20 dark:bg-slate-900 dark:text-slate-200">
                       <option value="">{t.allLocations}</option>
-                      {locations.map((loc) => (
-                        <option key={loc} value={loc}>{loc}</option>
-                      ))}
+                      {locations.map((loc) => <option key={loc} value={loc}>{loc}</option>)}
                     </select>
-                    <ChevronDown size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <ChevronDown size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-orange-500" />
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Footer - action buttons */}
-            <div className="shrink-0 border-t border-slate-100 dark:border-zinc-800 px-5 py-4 flex gap-3">
-              <button
-                onClick={handleClearFilters}
-                className="flex-1 rounded-xl border border-slate-200 dark:border-zinc-700 py-2.5 text-sm font-bold text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all"
-              >
+            <div className="flex shrink-0 gap-3 border-t border-orange-100 px-5 py-4 dark:border-orange-500/15">
+              <button onClick={handleClearFilters} className="flex-1 rounded-xl border border-orange-200 py-2.5 text-sm font-black text-orange-700 transition-all hover:bg-orange-50 dark:border-orange-500/25 dark:text-orange-200 dark:hover:bg-orange-500/10">
                 {t.clearBtn}
               </button>
-              <button
-                onClick={handleApplyFilter}
-                className="flex-1 rounded-xl bg-orange-500 hover:bg-orange-600 py-2.5 text-sm font-bold text-white shadow-md shadow-orange-400/30 active:scale-[0.98] transition-all"
-              >
+              <button onClick={handleApplyFilter} className="flex-1 rounded-xl bg-orange-500 py-2.5 text-sm font-black text-white shadow-md shadow-orange-500/25 transition-all hover:bg-orange-600 active:scale-[0.98]">
                 {t.applyBtn}
               </button>
             </div>
@@ -520,7 +429,6 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], catego
       )}
     </>
   );
-
 };
 
 export default PhotographerFilters;

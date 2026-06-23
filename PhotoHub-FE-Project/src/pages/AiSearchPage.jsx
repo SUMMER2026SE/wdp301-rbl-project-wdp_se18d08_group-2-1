@@ -58,7 +58,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
       botWelcome:
         "Hello! I am your **PhotoHub AI Assistant**. Send me a reference image of the photography style you desire, and (optional) set a maximum budget. I will scan thousands of photographer portfolios to find the perfect match for you!",
       imagePrompt: "Upload your style",
-      budgetPrompt: "Maximum Budget (USD/VNĐ)",
+      budgetPrompt: "Maximum Budget (VNĐ)",
       budgetPlaceholder: "Unlimited",
       limitLabel: "Results",
       btnSend: "Search",
@@ -231,7 +231,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
         isDark ? "bg-[#020617] text-white" : "bg-slate-50 text-slate-900"
       }`}
     >
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 dark:bg-cyan-500/[0.02] rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/5 dark:bg-orange-500/[0.02] rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500/5 dark:bg-purple-500/[0.02] rounded-full blur-3xl pointer-events-none" />
 
       {/* Main Chat Interface */}
@@ -239,14 +239,14 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
         {/* Chat Header */}
         <div className="px-6 py-4 border-b border-slate-200/50 dark:border-zinc-800/80 flex items-center justify-between bg-white/20 dark:bg-slate-950/20">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-lg shadow-cyan-500/5">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-400 border border-orange-500/20 shadow-lg shadow-orange-500/5">
               <WandSparkles className="h-5 w-5 animate-pulse" />
             </span>
             <div>
               <h1 className="text-base font-black tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:via-zinc-200 dark:to-zinc-400">
                 PhotoHub AI Assistant
               </h1>
-              <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">
+              <p className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">
                 Active Matchmaker
               </p>
             </div>
@@ -266,7 +266,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
                   ${
                     msg.sender === "user"
                       ? "bg-slate-100 dark:bg-zinc-900 text-slate-600 dark:text-zinc-300 border-slate-200 dark:border-zinc-800"
-                      : "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
+                      : "bg-orange-500/10 text-orange-400 border-orange-500/20"
                   }
                 `}
               >
@@ -279,7 +279,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
                   className={`rounded-3xl p-4 text-sm font-medium leading-relaxed shadow-md border
                     ${
                       msg.sender === "user"
-                        ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white border-transparent"
+                        ? "bg-gradient-to-r from-orange-500 to-amber-600 text-white border-transparent"
                         : "bg-white dark:bg-zinc-900 border-slate-100 dark:border-zinc-800 text-slate-800 dark:text-zinc-200"
                     }
                   `}
@@ -296,13 +296,13 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
 
                 {/* Render AI Scanning loader */}
                 {msg.isLoading && (
-                  <div className="rounded-3xl p-5 border border-cyan-500/10 bg-cyan-500/[0.02] flex flex-col gap-4 max-w-[320px] shadow-lg">
+                  <div className="rounded-3xl p-5 border border-orange-500/10 bg-orange-500/[0.02] flex flex-col gap-4 max-w-[320px] shadow-lg">
                     {/* Visual scan pulse */}
-                    <div className="relative aspect-video rounded-xl overflow-hidden border border-cyan-500/20 bg-slate-900 flex items-center justify-center text-cyan-400">
+                    <div className="relative aspect-video rounded-xl overflow-hidden border border-orange-500/20 bg-slate-900 flex items-center justify-center text-orange-400">
                       <Camera size={32} className="opacity-40 animate-pulse" />
-                      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_rgba(34,211,238,1)] animate-scanLine" />
+                      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-orange-400 to-transparent shadow-[0_0_15px_rgba(34,211,238,1)] animate-scanLine" />
                     </div>
-                    <div className="space-y-2 text-xs font-semibold tracking-wide text-cyan-400">
+                    <div className="space-y-2 text-xs font-semibold tracking-wide text-orange-400">
                       <p className="flex items-center gap-2">
                         <RefreshCw size={12} className="animate-spin" />
                         {t.scanning}
@@ -323,7 +323,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
                       return (
                         <div
                           key={pg._id}
-                          className="group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-white border border-slate-100 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-cyan-500/20 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-purple-500/20"
+                          className="group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-white border border-slate-100 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-orange-500/20 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-purple-500/20"
                         >
                           {/* Image matching style */}
                           <div className="relative aspect-video w-full overflow-hidden bg-slate-100 dark:bg-zinc-950">
@@ -333,7 +333,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
                               className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                             />
                             {/* Match percent badge */}
-                            <div className="absolute top-3 left-3 flex items-center gap-1 rounded-xl bg-cyan-500 px-3 py-1.5 text-xs font-black text-white shadow-md shadow-cyan-500/20">
+                            <div className="absolute top-3 left-3 flex items-center gap-1 rounded-xl bg-orange-500 px-3 py-1.5 text-xs font-black text-white shadow-md shadow-orange-500/20">
                               <Sparkles size={12} />
                               {port.match_percent}% Match
                             </div>
@@ -366,7 +366,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
 
                             <button
                               onClick={() => handleOpenDrawer(pg._id)}
-                              className="w-full flex items-center justify-center gap-1 rounded-2xl bg-slate-100 hover:bg-cyan-500 dark:bg-zinc-800 hover:dark:bg-cyan-500 py-2.5 text-xs font-bold text-slate-700 hover:text-white dark:text-zinc-200 transition-colors"
+                              className="w-full flex items-center justify-center gap-1 rounded-2xl bg-slate-100 hover:bg-orange-500 dark:bg-zinc-800 hover:dark:bg-orange-500 py-2.5 text-xs font-bold text-slate-700 hover:text-white dark:text-zinc-200 transition-colors"
                             >
                               {t.viewProfile}
                               <ChevronRight size={12} />
@@ -403,13 +403,13 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
                 className={`border border-dashed rounded-2xl px-4 py-3 flex items-center gap-3 cursor-pointer transition-all duration-300
                   ${
                     previewUrl
-                      ? "border-cyan-500 bg-cyan-500/[0.02] text-cyan-400"
-                      : "border-slate-200 dark:border-zinc-800 hover:border-cyan-500 hover:bg-slate-50 dark:hover:bg-zinc-900/40 text-slate-500"
+                      ? "border-orange-500 bg-orange-500/[0.02] text-orange-400"
+                      : "border-slate-200 dark:border-zinc-800 hover:border-orange-500 hover:bg-slate-50 dark:hover:bg-zinc-900/40 text-slate-500"
                   }
                 `}
               >
                 {previewUrl ? (
-                  <div className="h-8 w-8 rounded-lg overflow-hidden shrink-0 border border-cyan-500/20">
+                  <div className="h-8 w-8 rounded-lg overflow-hidden shrink-0 border border-orange-500/20">
                     <img src={previewUrl} alt="Upload preview" className="w-full h-full object-cover" />
                   </div>
                 ) : (
@@ -429,7 +429,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
                 min="0"
                 value={maxBudget}
                 onChange={(e) => setMaxBudget(e.target.value)}
-                className="w-full rounded-2xl pl-10 pr-4 py-3 outline-none border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-bold text-slate-800 dark:text-zinc-200 placeholder-slate-400 dark:placeholder-zinc-500 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 focus:bg-white dark:focus:bg-[#030303] transition-all"
+                className="w-full rounded-2xl pl-10 pr-4 py-3 outline-none border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-bold text-slate-800 dark:text-zinc-200 placeholder-slate-400 dark:placeholder-zinc-500 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 focus:bg-white dark:focus:bg-[#030303] transition-all"
                 placeholder={t.budgetPlaceholder}
               />
             </div>
@@ -445,7 +445,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
                     onClick={() => setLimit(n)}
                     className={`px-3 py-2.5 text-xs font-black transition-all ${
                       limit === n
-                        ? "bg-cyan-500 text-white"
+                        ? "bg-orange-500 text-white"
                         : "text-slate-500 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800"
                     }`}
                   >
@@ -459,11 +459,11 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
             <button
               type="submit"
               disabled={loading || !selectedFile}
-              className={`rounded-2xl p-3.5 flex items-center justify-center font-bold transition-all shadow-md shadow-cyan-500/10 select-none
+              className={`rounded-2xl p-3.5 flex items-center justify-center font-bold transition-all shadow-md shadow-orange-500/10 select-none
                 ${
                   !selectedFile || loading
                     ? "bg-slate-100 dark:bg-zinc-900 text-slate-400 border border-slate-200 dark:border-zinc-800 cursor-not-allowed shadow-none"
-                    : "bg-cyan-500 hover:bg-cyan-600 text-white active:scale-95"
+                    : "bg-orange-500 hover:bg-orange-600 text-white active:scale-95"
                 }
               `}
             >

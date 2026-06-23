@@ -249,7 +249,7 @@ export default function AdminFinance() {
           onClick={() => setActiveTab("withdrawals")}
           className={`py-3 px-1 text-sm font-semibold border-b-2 transition ${
             activeTab === "withdrawals"
-              ? "border-cyan-500 text-cyan-400"
+              ? "border-orange-500 text-orange-400"
               : "border-transparent text-slate-400 hover:text-white"
           }`}
         >
@@ -259,7 +259,7 @@ export default function AdminFinance() {
           onClick={() => setActiveTab("transactions")}
           className={`py-3 px-1 text-sm font-semibold border-b-2 transition ${
             activeTab === "transactions"
-              ? "border-cyan-500 text-cyan-400"
+              ? "border-orange-500 text-orange-400"
               : "border-transparent text-slate-400 hover:text-white"
           }`}
         >
@@ -278,7 +278,7 @@ export default function AdminFinance() {
               <select 
                 value={withdrawStatus} 
                 onChange={(e) => { setWithdrawStatus(e.target.value); setWithdrawPage(1); setSelectedWithdraw(null); }}
-                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
+                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-orange-500"
               >
                 <option value="">Tất cả trạng thái</option>
                 <option value="PENDING">Đang chờ duyệt (PENDING)</option>
@@ -312,7 +312,7 @@ export default function AdminFinance() {
                           <div className="font-semibold text-white">{r.photographer?.displayName}</div>
                           <div className="text-[11px] text-slate-500">{r.photographer?.user?.email}</div>
                         </td>
-                        <td className="py-3 px-3 text-cyan-400 font-bold">{formatCurrency(r.amount)}</td>
+                        <td className="py-3 px-3 text-orange-400 font-bold">{formatCurrency(r.amount)}</td>
                         <td className="py-3 px-3 text-slate-400">{new Date(r.createdAt).toLocaleDateString("vi-VN")}</td>
                         <td className="py-3 px-3">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeColor}`}>
@@ -381,7 +381,7 @@ export default function AdminFinance() {
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-500">Số tài khoản:</span>
-                    <span className="text-cyan-400 font-mono font-semibold">{selectedWithdraw.bankAccountNumber}</span>
+                    <span className="text-orange-400 font-mono font-semibold">{selectedWithdraw.bankAccountNumber}</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-500">Tên thụ hưởng:</span>
@@ -391,7 +391,7 @@ export default function AdminFinance() {
 
                 <div className="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800">
                   <span className="text-slate-400 text-xs">Số tiền rút:</span>
-                  <span className="text-cyan-400 text-lg font-bold">{formatCurrency(selectedWithdraw.amount)}</span>
+                  <span className="text-orange-400 text-lg font-bold">{formatCurrency(selectedWithdraw.amount)}</span>
                 </div>
 
                 {/* Wallets check balance if known */}
@@ -408,7 +408,7 @@ export default function AdminFinance() {
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => handleApproveWithdraw(selectedWithdraw._id)}
-                        className="flex items-center justify-center gap-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl py-2.5 font-bold transition text-xs"
+                        className="flex items-center justify-center gap-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl py-2.5 font-bold transition text-xs"
                       >
                         <Check className="h-4 w-4" />
                         Duyệt yêu cầu
@@ -466,7 +466,7 @@ export default function AdminFinance() {
               <select 
                 value={paymentType} 
                 onChange={(e) => { setPaymentType(e.target.value); setPaymentPage(1); }}
-                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
+                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-orange-500"
               >
                 <option value="">Tất cả loại giao dịch</option>
                 <option value="DEPOSIT">Tiền đặt cọc (DEPOSIT)</option>
@@ -478,7 +478,7 @@ export default function AdminFinance() {
               <select 
                 value={paymentStatus} 
                 onChange={(e) => { setPaymentStatus(e.target.value); setPaymentPage(1); }}
-                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
+                className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-orange-500"
               >
                 <option value="">Tất cả trạng thái</option>
                 <option value="PENDING">Chờ xử lý (PENDING)</option>
@@ -518,7 +518,7 @@ export default function AdminFinance() {
                       <td className="py-3 px-3 text-slate-400 text-xs">{p.sender?.fullName || "-"}</td>
                       <td className="py-3 px-3 text-slate-400 text-xs">{p.receiver?.fullName || "-"}</td>
                       <td className="py-3 px-3 text-slate-300 text-xs font-semibold">{p.paymentType}</td>
-                      <td className="py-3 px-3 font-bold text-cyan-400">{formatCurrency(p.amount)}</td>
+                      <td className="py-3 px-3 font-bold text-orange-400">{formatCurrency(p.amount)}</td>
                       <td className="py-3 px-3">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusColor}`}>
                           {p.status}

@@ -9,7 +9,7 @@ const bookingSchema = new mongoose.Schema(
     },
     photographer: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Photographer",
       required: true,
     },
     title: {
