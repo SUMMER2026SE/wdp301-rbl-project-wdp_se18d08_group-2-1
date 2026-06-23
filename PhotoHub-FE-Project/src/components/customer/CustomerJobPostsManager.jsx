@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   Plus,
@@ -18,8 +19,13 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
+  Users,
+  MessageSquare,
+  Star,
+  Check,
 } from "lucide-react";
 import { customerJobService } from "../../services/customerJobService";
+import { photographerMarketplaceService } from "../../services/photographerService";
 
 // ─── Lightbox component for fullscreen image preview ───
 function ImageLightbox({ images, startIndex, onClose }) {
@@ -98,6 +104,7 @@ function StatusBadge({ status }) {
 
 export default function CustomerJobPostsManager({ theme = "dark", language = "vi" }) {
   const isDark = theme === "dark";
+  const navigate = useNavigate();
 
   // ─── State ───
   const [jobs, setJobs] = useState([]);
@@ -106,6 +113,12 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
   const [showForm, setShowForm] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [lightbox, setLightbox] = useState(null); // { images, index }
+
+  // Bids modal state
+  const [showBidsModal, setShowBidsModal] = useState(false);
+  const [bidsJob, setBidsJob] = useState(null);
+  const [bids, setBids] = useState([]);
+  const [loadingBids, setLoadingBids] = useState(false);
 
   // Form state
   const [form, setForm] = useState({
@@ -169,6 +182,25 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
       budgetPH: "Ví dụ: 5000000",
       stylePH: "Ví dụ: Wedding, Portrait, Concept...",
       viewImages: "Xem ảnh mẫu",
+      viewBidsBtn: "Xem báo giá",
+      bidsModalTitle: "Báo giá cho job:",
+      noBids: "Chưa có báo giá nào cho job post này.",
+      photographerInfo: "Thông tin nhiếp ảnh gia",
+      pricing: "Đề xuất chi phí",
+      deliveryTime: "Thời gian bàn giao",
+      proposal: "Lời ngỏ / Proposal",
+      actionChat: "Nhắn tin",
+      actionAccept: "Đồng ý",
+      actionReject: "Từ chối",
+      acceptBidConfirm: "Bạn có chắc muốn chọn nhiếp ảnh gia này?",
+      acceptBidConfirmDesc: "Lựa chọn này sẽ tự động đóng job post và từ chối tất cả các báo giá khác.",
+      acceptSuccess: "Đã chọn nhiếp ảnh gia thành công!",
+      rejectSuccess: "Đã từ chối báo giá.",
+      experienceYears: "năm kinh nghiệm",
+      rating: "Đánh giá",
+      statusPending: "Đang chờ",
+      statusAccepted: "Đã đồng ý",
+      statusRejected: "Đã từ chối",
     },
     en: {
       title: "Job Post Manager",
@@ -214,6 +246,25 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
       budgetPH: "e.g., 5000000",
       stylePH: "e.g., Wedding, Portrait, Concept...",
       viewImages: "View Images",
+      viewBidsBtn: "View Bids",
+      bidsModalTitle: "Bids for job:",
+      noBids: "No bids submitted for this job post yet.",
+      photographerInfo: "Photographer Info",
+      pricing: "Proposed Price",
+      deliveryTime: "Delivery Time",
+      proposal: "Proposal",
+      actionChat: "Chat",
+      actionAccept: "Accept",
+      actionReject: "Reject",
+      acceptBidConfirm: "Are you sure you want to select this photographer?",
+      acceptBidConfirmDesc: "This will automatically close the job post and reject all other bids.",
+      acceptSuccess: "Photographer selected successfully!",
+      rejectSuccess: "Bid rejected.",
+      experienceYears: "years exp",
+      rating: "Rating",
+      statusPending: "Pending",
+      statusAccepted: "Accepted",
+      statusRejected: "Rejected",
     },
   }[language];
 
@@ -424,6 +475,123 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
     setEditingJob(job);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // ─── View Bids ───
+  const handleViewBids = async (job) => {
+    setBidsJob(job);
+    setShowBidsModal(true);
+    setLoadingBids(true);
+    try {
+      const res = await customerJobService.getBidsForJobPost(job._id);
+      setBids(res.data || []);
+    } catch (err) {
+      console.error(err);
+      setBids([]);
+    } finally {
+      setLoadingBids(false);
+    }
+  };
+
+  const handleAcceptBid = async (bid) => {
+    const result = await Swal.fire({
+      title: t.acceptBidConfirm,
+      text: t.acceptBidConfirmDesc,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: t.actionAccept,
+      cancelButtonText: t.cancelBtn,
+      confirmButtonColor: "#06b6d4",
+      cancelButtonColor: "#6b7280",
+      background: isDark ? "#09090b" : "#fff",
+      color: isDark ? "#fff" : "#000",
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      await customerJobService.acceptBid(bidsJob._id, bid._id);
+      Swal.fire({
+        icon: "success",
+        title: t.success,
+        text: t.acceptSuccess,
+        timer: 1500,
+        showConfirmButton: false,
+        background: isDark ? "#09090b" : "#fff",
+        color: isDark ? "#fff" : "#000",
+      });
+      setShowBidsModal(false);
+      fetchJobs();
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: t.error,
+        text: err.response?.data?.message || err.message,
+        background: isDark ? "#09090b" : "#fff",
+        color: isDark ? "#fff" : "#000",
+      });
+    }
+  };
+
+  const handleRejectBid = async (bid) => {
+    const result = await Swal.fire({
+      title: language === "vi" ? "Từ chối báo giá này?" : "Reject this bid?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: t.actionReject,
+      cancelButtonText: t.cancelBtn,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      background: isDark ? "#09090b" : "#fff",
+      color: isDark ? "#fff" : "#000",
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      await customerJobService.rejectBid(bidsJob._id, bid._id);
+      Swal.fire({
+        icon: "success",
+        title: t.success,
+        text: t.rejectSuccess,
+        timer: 1500,
+        showConfirmButton: false,
+        background: isDark ? "#09090b" : "#fff",
+        color: isDark ? "#fff" : "#000",
+      });
+      const res = await customerJobService.getBidsForJobPost(bidsJob._id);
+      setBids(res.data || []);
+      fetchJobs();
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: t.error,
+        text: err.response?.data?.message || err.message,
+        background: isDark ? "#09090b" : "#fff",
+        color: isDark ? "#fff" : "#000",
+      });
+    }
+  };
+
+  const handleContactPhotographer = async (photographerUserId) => {
+    try {
+      const res = await photographerMarketplaceService.createConversation(
+        photographerUserId,
+        null,
+        bidsJob._id
+      );
+      if (res && res.success) {
+        navigate("/chat");
+      } else {
+        throw new Error("Cannot open conversation");
+      }
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: t.error,
+        text: err.response?.data?.message || err.message || "Failed to contact photographer.",
+        background: isDark ? "#09090b" : "#fff",
+        color: isDark ? "#fff" : "#000",
+      });
+    }
   };
 
   // ─── RENDER ───
@@ -756,6 +924,13 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
               {job.status === "open" && (
                 <div className="flex gap-2 mt-4 pt-4 border-t border-white/[0.04]">
                   <button
+                    onClick={(e) => { e.stopPropagation(); handleViewBids(job); }}
+                    className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl transition bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white shadow-md active:scale-[0.97]"
+                  >
+                    <Users size={13} />
+                    {t.viewBidsBtn}
+                  </button>
+                  <button
                     onClick={(e) => { e.stopPropagation(); handleEdit(job); }}
                     className={`flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl transition ${
                       isDark ? "bg-white/5 hover:bg-cyan-500/10 text-slate-400 hover:text-cyan-400" : "bg-slate-100 hover:bg-cyan-50 text-slate-500 hover:text-cyan-600"
@@ -809,6 +984,225 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
           startIndex={lightbox.index}
           onClose={() => setLightbox(null)}
         />
+      )}
+
+      {/* ── BIDS LIST MODAL ── */}
+      {showBidsModal && bidsJob && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity"
+            onClick={() => setShowBidsModal(false)}
+          />
+
+          <div className={`relative w-full max-w-4xl max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden border transition-all duration-300 flex flex-col ${
+            isDark ? "bg-[#121214] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900"
+          }`}>
+            {/* Header */}
+            <div className={`flex items-center justify-between p-6 border-b ${
+              isDark ? "border-white/5" : "border-slate-100"
+            }`}>
+              <div>
+                <h3 className="text-xl font-black tracking-tight flex items-center gap-2">
+                  <Users size={20} className="text-cyan-500" />
+                  {t.bidsModalTitle} <span className="text-cyan-500 font-extrabold">{bidsJob.title}</span>
+                </h3>
+                <p className={`text-xs mt-1 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                  {bids.length} {language === "vi" ? "báo giá đề xuất" : "proposals"}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowBidsModal(false)}
+                className={`rounded-full p-2 transition ${
+                  isDark ? "hover:bg-white/10 text-slate-400 hover:text-white" : "hover:bg-slate-100 text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Content Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {loadingBids ? (
+                <div className="flex flex-col items-center justify-center py-20 space-y-3">
+                  <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-xs text-slate-500">
+                    {language === "vi" ? "Đang tải danh sách báo giá..." : "Loading proposals..."}
+                  </p>
+                </div>
+              ) : bids.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
+                  <AlertCircle size={40} className="opacity-20 text-cyan-500" />
+                  <p className="font-bold text-lg opacity-60">{t.noBids}</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {bids.map((bid) => {
+                    const isAccepted = bid.status === "accepted";
+                    const isRejected = bid.status === "rejected";
+                    const photoName = bid.photographerProfile?.displayName || bid.photographerId?.fullName || "Photographer";
+                    const avatarUrl = bid.photographerId?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256";
+                    const avgRating = bid.photographerProfile?.averageRating || 0;
+                    const expYears = bid.photographerProfile?.experienceYears || 0;
+
+                    return (
+                      <div
+                        key={bid._id}
+                        className={`border rounded-2xl p-5 transition-all duration-300 ${
+                          isAccepted
+                            ? (isDark ? "bg-emerald-500/[0.04] border-emerald-500/40 shadow-lg shadow-emerald-500/5" : "bg-emerald-50/30 border-emerald-500/30 shadow-md")
+                            : isRejected
+                            ? "opacity-60 bg-transparent border-dashed border-white/5"
+                            : (isDark ? "bg-[#16161a]/60 border-white/[0.05] hover:border-white/[0.1]" : "bg-slate-50/50 border-slate-200/80 hover:bg-slate-50")
+                        }`}
+                      >
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                          {/* Photographer Profile */}
+                          <div className="flex items-center gap-3.5 min-w-[240px]">
+                            <img
+                              src={avatarUrl}
+                              alt={photoName}
+                              className="w-14 h-14 rounded-full object-cover border-2 border-cyan-500/30"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256";
+                              }}
+                            />
+                            <div>
+                              <h4 className="font-extrabold text-base tracking-tight leading-snug">
+                                {photoName}
+                              </h4>
+                              {/* Rating & Exp */}
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                <span className="flex items-center gap-0.5 text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                                  <Star size={11} className="fill-amber-400 text-amber-400" />
+                                  {avgRating.toFixed(1)}
+                                </span>
+                                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                                  isDark ? "bg-white/5 text-slate-400" : "bg-slate-100 text-slate-600"
+                                }`}>
+                                  {expYears} {t.experienceYears}
+                                </span>
+                              </div>
+                              {bid.photographerId?.phoneNumber && (
+                                <p className="text-xs text-slate-500 mt-1.5 font-medium">
+                                  {bid.photographerId.phoneNumber}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Bid Proposal Details */}
+                          <div className="flex-1 space-y-2">
+                            {/* Proposal Letter */}
+                            <div className={`text-sm leading-relaxed ${isDark ? "text-slate-300" : "text-slate-700"}`}>
+                              <p className="font-semibold text-xs text-slate-500 uppercase tracking-wider mb-0.5">
+                                {t.proposal}
+                              </p>
+                              <p className="whitespace-pre-line">{bid.proposal}</p>
+                            </div>
+
+                            {/* Price & Time */}
+                            <div className="flex flex-wrap gap-4 pt-2 border-t border-white/[0.04]">
+                              <div>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                                  {t.pricing}
+                                </span>
+                                <span className="font-black text-lg text-emerald-400">
+                                  {bid.price.toLocaleString("vi-VN")}₫
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                                  {t.deliveryTime}
+                                </span>
+                                <span className={`font-bold text-sm flex items-center gap-1.5 mt-0.5 ${
+                                  isDark ? "text-slate-300" : "text-slate-700"
+                                }`}>
+                                  <Clock size={13} className="text-cyan-500" />
+                                  {bid.estimatedTime}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0 self-center md:self-start w-full sm:w-auto md:w-36">
+                            {/* Status Badge */}
+                            {bid.status !== "pending" && (
+                              <div className="text-center py-1">
+                                <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${
+                                  isAccepted
+                                    ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                                    : "text-red-400 bg-red-500/10 border-red-500/20"
+                                }`}>
+                                  {isAccepted ? <CheckCircle size={10} /> : <X size={10} />}
+                                  {isAccepted ? t.statusAccepted : t.statusRejected}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Action buttons (only active if job is open and bid is pending) */}
+                            {bidsJob.status === "open" && bid.status === "pending" && (
+                              <>
+                                <button
+                                  onClick={() => handleAcceptBid(bid)}
+                                  className="w-full flex items-center justify-center gap-1.5 text-xs font-black px-4 py-2.5 rounded-xl transition bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-md active:scale-[0.97]"
+                                >
+                                  <Check size={13} />
+                                  {t.actionAccept}
+                                </button>
+                                <button
+                                  onClick={() => handleRejectBid(bid)}
+                                  className={`w-full flex items-center justify-center gap-1.5 text-xs font-bold px-4 py-2.5 rounded-xl transition border ${
+                                    isDark
+                                      ? "border-red-500/20 hover:bg-red-500/10 text-red-400"
+                                      : "border-red-200 hover:bg-red-50 text-red-600"
+                                  }`}
+                                >
+                                  <X size={13} />
+                                  {t.actionReject}
+                                </button>
+                              </>
+                            )}
+
+                            {/* Contact/Chat button */}
+                            {bid.photographerId?._id && (
+                              <button
+                                onClick={() => handleContactPhotographer(bid.photographerId._id)}
+                                className={`w-full flex items-center justify-center gap-1.5 text-xs font-bold px-4 py-2.5 rounded-xl transition border ${
+                                  isDark
+                                    ? "border-cyan-500/20 hover:bg-cyan-500/10 text-cyan-400"
+                                    : "border-cyan-200 hover:bg-cyan-50 text-cyan-600"
+                                }`}
+                              >
+                                <MessageSquare size={13} />
+                                {t.actionChat}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className={`p-4 border-t text-right ${
+              isDark ? "border-white/5 bg-[#17171a]" : "border-slate-100 bg-slate-50"
+            }`}>
+              <button
+                onClick={() => setShowBidsModal(false)}
+                className={`px-5 py-2.5 rounded-xl font-bold text-sm transition ${
+                  isDark ? "bg-white/5 hover:bg-white/10 text-slate-300" : "bg-slate-200 hover:bg-slate-300 text-slate-700"
+                }`}
+              >
+                {language === "vi" ? "Đóng" : "Close"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

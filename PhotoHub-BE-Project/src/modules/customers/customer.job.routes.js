@@ -31,4 +31,8 @@ router.put(
   customerJobController.updateJobPost
 );
 
+router.get("/:id/bids", customerJobController.getBidsForJobPost);
+router.patch("/:id/bids/:bidId/accept", customerJobController.acceptBid);
+router.patch("/:id/bids/:bidId/reject", customerJobController.rejectBid);
+
 module.exports = router;

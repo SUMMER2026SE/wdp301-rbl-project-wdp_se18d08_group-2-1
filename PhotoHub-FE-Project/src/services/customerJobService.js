@@ -47,4 +47,27 @@ export const customerJobService = {
     const response = await axios.put(`${BASE_URL}/${jobId}`, formData, getAuthConfig(true));
     return response.data;
   },
+
+  getBidsForJobPost: async (jobId) => {
+    const response = await axios.get(`${BASE_URL}/${jobId}/bids`, getAuthConfig());
+    return response.data;
+  },
+
+  acceptBid: async (jobId, bidId) => {
+    const response = await axios.patch(
+      `${BASE_URL}/${jobId}/bids/${bidId}/accept`,
+      {},
+      getAuthConfig()
+    );
+    return response.data;
+  },
+
+  rejectBid: async (jobId, bidId) => {
+    const response = await axios.patch(
+      `${BASE_URL}/${jobId}/bids/${bidId}/reject`,
+      {},
+      getAuthConfig()
+    );
+    return response.data;
+  },
 };
