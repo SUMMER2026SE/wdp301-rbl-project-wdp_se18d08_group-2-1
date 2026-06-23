@@ -378,21 +378,48 @@ class BookingService {
     return { success: true, bookingId: booking._id, orderCode };
   }
 
-  async syncPaymentStatusByOrderCode(orderCode, customerUserId) {
+  async syncPaymentStatusByOrderCode(orderCode, customerUserId, forceCancel = false) {
     const code = Number(orderCode);
     if (!code) throw new Error("PayOS order code is required");
 
     const booking = await Booking.findOne({ payosOrderCode: code });
     if (!booking) throw new Error(`Booking not found for orderCode=${orderCode}`);
 
-    return await this.syncPaymentStatus(booking._id, customerUserId, code);
+    return await this.syncPaymentStatus(booking._id, customerUserId, code, forceCancel);
   }
 
-  async syncPaymentStatus(bookingId, customerUserId, orderCode = null) {
+  async syncPaymentStatus(bookingId, customerUserId, orderCode = null, forceCancel = false) {
     const booking = await Booking.findById(bookingId);
     if (!booking) throw new Error("Booking not found");
     if (String(booking.customer) !== String(customerUserId)) {
       throw new Error("You are not allowed to check this booking payment");
+    }
+
+    if (forceCancel) {
+      booking.status = BOOKING_STATUS.CANCELLED;
+      booking.paymentStatus = PAYMENT_STATUS.CANCELLED;
+      await booking.save();
+
+      const code = Number(orderCode || booking.payosOrderCode);
+      if (code) {
+        try {
+          if (payos.paymentRequests?.cancel) {
+            await payos.paymentRequests.cancel(code, "Customer cancelled payment on return");
+          } else if (payos.cancelPaymentLink) {
+            await payos.cancelPaymentLink(code, "Customer cancelled payment on return");
+          }
+        } catch (error) {
+          console.warn("[PayOS] Could not cancel payment link on return:", error.message);
+        }
+      }
+
+      safeEmit(`user:${booking.photographer.toString()}`, "booking-status-updated", {
+        bookingId: booking._id,
+        status: BOOKING_STATUS.CANCELLED,
+        message: "Customer cancelled the booking payment",
+      });
+
+      return { paid: false, payosStatus: "CANCELLED", paymentStatus: booking.paymentStatus, booking };
     }
 
     if (booking.paymentStatus === PAYMENT_STATUS.PAID || [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED].includes(booking.status)) {
@@ -410,7 +437,14 @@ class BookingService {
 
     if (["CANCELLED", "EXPIRED", "FAILED"].includes(paymentLink.status)) {
       booking.paymentStatus = paymentLink.status === "EXPIRED" ? PAYMENT_STATUS.EXPIRED : PAYMENT_STATUS.CANCELLED;
+      booking.status = BOOKING_STATUS.CANCELLED;
       await booking.save();
+
+      safeEmit(`user:${booking.photographer.toString()}`, "booking-status-updated", {
+        bookingId: booking._id,
+        status: BOOKING_STATUS.CANCELLED,
+        message: `Booking payment was ${paymentLink.status.toLowerCase()}`,
+      });
     }
 
     return {
