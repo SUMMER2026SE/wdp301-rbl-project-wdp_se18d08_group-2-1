@@ -159,6 +159,7 @@ export default function ProfilePage({
         if (result.success) {
             setUser(result.data);
             localStorage.setItem("user", JSON.stringify(result.data));
+            window.dispatchEvent(new Event("storage_user_changed"));
 
             Swal.fire({
                 icon: "success",
@@ -187,6 +188,7 @@ export default function ProfilePage({
         if (result.success) {
             setUser(result.data);
             localStorage.setItem("user", JSON.stringify(result.data));
+            window.dispatchEvent(new Event("storage_user_changed"));
 
             Swal.fire({
                 icon: "success",
