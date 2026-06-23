@@ -31,6 +31,7 @@ router.get("/search", PhotographerController.searchPhotographers);
 router.get("/top", PhotographerController.getTopPhotographers);
 router.get("/styles", PhotographerController.getStyles);
 router.get("/locations", PhotographerController.getLocations);
+router.get("/user/:userId", PhotographerController.getPhotographerByUserId);
 router.get("/:id", PhotographerController.getPhotographerDetail);
 
 // Protected routes

@@ -160,6 +160,7 @@ export default function ProfilePage({
         if (result.success) {
             setUser(result.data);
             localStorage.setItem("user", JSON.stringify(result.data));
+            window.dispatchEvent(new Event("storage_user_changed"));
 
             Swal.fire({
                 icon: "success",
@@ -188,6 +189,7 @@ export default function ProfilePage({
         if (result.success) {
             setUser(result.data);
             localStorage.setItem("user", JSON.stringify(result.data));
+            window.dispatchEvent(new Event("storage_user_changed"));
 
             Swal.fire({
                 icon: "success",
@@ -318,7 +320,7 @@ export default function ProfilePage({
                     <div className="flex flex-col items-center">
                         <div className="relative">
                             <img
-                                src={user?.avatar ? `http://localhost:3000${user.avatar}` : "https://i.pravatar.cc/300"}
+                                src={user?.avatar ? (user.avatar.startsWith("http") ? user.avatar : `http://localhost:3000${user.avatar.startsWith("/") ? user.avatar : `/${user.avatar}`}`) : "https://i.pravatar.cc/300"}
                                 alt="avatar"
                                 className="w-36 h-36 rounded-full object-cover border-4 border-orange-400"
                             />

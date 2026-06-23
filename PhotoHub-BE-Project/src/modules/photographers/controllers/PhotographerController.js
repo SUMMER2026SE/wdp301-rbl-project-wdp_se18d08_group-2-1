@@ -148,6 +148,24 @@ class PhotographerController {
       );
     }
   }
+
+  async getPhotographerByUserId(req, res) {
+    try {
+      const { userId } = req.params;
+      const photographer = await PhotographerService.getPhotographerByUserId(userId);
+      return ApiResponse.success(
+        res,
+        photographer,
+        "Get photographer profile by user ID successful"
+      );
+    } catch (error) {
+      return ApiResponse.error(
+        res,
+        error.message,
+        400
+      );
+    }
+  }
 }
 
 

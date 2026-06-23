@@ -557,9 +557,17 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
             >
               {/* AVATAR */}
               <div className="flex cursor-pointer items-center gap-3 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/[0.06] px-3 py-2 backdrop-blur-md">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-white font-semibold">
-                  {user.fullName?.charAt(0)?.toUpperCase() || "U"}
-                </div>
+                {user.avatar ? (
+                  <img
+                    src={user.avatar.startsWith("http") ? user.avatar : `http://localhost:3000${user.avatar.startsWith("/") ? user.avatar : `/${user.avatar}`}`}
+                    alt="User avatar"
+                    className="h-10 w-10 rounded-full object-cover ring-2 ring-orange-500/20"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-white font-semibold">
+                    {user.fullName?.charAt(0)?.toUpperCase() || "U"}
+                  </div>
+                )}
 
                 <div className="text-left">
                   <p className="text-xs text-slate-400 dark:text-slate-400">
