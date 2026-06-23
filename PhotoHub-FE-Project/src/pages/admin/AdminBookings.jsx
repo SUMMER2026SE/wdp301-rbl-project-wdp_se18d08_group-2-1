@@ -26,6 +26,7 @@ export default function AdminBookings() {
       if (res.success) {
         setBookings(res.data.bookings);
         setTotalPages(res.data.pagination.pages);
+        console.log(res.data.bookings)
       } else {
         Swal.fire("Lỗi", res.message || "Không thể tải danh sách lịch đặt", "error");
       }
@@ -171,7 +172,7 @@ export default function AdminBookings() {
                         <div className="font-semibold text-white">{b.photographer?.displayName || "Nhiếp ảnh gia"}</div>
                         <div className="text-[11px] text-slate-500">{b.photographer?.user?.email}</div>
                       </td>
-                      <td className="py-3 px-3 text-orange-400 font-bold">{formatCurrency(b.totalPrice)}</td>
+                      <td className="py-3 px-3 text-orange-400 font-bold">{formatCurrency(b.price)}</td>
                       <td className="py-3 px-3">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusColor}`}>
                           {b.status}
@@ -254,7 +255,7 @@ export default function AdminBookings() {
                 <span className="text-slate-400 text-xs uppercase font-bold tracking-wide">Chi tiết tài chính</span>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Tổng giá trị hợp đồng:</span>
-                  <span className="text-white font-semibold">{formatCurrency(selectedBooking.booking.totalPrice)}</span>
+                  <span className="text-white font-semibold">{formatCurrency(selectedBooking.booking.price)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Ký quỹ đặt cọc (Deposit):</span>
