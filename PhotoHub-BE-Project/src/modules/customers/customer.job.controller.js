@@ -82,6 +82,39 @@ class CustomerJobController {
       return ApiResponse.error(res, error.message, 400);
     }
   }
+
+  async getBidsForJobPost(req, res) {
+    try {
+      const { id } = req.params;
+      const bids = await customerJobService.getBidsForJobPost(id, req.user.id);
+      return ApiResponse.success(res, bids, "Danh sách báo giá đã được tải.");
+    } catch (error) {
+      console.error("Error fetching bids for job post:", error);
+      return ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+  async acceptBid(req, res) {
+    try {
+      const { id, bidId } = req.params;
+      const bid = await customerJobService.acceptBid(id, req.user.id, bidId);
+      return ApiResponse.success(res, bid, "Chấp nhận báo giá thành công!");
+    } catch (error) {
+      console.error("Error accepting bid:", error);
+      return ApiResponse.error(res, error.message, 400);
+    }
+  }
+
+  async rejectBid(req, res) {
+    try {
+      const { id, bidId } = req.params;
+      const bid = await customerJobService.rejectBid(id, req.user.id, bidId);
+      return ApiResponse.success(res, bid, "Từ chối báo giá thành công.");
+    } catch (error) {
+      console.error("Error rejecting bid:", error);
+      return ApiResponse.error(res, error.message, 400);
+    }
+  }
 }
 
 module.exports = new CustomerJobController();

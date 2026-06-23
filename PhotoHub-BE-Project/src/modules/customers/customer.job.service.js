@@ -1,4 +1,8 @@
 const JobPost = require("../photographers/job/jobPost.model");
+const Bid = require("../photographers/bid/bid.model");
+const Photographer = require("../photographers/models/photographer");
+const Booking = require("../photographers/booking/booking.model");
+const chatService = require("../photographers/chat/chat.service");
 
 class CustomerJobService {
   async createJobPost(customerId, data, imageUrls = []) {
@@ -137,6 +141,118 @@ class CustomerJobService {
 
     await job.save();
     return job;
+  }
+
+  async getBidsForJobPost(jobPostId, customerId) {
+    const job = await JobPost.findOne({ _id: jobPostId, customer: customerId });
+    if (!job) {
+      throw new Error("Không tìm thấy job post hoặc bạn không có quyền xem báo giá của job này.");
+    }
+
+    const bids = await Bid.find({ jobPostId })
+      .populate("photographerId", "fullName email avatar phoneNumber")
+      .sort({ price: 1, createdAt: -1 });
+
+    const enrichedBids = await Promise.all(
+      bids.map(async (bid) => {
+        const bidObj = bid.toObject();
+        if (bid.photographerId) {
+          const photographerProfile = await Photographer.findOne({ user: bid.photographerId._id })
+            .select("displayName averageRating experienceYears hourlyRate bio");
+          bidObj.photographerProfile = photographerProfile || null;
+        } else {
+          bidObj.photographerProfile = null;
+        }
+        return bidObj;
+      })
+    );
+
+    return enrichedBids;
+  }
+
+  async acceptBid(jobPostId, customerId, bidId) {
+    const job = await JobPost.findOne({ _id: jobPostId, customer: customerId });
+    if (!job) {
+      throw new Error("Không tìm thấy job post hoặc bạn không có quyền.");
+    }
+
+    const targetBid = await Bid.findOne({ _id: bidId, jobPostId });
+    if (!targetBid) {
+      throw new Error("Không tìm thấy báo giá phù hợp cho job này.");
+    }
+
+    targetBid.status = "accepted";
+    await targetBid.save();
+
+    await Bid.updateMany(
+      { jobPostId, _id: { $ne: bidId } },
+      { $set: { status: "rejected" } }
+    );
+
+    job.status = "closed";
+    await job.save();
+
+    // Tự động tạo Booking khi đồng ý đề xuất
+    const booking = await Booking.create({
+      customer: customerId,
+      photographer: targetBid.photographerId,
+      title: job.title,
+      start: job.date,
+      end: new Date(new Date(job.date).getTime() + 2 * 60 * 60 * 1000), // Mặc định 2 giờ chụp
+      bookingDate: job.date,
+      location: job.location,
+      price: targetBid.price,
+      totalPrice: targetBid.price,
+      style: job.style || "",
+      packageName: targetBid.packageName || "",
+      status: "accepted",
+      paymentStatus: "unpaid",
+      statusLogs: [
+        {
+          status: "ACCEPTED",
+          note: `Booking được tạo tự động từ báo giá của photographer cho job "${job.title}"`,
+        },
+      ],
+    });
+
+    // Tạo cuộc hội thoại chat tư vấn giữa Customer và Photographer
+    const conversation = await chatService.findOrCreateConversation(
+      [customerId.toString(), targetBid.photographerId.toString()],
+      booking._id,
+      jobPostId
+    );
+
+    // Gửi tin nhắn tự động đầu tiên của cuộc hội thoại tư vấn
+    await chatService.createMessage(conversation._id, customerId, {
+      text: `Chào bạn, báo giá cho job "${job.title}" của bạn đã được chấp nhận. Chúng ta có thể thảo luận thêm chi tiết tại đây.`,
+      messageType: "booking_detail",
+      metadata: {
+        bookingId: booking._id,
+        status: booking.status,
+        start: booking.start,
+        location: booking.location,
+        price: booking.totalPrice,
+      },
+    });
+
+    return targetBid;
+  }
+
+  async rejectBid(jobPostId, customerId, bidId) {
+    const job = await JobPost.findOne({ _id: jobPostId, customer: customerId });
+    if (!job) {
+      throw new Error("Không tìm thấy job post hoặc bạn không có quyền.");
+    }
+
+    const targetBid = await Bid.findOne({ _id: bidId, jobPostId });
+    if (!targetBid) {
+      throw new Error("Không tìm thấy báo giá phù hợp.");
+    }
+
+    targetBid.status = "rejected";
+    await targetBid.save();
+
+    return targetBid;
   }
 }
 
