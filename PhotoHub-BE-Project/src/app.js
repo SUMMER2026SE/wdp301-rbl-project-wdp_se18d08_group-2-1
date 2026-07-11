@@ -1,4 +1,4 @@
-﻿const express = require("express");
+const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const passport = require("passport");
@@ -64,6 +64,12 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api", reviewRoutes);
 app.use("/api/upload", require("./utils/upload.routes"));
 app.use("/api/customer/jobs", customerJobRoutes);
+
+// Potonow additional features
+app.use("/api/blogs", require("./modules/blog/routes/blog.routes"));
+app.use("/api/marketing-events", require("./modules/events/routes/event.routes"));
+app.use("/api/booking-addons", require("./modules/bookings/routes/addon.routes"));
+app.use("/api/loyalty", require("./modules/loyalty/routes/loyalty.routes"));
 
 // Health check
 app.get("/", (_req, res) => {

@@ -10,7 +10,8 @@ import {
   MessageSquare, 
   Settings,
   LogOut,
-  Camera
+  Camera,
+  Gift
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -25,6 +26,7 @@ export default function AdminSidebar() {
     { label: "Tài chính & Rút tiền", path: "/admin/finance", icon: DollarSign },
     { label: "Tranh chấp & Khiếu nại", path: "/admin/disputes", icon: AlertTriangle },
     { label: "Báo cáo & Kiểm duyệt", path: "/admin/reports-chats", icon: MessageSquare },
+    { label: "Tích điểm & Ưu đãi", path: "/admin/loyalty", icon: Gift },
     { label: "Cấu hình & Gói", path: "/admin/settings-packages", icon: Settings },
   ];
 
