@@ -102,7 +102,7 @@ function StatusBadge({ status }) {
   );
 }
 
-export default function CustomerJobPostsManager({ theme = "dark", language = "vi" }) {
+export default function CustomerJobPostsManager({ theme = "dark", language = "vi", onJobCreated }) {
   const isDark = theme === "dark";
   const navigate = useNavigate();
 
@@ -389,6 +389,9 @@ export default function CustomerJobPostsManager({ theme = "dark", language = "vi
         });
         resetForm();
         fetchJobs();
+        if (onJobCreated) {
+          onJobCreated();
+        }
       } else {
         throw new Error(res.message);
       }

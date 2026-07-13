@@ -46,18 +46,18 @@ export const bookingService = {
     return res.data;
   },
 
-  syncPaymentStatus: async (bookingId, orderCode) => {
+  syncPaymentStatus: async (bookingId, orderCode, canceled = false) => {
     const res = await axios.get(`${API_BASE}/bookings/${bookingId}/payment/status`, {
       ...getHeaders(),
-      params: { orderCode },
+      params: { orderCode, canceled },
     });
     return res.data;
   },
 
-  syncPaymentStatusByOrderCode: async (orderCode) => {
+  syncPaymentStatusByOrderCode: async (orderCode, canceled = false) => {
     const res = await axios.get(`${API_BASE}/bookings/payment/status`, {
       ...getHeaders(),
-      params: { orderCode },
+      params: { orderCode, canceled },
     });
     return res.data;
   },

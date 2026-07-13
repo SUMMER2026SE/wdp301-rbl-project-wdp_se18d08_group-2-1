@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const passport = require("passport");
@@ -23,6 +23,7 @@ const communityRoutes = require("./modules/community/community.routes");
 const customerJobRoutes = require("./modules/customers/customer.job.routes");
 const bookingRoutes = require("./modules/bookings/routes/booking.routes");
 const reviewRoutes = require("./modules/review/routes/review.routes");
+
 // Middlewares
 app.use(express.json({ limit: "300mb" }));
 app.use(express.urlencoded({ limit: "300mb", extended: true }));

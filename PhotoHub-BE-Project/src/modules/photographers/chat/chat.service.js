@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Conversation = require("./conversation.model");
 const Message = require("./message.model");
 
@@ -83,20 +84,26 @@ class ChatService {
       throw new Error("Conversation requires two different participants");
     }
 
-    const query = {
-      participants: { $all: sortedParticipants, $size: sortedParticipants.length },
+    const participantObjectIds = sortedParticipants.map((id) => new mongoose.Types.ObjectId(id));
+
+    const parseId = (val) => {
+      if (!val || val === "null" || val === "undefined") return null;
+      return new mongoose.Types.ObjectId(val);
     };
 
-    if (bookingId) query.bookingId = bookingId;
-    if (jobPostId) query.jobPostId = jobPostId;
+    const query = {
+      participants: { $all: participantObjectIds, $size: participantObjectIds.length },
+      bookingId: parseId(bookingId),
+      jobPostId: parseId(jobPostId),
+    };
 
     let conversation = await Conversation.findOne(query);
 
     if (!conversation) {
       conversation = new Conversation({
-        participants: sortedParticipants,
-        bookingId,
-        jobPostId,
+        participants: participantObjectIds,
+        bookingId: query.bookingId,
+        jobPostId: query.jobPostId,
       });
       await conversation.save();
     }

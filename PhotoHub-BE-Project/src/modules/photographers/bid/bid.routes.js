@@ -10,8 +10,5 @@ router.post("/assist", authenticate, authorize(["photographer"]), bidController.
 router.post("/", authenticate, authorize(["photographer"]), bidController.submitBid);
 router.post("/:id/optimize", authenticate, authorize(["photographer"]), bidController.optimizeBid);
 router.put("/:id", authenticate, authorize(["photographer"]), bidController.updateBid);
-router.post("/", authenticate, authorize(["photographer"]), bidController.submitBid);
-router.put("/:id", authenticate, authorize(["photographer"]), bidController.updateBid);
-router.get("/", authenticate, authorize(["photographer"]), bidController.getMyBids);
 
 module.exports = router;

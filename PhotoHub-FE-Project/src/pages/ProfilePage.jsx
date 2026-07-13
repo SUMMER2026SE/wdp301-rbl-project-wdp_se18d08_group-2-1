@@ -15,9 +15,9 @@ import {
 
 import Swal from "sweetalert2";
 import { profileService } from "../services/profileService";
-import CustomerJobPostsManager from "../components/customer/CustomerJobPostsManager";
 import CustomerBookingList from "../booking/CustomerBookingList";
 import PhotographerChat from "../components/photographers/PhotographerChat";
+
 
 export default function ProfilePage({
     language = "vi",
@@ -159,6 +159,7 @@ export default function ProfilePage({
         if (result.success) {
             setUser(result.data);
             localStorage.setItem("user", JSON.stringify(result.data));
+            window.dispatchEvent(new Event("storage_user_changed"));
 
             Swal.fire({
                 icon: "success",
@@ -187,6 +188,7 @@ export default function ProfilePage({
         if (result.success) {
             setUser(result.data);
             localStorage.setItem("user", JSON.stringify(result.data));
+            window.dispatchEvent(new Event("storage_user_changed"));
 
             Swal.fire({
                 icon: "success",
@@ -552,19 +554,7 @@ export default function ProfilePage({
                             {t.updatePassword}
                         </button>
                     </div>
-                    {(() => {
-                        const apiRole = user?.role;
-                        const localUser = JSON.parse(localStorage.getItem("user") || "{}");
-                        const localRole = localUser?.role;
-                        const effectiveRole = apiRole || localRole;
-                        return effectiveRole === "customer" ? (
-                            <div className={`border rounded-3xl p-8 mt-8 transition-all ${
-                                isDark ? "bg-white/5 border-white/10" : "bg-slate-50/50 border-slate-200/80 shadow-sm"
-                            }`}>
-                                <CustomerJobPostsManager theme={theme} language={language} />
-                            </div>
-                        ) : null;
-                    })()}
+
                         </>
                     ) : activeTab === "bookings" ? (
                         <div className="animate-fadeIn">

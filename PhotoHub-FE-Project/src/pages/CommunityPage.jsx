@@ -1,7 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { User, Bell, Bookmark, Camera, CheckCircle2, ChevronRight, Clock, Heart, Image, MessageCircle, MoreHorizontal, PenLine, Pin, Search, Send, Share2, ShieldCheck, Sparkles, Star, Tag, TrendingUp, Users, X } from "lucide-react";
+import { Bell, Bookmark, Camera, CheckCircle2, ChevronRight, Clock, Heart, Image, MapPin, MessageCircle, MoreHorizontal, PenLine, Pin, Search, Send, Share2, ShieldCheck, Sparkles, Star, Tag, TrendingUp, User, Users, X, Briefcase } from "lucide-react";
 import { communityService } from "../services/communityService";
+import { photographerService, photographerMarketplaceService } from "../services/photographerService";
+import CustomerJobPostsManager from "../components/customer/CustomerJobPostsManager";
 
 const tones = {
   all: "bg-orange-50 text-orange-700", discussion: "bg-orange-50 text-orange-700", question: "bg-amber-50 text-amber-700",
@@ -23,13 +26,13 @@ const cats = {
 };
 const c = {
   vi: {
-    member: "Th\u00e0nh vi\u00ean", composer: "B\u1ea1n mu\u1ed1n chia s\u1ebb \u0111i\u1ec1u g\u00ec v\u1edbi c\u1ed9ng \u0111\u1ed3ng PhotoHub?", photo: "\u1ea2nh m\u1eabu", ask: "H\u1ecfi \u00fd ki\u1ebfn", story: "K\u1ec3 job",
+    member: "Thành viên", composer: "Bạn muốn chia sẻ điều gì với cộng đồng PhotoHub?", photo: "Ảnh mẫu", ask: "Hỏi ý kiến", jobs: "Job Post", story: "Kể job",
     create: "T\u1ea1o b\u00e0i vi\u1ebft m\u1edbi", createHint: "Chia s\u1ebb portfolio, brief c\u1ea7n t\u01b0 v\u1ea5n ho\u1eb7c c\u00e2u chuy\u1ec7n job.", miss: "Thi\u1ebfu n\u1ed9i dung", missMsg: "H\u00e3y nh\u1eadp ti\u00eau \u0111\u1ec1 v\u00e0 n\u1ed9i dung b\u00e0i vi\u1ebft.", imageOnly: "Ch\u1ec9 \u0111\u01b0\u1ee3c ch\u1ecdn file \u1ea3nh.",
     title: "Ti\u00eau \u0111\u1ec1 b\u00e0i vi\u1ebft", body: "Vi\u1ebft n\u1ed9i dung, c\u00e2u h\u1ecfi, brief ch\u1ee5p \u1ea3nh ho\u1eb7c kinh nghi\u1ec7m...", tags: "Tag: wedding, danang, han-quoc", upload: "T\u1ea3i \u1ea3nh cover t\u1eeb m\u00e1y", uploadHint: "Ch\u1ecdn JPG/PNG/WebP, t\u1ed1i \u0111a 5MB. \u1ea2nh s\u1ebd l\u01b0u Cloudinary.", selected: "\u0110\u00e3 ch\u1ecdn", cover: "Ho\u1eb7c d\u00e1n link \u1ea3nh cover", publish: "\u0110\u0103ng b\u00e0i", publishing: "\u0110ang \u0111\u0103ng...",
     like: "Th\u00edch", comment: "B\u00ecnh lu\u1eadn", save: "L\u01b0u", saved: "\u0110\u00e3 l\u01b0u", share: "Chia s\u1ebb", reply: "Tr\u1ea3 l\u1eddi", replyingTo: "\u0110ang tr\u1ea3 l\u1eddi", cancelReply: "H\u1ee7y", shareToChat: "Chia s\u1ebb qua tr\u00f2 chuy\u1ec7n", chooseConversation: "Ch\u1ecdn cu\u1ed9c tr\u00f2 chuy\u1ec7n \u0111\u1ec3 g\u1eedi b\u00e0i vi\u1ebft", noConversations: "Ch\u01b0a c\u00f3 cu\u1ed9c tr\u00f2 chuy\u1ec7n n\u00e0o.", shared: "\u0110\u00e3 chia s\u1ebb", sharedMsg: "B\u00e0i vi\u1ebft \u0111\u00e3 \u0111\u01b0\u1ee3c g\u1eedi v\u00e0o tr\u00f2 chuy\u1ec7n.", shareFailed: "Kh\u00f4ng th\u1ec3 chia s\u1ebb b\u00e0i", likes: "l\u01b0\u1ee3t th\u00edch", comments: "b\u00ecnh lu\u1eadn", commentPh: "Vi\u1ebft b\u00ecnh lu\u1eadn...", login: "C\u1ea7n \u0111\u0103ng nh\u1eadp", loginMsg: "\u0110\u0103ng nh\u1eadp \u0111\u1ec3 \u0111\u0103ng b\u00e0i, th\u1ea3 tim v\u00e0 b\u00ecnh lu\u1eadn.", ok: "\u0110\u00e3 \u0111\u0103ng b\u00e0i", okMsg: "B\u00e0i vi\u1ebft c\u1ee7a b\u1ea1n \u0111\u00e3 xu\u1ea5t hi\u1ec7n.", err: "C\u00f3 l\u1ed7i", hero: "C\u1ed9ng \u0111\u1ed3ng nhi\u1ebfp \u1ea3nh PhotoHub", sub: "N\u01a1i kh\u00e1ch h\u00e0ng v\u00e0 photographer trao \u0111\u1ed5i brief, xin t\u01b0 v\u1ea5n gi\u00e1, chia s\u1ebb portfolio v\u00e0 k\u1ec3 l\u1ea1i job th\u1ef1c t\u1ebf.", posts: "B\u00e0i vi\u1ebft", latest: "M\u1edbi nh\u1ea5t", popular: "N\u1ed5i b\u1eadt", search: "T\u00ecm b\u00e0i vi\u1ebft, tag, \u0111\u1ecba \u0111i\u1ec3m...", savedPosts: "B\u00e0i \u0111\u00e3 l\u01b0u", savedHint: "Bookmark c\u1ee7a b\u1ea1n", hot: "Tag \u0111ang hot", loading: "\u0110ang t\u1ea3i feed...", empty: "Ch\u01b0a c\u00f3 b\u00e0i vi\u1ebft n\u00e0o.", rules: "N\u1ed9i quy group", r1: "T\u00f4n tr\u1ecdng kh\u00e1ch h\u00e0ng v\u00e0 photographer.", r2: "Kh\u00f4ng spam booking, kh\u00f4ng l\u1ed9 th\u00f4ng tin ri\u00eang t\u01b0.", r3: "G\u00f3p \u00fd portfolio l\u1ecbch s\u1ef1.", should: "B\u00e0i n\u00ean c\u00f3", s1: "Brief r\u00f5: \u0111\u1ecba \u0111i\u1ec3m, th\u1eddi gian, ng\u00e2n s\u00e1ch, style.", s2: "\u1ea2nh m\u1eabu ho\u1eb7c moodboard.", s3: "K\u1ebft qu\u1ea3 sau bu\u1ed5i ch\u1ee5p.", recent: "Ho\u1ea1t \u0111\u1ed9ng g\u1ea7n \u0111\u00e2y", a1: "Feed \u01b0u ti\u00ean b\u00e0i m\u1edbi v\u00e0 t\u01b0\u01a1ng t\u00e1c cao.", a2: "\u0110\u0103ng nh\u1eadp \u0111\u1ec3 th\u1ea3 tim, b\u00ecnh lu\u1eadn v\u00e0 \u0111\u0103ng b\u00e0i.",
   },
   en: {
-    member: "Member", composer: "What would you like to share with the PhotoHub community?", photo: "Sample photo", ask: "Ask opinion", story: "Job story",
+    member: "Member", composer: "What would you like to share with the PhotoHub community?", photo: "Sample photo", ask: "Ask opinion", jobs: "Post Job", story: "Job story",
     create: "Create a new post", createHint: "Share portfolio work, ask for brief advice, or tell a job story.", miss: "Missing content", missMsg: "Please add a title and content before publishing.", imageOnly: "Only image files are allowed.",
     title: "Post title", body: "Write your question, shoot brief, experience, portfolio link, or story...", tags: "Tags: wedding, danang, korean", upload: "Upload cover image from your device", uploadHint: "Choose JPG/PNG/WebP up to 5MB. The image will be stored on Cloudinary.", selected: "Selected", cover: "Or paste an optional cover image URL", publish: "Publish", publishing: "Publishing...",
     like: "Like", comment: "Comment", save: "Save", saved: "Saved", share: "Share", reply: "Reply", replyingTo: "Replying to", cancelReply: "Cancel", shareToChat: "Share to chat", chooseConversation: "Choose a conversation to send this post.", noConversations: "No conversations yet.", shared: "Shared", sharedMsg: "The post has been sent to chat.", shareFailed: "Could not share post", likes: "likes", comments: "comments", commentPh: "Write a comment...", login: "Login required", loginMsg: "Log in to publish, like, and comment.", ok: "Published", okMsg: "Your post is now live.", err: "Something went wrong", hero: "PhotoHub Photography Community", sub: "A place where customers and photographers discuss briefs, pricing, portfolios, gear, and real jobs.", posts: "Posts", latest: "Latest", popular: "Popular", search: "Search posts, tags, locations...", savedPosts: "Saved posts", savedHint: "Your bookmarks", hot: "Hot tags", loading: "Loading feed...", empty: "No posts yet.", rules: "Group rules", r1: "Respect customers and photographers.", r2: "Do not spam bookings or expose private information.", r3: "Give respectful portfolio feedback.", should: "Good posts include", s1: "A clear brief: location, time, budget, style.", s2: "Sample photos or moodboards.", s3: "Post-shoot results.", recent: "Recent activity", a1: "The feed prioritizes new and engaging posts.", a2: "Log in to like, comment, and publish posts.",
@@ -65,7 +68,7 @@ function PopBadge({ type }) {
   if (!type) return null;
   return <span className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 animate-[communityPop_760ms_ease-out_forwards] rounded-full bg-slate-950 px-3 py-1 text-xs font-black text-white shadow-xl">{type === "like" ? "+1" : "Saved"}</span>;
 }
-function Composer({ user, onSubmit, categories, text }) {
+function Composer({ user, onSubmit, categories, text, onOpenJobs }) {
   const [form, setForm] = useState(emptyForm);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -86,9 +89,10 @@ function Composer({ user, onSubmit, categories, text }) {
   };
   return <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
     <div className="flex items-center gap-3"><Avatar user={user} text={text} /><button type="button" onClick={() => setOpen(true)} className="min-h-[48px] flex-1 rounded-full border border-slate-200 bg-slate-50 px-5 text-left text-sm text-slate-500 transition hover:border-orange-200 hover:bg-orange-50/60">{text.composer}</button></div>
-    <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 text-xs font-bold text-slate-600">
+    <div className="mt-4 grid grid-cols-4 gap-2 border-t border-slate-100 pt-3 text-[11px] md:text-xs font-bold text-slate-600">
       <button type="button" onClick={() => setOpen(true)} className="flex items-center justify-center gap-2 rounded-xl py-2 hover:bg-emerald-50 hover:text-emerald-700"><Image size={16} />{text.photo}</button>
       <button type="button" onClick={() => setOpen(true)} className="flex items-center justify-center gap-2 rounded-xl py-2 hover:bg-orange-50 hover:text-orange-700"><PenLine size={16} />{text.ask}</button>
+      <button type="button" onClick={onOpenJobs} className="flex items-center justify-center gap-2 rounded-xl py-2 hover:bg-cyan-50 hover:text-cyan-700"><Briefcase size={16} />{text.jobs}</button>
       <button type="button" onClick={() => setOpen(true)} className="flex items-center justify-center gap-2 rounded-xl py-2 hover:bg-amber-50 hover:text-amber-700"><Sparkles size={16} />{text.story}</button>
     </div>
     {open && <form onSubmit={submit} className="mt-4 space-y-4 rounded-2xl border border-orange-100 bg-orange-50/50 p-4">
@@ -102,7 +106,41 @@ function Composer({ user, onSubmit, categories, text }) {
     </form>}
   </section>;
 }
-function PostCard({ post, onLike, onSave, onComment, onShare, categories, text }) {
+
+const renderPostContent = (content) => {
+  if (!content) return null;
+  const lines = content.split("\n");
+  return lines.map((line, idx) => {
+    const boldRegex = /\*\*(.*?)\*\*/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+    
+    while ((match = boldRegex.exec(line)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(line.substring(lastIndex, match.index));
+      }
+      parts.push(
+        <strong key={match.index} className="font-extrabold text-slate-950 dark:text-white">
+          {match[1]}
+        </strong>
+      );
+      lastIndex = boldRegex.lastIndex;
+    }
+    
+    if (lastIndex < line.length) {
+      parts.push(line.substring(lastIndex));
+    }
+    
+    return (
+      <p key={idx} className="min-h-[1.25rem] mt-1">
+        {parts.length > 0 ? parts : line}
+      </p>
+    );
+  });
+};
+
+function PostCard({ post, onLike, onSave, onComment, onShare, categories, text, activeSearch, onTagClick, onUserClick }) {
   const [comment, setComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [open, setOpen] = useState(false);
@@ -114,15 +152,105 @@ function PostCard({ post, onLike, onSave, onComment, onShare, categories, text }
   const pulse = (type) => { setPop(type); window.setTimeout(() => setPop(null), 760); };
   const submit = async (e) => { e.preventDefault(); if (!comment.trim()) return; await onComment(post._id, comment.trim(), replyTo?._id || null); setComment(""); setReplyTo(null); setOpen(true); };
   return <article className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><PopBadge type={pop} />
-    <div className="flex items-start justify-between gap-3 p-5 pb-3"><div className="flex items-center gap-3"><Avatar user={post.author} text={text} /><div><div className="flex flex-wrap items-center gap-2 text-sm font-bold text-slate-950">{post.author?.fullName || text.member}{post.author?.role && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] uppercase text-slate-500">{post.author.role}</span>}</div><p className="mt-1 flex items-center gap-1 text-xs text-slate-500"><Clock size={12} /> {fmt(post.createdAt)} · {cat.label}</p></div></div><button className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900"><MoreHorizontal size={18} /></button></div>
-    <div className="space-y-4 px-5 pb-4"><div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-3 py-1 text-[11px] font-black uppercase ${tones[cat.id] || tones.all}`}>{cat.label}</span>{(post.tags || []).map((tag) => <span key={tag} className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2 py-1 text-[11px] text-slate-500"><Tag size={11} />{tag}</span>)}</div><div><h3 className="text-xl font-black text-slate-950">{post.title}</h3><p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">{post.content}</p></div></div>
+    <div className="flex items-start justify-between gap-3 p-5 pb-3">
+      <div className="flex items-center gap-3">
+        <div className="cursor-pointer transition hover:opacity-80 shrink-0" onClick={() => onUserClick?.(post.author)}>
+          <Avatar user={post.author} text={text} />
+        </div>
+        <div>
+          <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-slate-950">
+            <span className="cursor-pointer hover:text-orange-600 hover:underline transition" onClick={() => onUserClick?.(post.author)}>
+              {post.author?.fullName || text.member}
+            </span>
+            {post.author?.role && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] uppercase text-slate-500">{post.author.role}</span>}
+          </div>
+          <p className="mt-1 flex items-center gap-1 text-xs text-slate-500"><Clock size={12} /> {fmt(post.createdAt)} · {cat.label}</p>
+        </div>
+      </div>
+      <button className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-900"><MoreHorizontal size={18} /></button>
+    </div>
+    <div className="space-y-4 px-5 pb-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={`rounded-full px-3 py-1 text-[11px] font-black uppercase ${tones[cat.id] || tones.all}`}>{cat.label}</span>
+        {(post.tags || []).map((tag) => {
+          const isActive = activeSearch === tag;
+          return (
+            <button
+              key={tag}
+              onClick={() => onTagClick?.(tag)}
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition cursor-pointer ${
+                isActive
+                  ? "border-orange-500 bg-orange-500 text-white shadow-sm hover:bg-orange-600"
+                  : "border-slate-200 bg-slate-50 text-slate-500 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+              }`}
+            >
+              <Tag size={11} />
+              {tag}
+            </button>
+          );
+        })}
+      </div>
+      <div>
+        <h3 className="text-xl font-black text-slate-950">{post.title}</h3>
+        <div className="mt-3 text-sm leading-6 text-slate-700 dark:text-slate-300">{renderPostContent(post.content)}</div>
+      </div>
+    </div>
     {post.coverImage && <img src={post.coverImage} alt={post.title} className="max-h-[520px] w-full object-cover" />}
-    <div className="px-5 py-3"><div className="flex items-center justify-between border-b border-slate-100 pb-3 text-xs text-slate-500"><span>{post.likesCount || 0} {text.likes}</span><span>{post.commentsCount || 0} {text.comments}</span></div><div className="grid grid-cols-4 gap-2 pt-3">
-      <button onClick={async () => { try { await onLike(post._id); pulse("like"); } catch (e) { Swal.fire(text.err, e.response?.data?.message || e.message, "error") } }} className={`flex items-center justify-center gap-2 rounded-xl py-2 text-sm font-bold transition active:scale-95 ${post.likedByMe ? "bg-rose-50 text-rose-600" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"}`}><Heart size={17} className={post.likedByMe ? "fill-current" : ""} />{text.like}</button>
-      <button onClick={() => setOpen(v => !v)} className="flex items-center justify-center gap-2 rounded-xl py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"><MessageCircle size={17} />{text.comment}</button>
-      <button onClick={() => onShare(post)} className="flex items-center justify-center gap-2 rounded-xl py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"><Share2 size={17} />{text.share}</button>
-      <button onClick={async () => { try { await onSave(post._id); pulse("save"); } catch (e) { Swal.fire(text.err, e.response?.data?.message || e.message, "error") } }} className={`flex items-center justify-center gap-2 rounded-xl py-2 text-sm font-bold transition active:scale-95 ${post.savedByMe ? "bg-orange-50 text-orange-700" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"}`}><Bookmark size={17} className={post.savedByMe ? "fill-current" : ""} />{post.savedByMe ? text.saved : text.save}</button>
-    </div>{open && <div className="mt-3 space-y-3 rounded-2xl bg-slate-50 p-3">{rootComments.map((item) => <div key={item._id} className="space-y-2"><div className="flex gap-2"><Avatar user={item.author} text={text} size="h-8 w-8" /><div className="rounded-2xl bg-white px-3 py-2 shadow-sm"><div className="text-xs font-bold text-orange-700">{item.author?.fullName || text.member}</div><p className="mt-1 text-sm text-slate-700">{item.content}</p><button type="button" onClick={() => setReplyTo(item)} className="mt-1 text-xs font-bold text-orange-600 hover:text-orange-500">{text.reply}</button></div></div>{repliesFor(item._id).map((reply) => <div key={reply._id} className="ml-10 flex gap-2"><Avatar user={reply.author} text={text} size="h-8 w-8" /><div className="rounded-2xl bg-white px-3 py-2 shadow-sm"><div className="text-xs font-bold text-orange-700">{reply.author?.fullName || text.member}</div><p className="mt-1 text-sm text-slate-700">{reply.content}</p></div></div>)}</div>)}{replyTo && <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2 text-xs text-slate-600"><span>{text.replyingTo} {replyTo.author?.fullName || text.member}</span><button type="button" onClick={() => setReplyTo(null)} className="font-bold text-orange-600">{text.cancelReply}</button></div>}<form onSubmit={submit} className="flex gap-2"><input value={comment} onChange={(e) => setComment(e.target.value)} placeholder={text.commentPh} className="min-w-0 flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none focus:border-orange-400" /><button className="rounded-full bg-orange-600 px-3 py-2 text-white"><Send size={16} /></button></form></div>}</div>
+    <div className="px-5 py-3">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-3 text-xs text-slate-500">
+        <span>{post.likesCount || 0} {text.likes}</span>
+        <span>{post.commentsCount || 0} {text.comments}</span>
+      </div>
+      <div className="grid grid-cols-4 gap-2 pt-3">
+        <button onClick={async () => { try { await onLike(post._id); pulse("like"); } catch (e) { Swal.fire(text.err, e.response?.data?.message || e.message, "error") } }} className={`flex items-center justify-center gap-2 rounded-xl py-2 text-sm font-bold transition active:scale-95 ${post.likedByMe ? "bg-rose-50 text-rose-600" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"}`}><Heart size={17} className={post.likedByMe ? "fill-current" : ""} />{text.like}</button>
+        <button onClick={() => setOpen(v => !v)} className="flex items-center justify-center gap-2 rounded-xl py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"><MessageCircle size={17} />{text.comment}</button>
+        <button onClick={() => onShare(post)} className="flex items-center justify-center gap-2 rounded-xl py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"><Share2 size={17} />{text.share}</button>
+        <button onClick={async () => { try { await onSave(post._id); pulse("save"); } catch (e) { Swal.fire(text.err, e.response?.data?.message || e.message, "error") } }} className={`flex items-center justify-center gap-2 rounded-xl py-2 text-sm font-bold transition active:scale-95 ${post.savedByMe ? "bg-orange-50 text-orange-700" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"}`}><Bookmark size={17} className={post.savedByMe ? "fill-current" : ""} />{post.savedByMe ? text.saved : text.save}</button>
+      </div>
+      {open && (
+        <div className="mt-3 space-y-3 rounded-2xl bg-slate-50 p-3">
+          {rootComments.map((item) => (
+            <div key={item._id} className="space-y-2">
+              <div className="flex gap-2">
+                <div className="cursor-pointer transition hover:opacity-80 shrink-0" onClick={() => onUserClick?.(item.author)}>
+                  <Avatar user={item.author} text={text} size="h-8 w-8" />
+                </div>
+                <div className="rounded-2xl bg-white px-3 py-2 shadow-sm">
+                  <div className="text-xs font-bold text-orange-700 cursor-pointer hover:underline" onClick={() => onUserClick?.(item.author)}>
+                    {item.author?.fullName || text.member}
+                  </div>
+                  <p className="mt-1 text-sm text-slate-700">{item.content}</p>
+                  <button type="button" onClick={() => setReplyTo(item)} className="mt-1 text-xs font-bold text-orange-600 hover:text-orange-500">{text.reply}</button>
+                </div>
+              </div>
+              {repliesFor(item._id).map((reply) => (
+                <div key={reply._id} className="ml-10 flex gap-2">
+                  <div className="cursor-pointer transition hover:opacity-80 shrink-0" onClick={() => onUserClick?.(reply.author)}>
+                    <Avatar user={reply.author} text={text} size="h-8 w-8" />
+                  </div>
+                  <div className="rounded-2xl bg-white px-3 py-2 shadow-sm">
+                    <div className="text-xs font-bold text-orange-700 cursor-pointer hover:underline" onClick={() => onUserClick?.(reply.author)}>
+                      {reply.author?.fullName || text.member}
+                    </div>
+                    <p className="mt-1 text-sm text-slate-700">{reply.content}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+          {replyTo && (
+            <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2 text-xs text-slate-600">
+              <span>{text.replyingTo} {replyTo.author?.fullName || text.member}</span>
+              <button type="button" onClick={() => setReplyTo(null)} className="font-bold text-orange-600">{text.cancelReply}</button>
+            </div>
+          )}
+          <form onSubmit={submit} className="flex gap-2">
+            <input value={comment} onChange={(e) => setComment(e.target.value)} placeholder={text.commentPh} className="min-w-0 flex-1 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none focus:border-orange-400" />
+            <button className="rounded-full bg-orange-600 px-3 py-2 text-white"><Send size={16} /></button>
+          </form>
+        </div>
+      )}
+    </div>
   </article>;
 }
 
@@ -132,6 +260,8 @@ export default function CommunityPage({ language = "vi", theme = "light" }) {
   const categories = cats[lang].map(([id, label, hint]) => ({ id, label, hint }));
   const isDark = theme === "dark";
   const user = useMemo(getUser, []);
+  const navigate = useNavigate();
+
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ category: "all", search: "", sort: "latest", savedOnly: false });
@@ -139,6 +269,87 @@ export default function CommunityPage({ language = "vi", theme = "light" }) {
   const [sharePost, setSharePost] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [shareLoading, setShareLoading] = useState(false);
+  const [showJobsModal, setShowJobsModal] = useState(false);
+
+  const handleOpenJobs = () => {
+    if (!hasValidToken()) {
+      Swal.fire(text.login, text.loginMsg, "info");
+      return;
+    }
+    const currentRole = user?.role;
+    if (currentRole !== "customer") {
+      Swal.fire(
+        language === "vi" ? "Thông báo" : "Notice",
+        language === "vi" ? "Tính năng này chỉ dành cho Khách hàng để quản lý Job Post." : "This feature is only for Customers to manage Job Posts.",
+        "warning"
+      );
+      return;
+    }
+    setShowJobsModal(true);
+  };
+
+  // States for user profile modal preview and message
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [photographerProfile, setPhotographerProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+
+  // Fetch photographer profile details if the selected user is a photographer
+  useEffect(() => {
+    if (!selectedUser) {
+      setPhotographerProfile(null);
+      return;
+    }
+    const fetchProfile = async () => {
+      setLoadingProfile(true);
+      try {
+        const res = await photographerService.getPhotographerByUserId(selectedUser._id || selectedUser.id);
+        setPhotographerProfile(res.data);
+      } catch (err) {
+        console.error("Failed to load photographer profile:", err);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    fetchProfile();
+  }, [selectedUser]);
+
+  const handleStartChat = async () => {
+    if (!selectedUser) return;
+    if (!hasValidToken()) {
+      Swal.fire(text.login, text.loginMsg, "info");
+      return;
+    }
+    const currentUserId = user?._id || user?.id;
+    const targetId = selectedUser._id || selectedUser.id;
+    if (String(currentUserId) === String(targetId)) {
+      Swal.fire(language === "vi" ? "Thông báo" : "Notice", language === "vi" ? "Bạn không thể nhắn tin cho chính mình." : "You cannot message yourself.", "info");
+      return;
+    }
+    try {
+      const res = await photographerMarketplaceService.createConversation(targetId);
+      const conversationId = res.data?._id || res.data?.id || res._id || res.id;
+      setSelectedUser(null);
+      navigate(conversationId ? `/chat?conversationId=${conversationId}` : "/chat");
+    } catch (err) {
+      Swal.fire(text.err, err.response?.data?.message || err.message, "error");
+    }
+  };
+
+  const handleTagToggle = (tag) => {
+    if (filters.search === tag) {
+      setSearchDraft("");
+      setFilters(p => ({ ...p, search: "", savedOnly: false }));
+    } else {
+      setSearchDraft(tag);
+      setFilters(p => ({ ...p, search: tag, savedOnly: false }));
+    }
+  };
+
+  const handleUserClick = (userObj) => {
+    if (!userObj) return;
+    setSelectedUser(userObj);
+  };
+
   const stats = useMemo(() => ({ posts: posts.length, comments: posts.reduce((t, p) => t + (p.commentsCount || 0), 0), likes: posts.reduce((t, p) => t + (p.likesCount || 0), 0) }), [posts]);
   const fetchPosts = useCallback(async () => { if (filters.savedOnly && !hasValidToken()) { setFilters((p) => ({ ...p, savedOnly: false })); setLoading(false); return; } setLoading(true); try { const res = await communityService.getPosts(filters); setPosts(res.data?.posts || []); } catch (e) { Swal.fire(text.err, e.response?.data?.message || e.message, "error"); } finally { setLoading(false); } }, [filters, text.err]);
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
@@ -150,6 +361,7 @@ export default function CommunityPage({ language = "vi", theme = "light" }) {
   const openShare = async (post) => { if (!needLogin()) return; setSharePost(post); setShareLoading(true); try { const res = await communityService.getChatConversations(); const data = res.data; setConversations(Array.isArray(data) ? data : Array.isArray(data?.conversations) ? data.conversations : []); } catch (e) { setSharePost(null); Swal.fire(text.shareFailed, e.response?.data?.message || e.message, "error"); } finally { setShareLoading(false); } };
   const sendShare = async (conversationId) => { if (!sharePost) return; try { await communityService.sharePostToConversation(conversationId, sharePost); setSharePost(null); Swal.fire(text.shared, text.sharedMsg, "success"); } catch (e) { Swal.fire(text.shareFailed, e.response?.data?.message || e.message, "error"); } };
   const search = (e) => { e.preventDefault(); setFilters((p) => ({ ...p, search: searchDraft.trim(), savedOnly: false })); };
+
   return <main data-community-theme={isDark ? "dark" : "light"} className={`min-h-screen pb-16 pt-24 ${isDark ? "bg-slate-950 text-slate-100" : "bg-slate-100 text-slate-950"}`}><style>{`@keyframes communityPop{0%{opacity:0;transform:translate(-50%,-35%) scale(.7)}25%{opacity:1;transform:translate(-50%,-75%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-125%) scale(.9)}} [data-community-theme="light"] .hero-metric-value,[data-community-theme="light"] .hero-metric-label{color:#fff!important} [data-community-theme="dark"] .hero-metric-value{color:#020617!important} [data-community-theme="dark"] .hero-metric-label{color:#334155!important} [data-community-theme="light"] .hero-copy-title,[data-community-theme="light"] .hero-copy-sub{color:#fff!important} [data-community-theme="dark"] .hero-copy-title,[data-community-theme="dark"] .hero-copy-sub{color:#020617!important} [data-community-theme="dark"] .bg-white{background-color:#0f172a!important;} [data-community-theme="dark"] .bg-slate-50{background-color:#111827!important;} [data-community-theme="dark"] .border-slate-200,[data-community-theme="dark"] .border-slate-100{border-color:#1f2937!important;} [data-community-theme="dark"] .text-slate-950,[data-community-theme="dark"] .text-slate-900{color:#f8fafc!important;} [data-community-theme="dark"] .text-slate-700,[data-community-theme="dark"] .text-slate-600,[data-community-theme="dark"] .text-slate-500{color:#cbd5e1!important;} [data-community-theme="dark"] .shadow-sm{box-shadow:0 10px 30px rgba(0,0,0,.25)!important;}`}</style><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
       <div className="relative min-h-[330px] bg-[url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1800&q=80')] bg-cover bg-center">
@@ -160,8 +372,176 @@ export default function CommunityPage({ language = "vi", theme = "light" }) {
           <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/95 px-3 py-1 text-xs font-black uppercase text-orange-700 shadow-sm"><Users size={14} /> PhotoHub Community</div>
           <h1 className="hero-copy-title max-w-3xl text-4xl font-black tracking-tight [text-shadow:0_8px_30px_rgba(0,0,0,.45)] md:text-6xl">{text.hero}</h1>
           <p className="hero-copy-sub mt-4 max-w-3xl text-base font-medium leading-7 [text-shadow:0_4px_18px_rgba(0,0,0,.35)]">{text.sub}</p></div><div className={`grid grid-cols-3 gap-2 rounded-2xl border p-3 shadow-xl backdrop-blur ${isDark ? "border-white/70 bg-white/90" : "border-white/25 bg-slate-950/70"}`}><div className="px-3 text-center"><div className="hero-metric-value text-lg font-black">{stats.posts}</div><div className="hero-metric-label text-[11px] font-semibold">{text.posts}</div></div><div className="px-3 text-center"><div className="hero-metric-value text-lg font-black">{stats.comments}</div><div className="hero-metric-label text-[11px] font-semibold">{text.comment}</div></div><div className="px-3 text-center"><div className="hero-metric-value text-lg font-black">{stats.likes}</div><div className="hero-metric-label text-[11px] font-semibold">{text.likes}</div></div></div></div></div></div><div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-4"><div className="flex gap-2"><button onClick={() => setFilters(p => ({ ...p, sort: "latest", savedOnly: false }))} className={`rounded-xl px-4 py-2 text-sm font-bold ${filters.sort === "latest" ? "bg-orange-600 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"}`}>{text.latest}</button><button onClick={() => setFilters(p => ({ ...p, sort: "popular", savedOnly: false }))} className={`rounded-xl px-4 py-2 text-sm font-bold ${filters.sort === "popular" ? "bg-orange-600 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"}`}>{text.popular}</button></div><form onSubmit={search} className="flex min-w-[280px] gap-2"><input value={searchDraft} onChange={(e) => setSearchDraft(e.target.value)} placeholder={text.search} className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-orange-400" /><button className="rounded-xl bg-slate-900 px-3 text-white hover:bg-orange-700"><Search size={16} /></button></form></div></section>
-    <section className="mt-6 grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)_300px]"><aside className="space-y-4 lg:sticky lg:top-24 lg:self-start"><div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">{categories.map((cat) => <button key={cat.id} onClick={() => setFilters(p => ({ ...p, category: cat.id, savedOnly: false }))} className={`mb-1 flex w-full items-center justify-between rounded-xl px-3 py-3 text-left transition ${filters.category === cat.id && !filters.savedOnly ? "bg-orange-50 text-orange-700" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"}`}><span><span className="block text-sm font-black">{cat.label}</span><span className="text-xs opacity-70">{cat.hint}</span></span><ChevronRight size={15} /></button>)}<button onClick={() => { if (!filters.savedOnly && !needLogin()) return; setFilters(p => ({ ...p, savedOnly: !p.savedOnly, category: "all" })) }} className={`mt-2 flex w-full items-center justify-between rounded-xl border-t border-slate-100 px-3 py-3 text-left transition ${filters.savedOnly ? "bg-orange-50 text-orange-700" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"}`}><span><span className="block text-sm font-black">{text.savedPosts}</span><span className="text-xs opacity-70">{text.savedHint}</span></span><Bookmark size={15} /></button></div><div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><h2 className="flex items-center gap-2 text-sm font-black text-slate-950"><TrendingUp size={16} />{text.hot}</h2><div className="mt-3 flex flex-wrap gap-2">{quickTags.map(tag => <button key={tag} onClick={() => { setSearchDraft(tag); setFilters(p => ({ ...p, search: tag, savedOnly: false })) }} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700">#{tag}</button>)}</div></div></aside>
-      <section className="space-y-5"><Composer user={user} onSubmit={createPost} categories={categories} text={text} />{loading ? <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500 shadow-sm">{text.loading}</div> : posts.length === 0 ? <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500 shadow-sm">{text.empty}</div> : posts.map(post => <PostCard key={post._id} post={post} onLike={toggleLike} onSave={toggleSave} onComment={addComment} onShare={openShare} categories={categories} text={text} />)}</section>
+    <section className="mt-6 grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)_300px]"><aside className="space-y-4 lg:sticky lg:top-24 lg:self-start"><div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">{categories.map((cat) => <button key={cat.id} onClick={() => setFilters(p => ({ ...p, category: cat.id, savedOnly: false }))} className={`mb-1 flex w-full items-center justify-between rounded-xl px-3 py-3 text-left transition ${filters.category === cat.id && !filters.savedOnly ? "bg-orange-50 text-orange-700" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"}`}><span><span className="block text-sm font-black">{cat.label}</span><span className="text-xs opacity-70">{cat.hint}</span></span><ChevronRight size={15} /></button>)}<button onClick={() => { if (!filters.savedOnly && !needLogin()) return; setFilters(p => ({ ...p, savedOnly: !p.savedOnly, category: "all" })) }} className={`mt-2 flex w-full items-center justify-between rounded-xl border-t border-slate-100 px-3 py-3 text-left transition ${filters.savedOnly ? "bg-orange-50 text-orange-700" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"}`}><span><span className="block text-sm font-black">{text.savedPosts}</span><span className="text-xs opacity-70">{text.savedHint}</span></span><Bookmark size={15} /></button></div><div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><h2 className="flex items-center gap-2 text-sm font-black text-slate-950"><TrendingUp size={16} />{text.hot}</h2><div className="mt-3 flex flex-wrap gap-2">{quickTags.map(tag => {
+      const isActive = filters.search === tag;
+      return <button key={tag} onClick={() => handleTagToggle(tag)} className={`rounded-full border px-3 py-1 text-xs font-semibold transition cursor-pointer ${isActive ? "border-orange-500 bg-orange-500 text-white shadow-sm hover:bg-orange-600" : "border-slate-200 bg-slate-50 text-slate-600 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"}`}>#{tag}</button>;
+    })}</div></div></aside>
+      <section className="space-y-5"><Composer user={user} onSubmit={createPost} categories={categories} text={text} onOpenJobs={handleOpenJobs} />{loading ? <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500 shadow-sm">{text.loading}</div> : posts.length === 0 ? <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500 shadow-sm">{text.empty}</div> : posts.map(post => <PostCard key={post._id} post={post} onLike={toggleLike} onSave={toggleSave} onComment={addComment} onShare={openShare} categories={categories} text={text} activeSearch={filters.search} onTagClick={handleTagToggle} onUserClick={handleUserClick} />)}</section>
       <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start"><div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><h2 className="flex items-center gap-2 text-sm font-black text-slate-950"><ShieldCheck size={16} />{text.rules}</h2><div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">{[text.r1, text.r2, text.r3].map(x => <p key={x} className="flex gap-2"><CheckCircle2 className="mt-1 h-4 w-4 text-emerald-500" />{x}</p>)}</div></div><div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><h2 className="flex items-center gap-2 text-sm font-black text-slate-950"><Pin size={16} />{text.should}</h2><div className="mt-3 space-y-3">{[text.s1, text.s2, text.s3].map(x => <div key={x} className="rounded-xl bg-slate-50 p-3 text-sm leading-5 text-slate-600">{x}</div>)}</div></div><div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"><h2 className="flex items-center gap-2 text-sm font-black text-slate-950"><Bell size={16} />{text.recent}</h2><div className="mt-3 space-y-3 text-sm text-slate-600"><p className="flex gap-2"><Star className="mt-1 h-4 w-4 text-amber-500" />{text.a1}</p><p className="flex gap-2"><Camera className="mt-1 h-4 w-4 text-orange-600" />{text.a2}</p></div></div></aside></section>
-  </div>{sharePost && <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm"><div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"><div className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-black text-slate-950">{text.shareToChat}</h2><p className="mt-1 text-sm text-slate-500">{text.chooseConversation}</p></div><button onClick={() => setSharePost(null)} className="rounded-full p-2 text-slate-500 hover:bg-slate-100"><X size={18} /></button></div><div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="line-clamp-2 text-sm font-bold text-slate-900">{sharePost.title}</p></div><div className="mt-4 max-h-[360px] space-y-2 overflow-auto">{shareLoading ? <div className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">{text.loading}</div> : null}{!shareLoading && conversations.length === 0 ? <div className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">{text.noConversations}</div> : null}{!shareLoading && conversations.map((conversation) => { const currentId = user?._id || user?.id; const other = (conversation.participants || []).find((p) => String(p._id || p.id) !== String(currentId)) || (conversation.participants || [])[0]; return <button key={conversation._id} onClick={() => sendShare(conversation._id)} className="flex w-full items-center gap-3 rounded-xl border border-slate-200 p-3 text-left transition hover:border-orange-200 hover:bg-orange-50"><Avatar user={other} text={text} size="h-10 w-10" /><span className="min-w-0"><span className="block truncate text-sm font-black text-slate-950">{other?.fullName || other?.email || text.member}</span><span className="block truncate text-xs text-slate-500">{conversation.lastMessage?.text || text.shareToChat}</span></span></button> })}</div></div></div>}</main>;
+  </div>{sharePost && <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm"><div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"><div className="flex items-start justify-between gap-3"><div><h2 className="text-xl font-black text-slate-950">{text.shareToChat}</h2><p className="mt-1 text-sm text-slate-500">{text.chooseConversation}</p></div><button onClick={() => setSharePost(null)} className="rounded-full p-2 text-slate-500 hover:bg-slate-100"><X size={18} /></button></div><div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="line-clamp-2 text-sm font-bold text-slate-900">{sharePost.title}</p></div><div className="mt-4 max-h-[360px] space-y-2 overflow-auto">{shareLoading ? <div className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">{text.loading}</div> : null}{!shareLoading && conversations.length === 0 ? <div className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500">{text.noConversations}</div> : null}{!shareLoading && conversations.map((conversation) => { const currentId = user?._id || user?.id; const other = (conversation.participants || []).find((p) => String(p._id || p.id) !== String(currentId)) || (conversation.participants || [])[0]; return <button key={conversation._id} onClick={() => sendShare(conversation._id)} className="flex w-full items-center gap-3 rounded-xl border border-slate-200 p-3 text-left transition hover:border-orange-200 hover:bg-orange-50"><Avatar user={other} text={text} size="h-10 w-10" /><span className="min-w-0"><span className="block truncate text-sm font-black text-slate-950">{other?.fullName || other?.email || text.member}</span><span className="block truncate text-xs text-slate-500">{conversation.lastMessage?.text || text.shareToChat}</span></span></button> })}</div></div></div>}
+  {selectedUser && (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm">
+      <div className={`w-full max-w-md rounded-2xl border p-6 shadow-2xl transition-all duration-300 transform scale-100 ${
+        isDark ? "bg-slate-900 border-white/[0.08] text-white" : "bg-white border-slate-200 text-slate-950"
+      }`}>
+        {/* Modal Header */}
+        <div className="flex items-start justify-between border-b pb-4 dark:border-white/5 border-slate-100">
+          <div>
+            <h2 className="text-xl font-black">{language === "vi" ? "Thông tin cá nhân" : "User Profile"}</h2>
+            <p className="text-xs text-slate-500 mt-0.5">{language === "vi" ? "Xem trước thông tin thành viên" : "Preview member information"}</p>
+          </div>
+          <button
+            onClick={() => setSelectedUser(null)}
+            className="rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 transition"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Modal Content */}
+        <div className="mt-5 flex flex-col items-center text-center">
+          {/* Large Avatar */}
+          <div className="relative group">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 p-[3px] shadow-xl">
+              <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden border-2 border-white dark:border-slate-900 ${
+                isDark ? "bg-slate-950" : "bg-slate-50"
+              }`}>
+                <Avatar user={selectedUser} text={text} size="h-full w-full" />
+              </div>
+            </div>
+          </div>
+
+          {/* User Details */}
+          <h3 className="mt-4 text-xl font-extrabold tracking-tight">
+            {selectedUser.fullName || selectedUser.name || text.member}
+          </h3>
+          
+          {/* Role Badge */}
+          <span className={`mt-1.5 inline-flex items-center rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider ${
+            selectedUser.role === "photographer"
+              ? "bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300"
+              : selectedUser.role === "admin"
+              ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300"
+              : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+          }`}>
+            {selectedUser.role || "member"}
+          </span>
+
+          <p className="mt-3 text-sm text-slate-500 font-semibold">{selectedUser.email}</p>
+
+          {/* Photographer specific details */}
+          {selectedUser.role === "photographer" && (
+            <div className="mt-4 w-full rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 p-4 text-left space-y-3">
+              {loadingProfile ? (
+                <div className="flex justify-center items-center py-4">
+                  <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : photographerProfile ? (
+                <>
+                  {photographerProfile.location && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <MapPin size={14} className="text-orange-500 shrink-0" />
+                      <span className="font-bold text-slate-700 dark:text-slate-300">
+                        {language === "vi" ? "Khu vực: " : "Location: "}
+                        <span className="font-medium">{photographerProfile.location}</span>
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-xs">
+                    <Star size={14} className="text-orange-500 fill-current shrink-0" />
+                    <span className="font-bold text-slate-700 dark:text-slate-300">
+                      {language === "vi" ? "Đánh giá: " : "Rating: "}
+                      <span className="font-medium">
+                        {photographerProfile.averageRating ? photographerProfile.averageRating.toFixed(1) : "5.0"} 
+                        {` (${photographerProfile.totalReviews || 0} ${language === "vi" ? "đánh giá" : "reviews"})`}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <Clock size={14} className="text-orange-500 shrink-0" />
+                    <span className="font-bold text-slate-700 dark:text-slate-300">
+                      {language === "vi" ? "Kinh nghiệm: " : "Experience: "}
+                      <span className="font-medium">{photographerProfile.experienceYears || 0} {language === "vi" ? "năm" : "years"}</span>
+                    </span>
+                  </div>
+                  {photographerProfile.styles && photographerProfile.styles.length > 0 && (
+                    <div className="space-y-1.5 pt-1 border-t dark:border-white/5 border-slate-100">
+                      <div className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                        {language === "vi" ? "Phong cách nổi bật" : "Featured Styles"}
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {photographerProfile.styles.slice(0, 3).map((st) => (
+                          <span key={st} className="px-2 py-0.5 rounded bg-orange-500/10 text-orange-600 dark:text-orange-300 text-[10px] font-bold">
+                            {st}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-xs text-slate-400 text-center font-semibold py-2">
+                  {language === "vi" ? "Không tìm thấy thông tin chi tiết photographer." : "Photographer details not found."}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Modal Actions */}
+        <div className="mt-6 flex gap-3 border-t dark:border-white/5 border-slate-100 pt-4">
+          {selectedUser.role === "photographer" && photographerProfile && (
+            <button
+              onClick={() => {
+                setSelectedUser(null);
+                navigate(`/photographers/${photographerProfile._id}`);
+              }}
+              className="flex-1 h-11 rounded-xl border border-orange-200 dark:border-orange-500/40 text-xs font-black uppercase tracking-wide text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 transition active:scale-95 cursor-pointer"
+            >
+              {language === "vi" ? "Xem hồ sơ" : "View Profile"}
+            </button>
+          )}
+          <button
+            onClick={handleStartChat}
+            className="flex-1 h-11 rounded-xl bg-orange-600 text-white text-xs font-black uppercase tracking-wide hover:bg-orange-500 shadow-md shadow-orange-500/10 transition active:scale-95 cursor-pointer"
+          >
+            {language === "vi" ? "Nhắn tin" : "Send Message"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+  {showJobsModal && (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/80 p-4 md:p-8 backdrop-blur-sm animate-fadeIn">
+      <div className={`relative w-full max-w-6xl h-[90vh] flex flex-col rounded-3xl border shadow-2xl transition-all duration-300 ${
+        isDark ? "bg-slate-900 border-white/[0.08] text-white" : "bg-white border-slate-200 text-slate-950"
+      }`}>
+        {/* Modal Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b dark:border-white/5 border-slate-100 shrink-0">
+          <div>
+            <h2 className="text-2xl font-black">{language === "vi" ? "Quản lý Job tuyển Photo & Báo giá" : "Manage Jobs & Bids"}</h2>
+            <p className="text-xs text-slate-500 mt-0.5">{language === "vi" ? "Đăng tin tuyển nhiếp ảnh gia và duyệt báo giá từ cộng đồng" : "Post photography jobs and manage photographer bids"}</p>
+          </div>
+          <button
+            onClick={() => {
+              setShowJobsModal(false);
+              fetchPosts();
+            }}
+            className="rounded-full p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 transition"
+          >
+            <X size={22} />
+          </button>
+        </div>
+
+        {/* Modal Body - Scrollable content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <CustomerJobPostsManager 
+            theme={theme === "light" ? "light" : "dark"} 
+            language={language}
+            onJobCreated={fetchPosts}
+          />
+        </div>
+      </div>
+    </div>
+  )}</main>;
 }

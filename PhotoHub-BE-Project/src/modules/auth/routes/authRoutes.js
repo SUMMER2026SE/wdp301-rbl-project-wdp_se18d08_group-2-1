@@ -5,6 +5,11 @@ const authenticate = require("../../../middlewares/authenticate");
 const ApiResponse = require("../../../utils/ApiResponse");
 const upload = require("../../../middlewares/upload.middleware");
 
+
+const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../../../config/cloudinary");
+
 // Controllers
 const AuthController = require("../../../modules/auth/controllers/AuthController");
 const googleAuth = require("../../../modules/auth/controllers/GoogleAuthController");
@@ -12,6 +17,27 @@ const ProfileController = require("../../../modules/auth/controllers/ProfileCont
 
 const auth = new AuthController();
 const profile = new ProfileController();
+
+
+// ── Upload avatar config ─ Cloudinary ────────────────────────────────────
+const avatarStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "photohub/avatars",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto" }],
+  },
+});
+
+const uploadAvatarMulter = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype?.startsWith("image/")) return cb(null, true);
+    cb(new Error("Chỉ chấp nhận file ảnh"));
+  },
+}).single("avatar");
+
 // ================= AUTH =================
 router.post("/register", (req, res) => auth.register(req, res));
 

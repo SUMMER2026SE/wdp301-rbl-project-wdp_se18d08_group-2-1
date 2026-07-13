@@ -173,6 +173,11 @@ export const photographerService = {
 
         return response.data;
     },
+
+    getPhotographerByUserId: async (userId) => {
+        const response = await axios.get(`${BASE_URL}/user/${userId}`);
+        return response.data;
+    },
 };
 
 const getAuthConfig = (isMultipart = false) => {

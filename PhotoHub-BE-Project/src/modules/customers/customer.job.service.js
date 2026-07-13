@@ -1,8 +1,9 @@
 const JobPost = require("../photographers/job/jobPost.model");
 const Bid = require("../photographers/bid/bid.model");
 const Photographer = require("../photographers/models/photographer");
-const Booking = require("../photographers/booking/booking.model");
+const { Booking } = require("../bookings/models/booking.model");
 const chatService = require("../photographers/chat/chat.service");
+const CommunityPost = require("../community/community.model");
 
 class CustomerJobService {
   async createJobPost(customerId, data, imageUrls = []) {
@@ -39,6 +40,31 @@ class CustomerJobService {
       referenceImages: imageUrls,
       status: "open",
     });
+
+    // Tự động đăng lên diễn đàn cộng đồng
+    try {
+      const coverImage = imageUrls && imageUrls.length > 0 ? imageUrls[0] : "";
+      const postTitle = `[Tuyển Photographer] ${title.trim()}`;
+      const postContent = `📍 **Địa điểm**: ${location.trim()}
+💰 **Ngân sách**: ${budgetNum.toLocaleString("vi-VN")} VND
+📅 **Ngày chụp**: ${jobDate.toLocaleDateString("vi-VN")}
+📸 **Phong cách**: ${style.trim()}
+
+**Mô tả chi tiết yêu cầu**:
+${description.trim()}`;
+
+      await CommunityPost.create({
+        author: customerId,
+        title: postTitle,
+        content: postContent,
+        category: "job_story",
+        tags: ["tuyen-photo", style.trim().toLowerCase().replace(/\s+/g, "-")],
+        coverImage: coverImage,
+        status: "published"
+      });
+    } catch (postError) {
+      console.error("Failed to automatically post job to community:", postError);
+    }
 
     return jobPost;
   }
@@ -181,6 +207,11 @@ class CustomerJobService {
       throw new Error("Không tìm thấy báo giá phù hợp cho job này.");
     }
 
+    const photographerProfile = await Photographer.findOne({ user: targetBid.photographerId });
+    if (!photographerProfile) {
+      throw new Error("Không tìm thấy hồ sơ của nhiếp ảnh gia.");
+    }
+
     targetBid.status = "accepted";
     await targetBid.save();
 
@@ -195,24 +226,14 @@ class CustomerJobService {
     // Tự động tạo Booking khi đồng ý đề xuất
     const booking = await Booking.create({
       customer: customerId,
-      photographer: targetBid.photographerId,
+      photographer: photographerProfile._id,
       title: job.title,
       start: job.date,
       end: new Date(new Date(job.date).getTime() + 2 * 60 * 60 * 1000), // Mặc định 2 giờ chụp
-      bookingDate: job.date,
       location: job.location,
       price: targetBid.price,
-      totalPrice: targetBid.price,
-      style: job.style || "",
-      packageName: targetBid.packageName || "",
       status: "accepted",
       paymentStatus: "unpaid",
-      statusLogs: [
-        {
-          status: "ACCEPTED",
-          note: `Booking được tạo tự động từ báo giá của photographer cho job "${job.title}"`,
-        },
-      ],
     });
 
     // Tạo cuộc hội thoại chat tư vấn giữa Customer và Photographer
@@ -231,7 +252,7 @@ class CustomerJobService {
         status: booking.status,
         start: booking.start,
         location: booking.location,
-        price: booking.totalPrice,
+        price: booking.price,
       },
     });
 
