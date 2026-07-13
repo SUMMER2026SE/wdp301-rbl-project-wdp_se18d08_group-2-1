@@ -134,7 +134,8 @@ class PhotographerPackageService {
       {
         $match: {
           photographerId: new mongoose.Types.ObjectId(photographerId),
-          isDeleted: { $ne: true }
+          isDeleted: { $ne: true },
+          status: { $ne: "DELETED" }
         }
       },
 
@@ -338,7 +339,7 @@ class PhotographerPackageService {
   async softDeletePackage(packageId) {
     const pkg = await PhotographerPackage.findByIdAndUpdate(
       packageId,
-      { $set: { isDeleted: true } },
+      { $set: { isDeleted: true, status: "DELETED" } },
       { new: true }
     );
     if (!pkg) throw new Error("Package khĂ´ng tá»“n táº¡i");

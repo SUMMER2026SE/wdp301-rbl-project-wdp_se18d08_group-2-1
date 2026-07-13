@@ -356,7 +356,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
                             <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
                               <span className="flex items-center gap-1 bg-amber-500/5 border border-amber-500/10 px-2 py-1 rounded-lg text-amber-500">
                                 <Star size={11} className="fill-amber-500" />
-                                {pg.averageRating ? pg.averageRating.toFixed(1) : "5.0"}
+                                {pg.averageRating ? pg.averageRating.toFixed(1) : "0.0"}
                               </span>
                               <span className="flex items-center gap-1 bg-emerald-500/5 border border-emerald-500/10 px-2 py-1 rounded-lg text-emerald-500">
                                 <Award size={11} />

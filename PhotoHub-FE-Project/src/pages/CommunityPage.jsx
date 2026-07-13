@@ -250,6 +250,7 @@ export default function CommunityPage({ language = "vi", theme = "light" }) {
       try {
         const res = await photographerService.getPhotographerByUserId(selectedUser._id || selectedUser.id);
         setPhotographerProfile(res.data);
+        console.log(res.data)
       } catch (err) {
         console.error("Failed to load photographer profile:", err);
       } finally {
@@ -398,7 +399,7 @@ export default function CommunityPage({ language = "vi", theme = "light" }) {
                     <span className="font-bold text-slate-700 dark:text-slate-300">
                       {language === "vi" ? "Đánh giá: " : "Rating: "}
                       <span className="font-medium">
-                        {photographerProfile.averageRating ? photographerProfile.averageRating.toFixed(1) : "5.0"} 
+                        {photographerProfile.averageRating ? photographerProfile.averageRating.toFixed(1) : "0.0"} 
                         {` (${photographerProfile.totalReviews || 0} ${language === "vi" ? "đánh giá" : "reviews"})`}
                       </span>
                     </span>
@@ -417,8 +418,8 @@ export default function CommunityPage({ language = "vi", theme = "light" }) {
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {photographerProfile.styles.slice(0, 3).map((st) => (
-                          <span key={st} className="px-2 py-0.5 rounded bg-orange-500/10 text-orange-600 dark:text-orange-300 text-[10px] font-bold">
-                            {st}
+                          <span key={st._id} className="px-2 py-0.5 rounded bg-orange-500/10 text-orange-600 dark:text-orange-300 text-[10px] font-bold">
+                            {st.name}
                           </span>
                         ))}
                       </div>

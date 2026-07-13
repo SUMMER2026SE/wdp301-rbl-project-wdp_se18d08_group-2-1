@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
     Plus,
     Image as ImageIcon,
@@ -77,6 +77,9 @@ export default function PhotographerPackages({
     const [filterStyles, setFilterStyles] = useState([]);
     const [showCateFilter, setShowCateFilter] = useState(false);
     const [showStyleFilter, setShowStyleFilter] = useState(false);
+    const cateRef = useRef(null);
+    const styleRef = useRef(null);
+
 
     const t = {
         vi: {
@@ -136,6 +139,33 @@ export default function PhotographerPackages({
             styleTitle: "Styles",
         },
     }[language];
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                cateRef.current &&
+                !cateRef.current.contains(event.target)
+            ) {
+                setShowCateDropdown(false);
+            }
+
+            if (
+                styleRef.current &&
+                !styleRef.current.contains(event.target)
+            ) {
+                setShowStyleDropdown(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener(
+                "mousedown",
+                handleClickOutside
+            );
+        };
+    }, []);
 
     const initData = async (
         categories = filterCategories,
@@ -908,7 +938,7 @@ export default function PhotographerPackages({
                             </div>
 
                             {/* SEARCHABLE DROPDOWN CATEGORIES */}
-                            <div className="space-y-1.5 relative cate-dropdown-container">
+                            <div ref={cateRef} className="space-y-1.5 relative cate-dropdown-container">
                                 <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                                     {t.labelCategories}
                                 </label>
@@ -974,7 +1004,7 @@ export default function PhotographerPackages({
                             </div>
 
                             {/* SEARCHABLE DROPDOWN STYLES */}
-                            <div className="space-y-1.5 relative style-dropdown-container">
+                            <div ref={styleRef} className="space-y-1.5 relative style-dropdown-container">
                                 <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                                     {t.labelStyles}
                                 </label>
