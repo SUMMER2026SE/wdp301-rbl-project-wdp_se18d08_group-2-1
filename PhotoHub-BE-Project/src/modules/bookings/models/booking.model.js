@@ -163,6 +163,12 @@ const bookingSchema = new mongoose.Schema(
       ref: "LoyaltyAddonReward",
       default: null,
     },
+    groupBooking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "GroupBooking",
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: true,

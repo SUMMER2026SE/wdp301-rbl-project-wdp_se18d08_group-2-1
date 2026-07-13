@@ -936,6 +936,7 @@ class GroupBookingService {
         paymentStatus: "paid", // Đã thanh toán cọc qua nhóm
         paidAmount: Math.round(group.currentPrice * paidCount),
         paidAt: new Date(),
+        groupBooking: group._id, // Liên kết Booking ngược lại GroupBooking
       });
       scheduledBookingId = newBooking._id;
 

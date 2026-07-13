@@ -223,7 +223,17 @@ class BookingService {
   }
 
   async getBookingsForCustomer(customerUserId, { status, page = 1, limit = 10 } = {}) {
-    const query = { customer: customerUserId };
+    // Lấy danh sách các nhóm mà user này là thành viên (đã tham gia)
+    const { GroupMember } = require("../../group_booking/models/groupMember.model");
+    const memberships = await GroupMember.find({ user: customerUserId }).select("group");
+    const groupIds = memberships.map((m) => m.group);
+
+    const query = {
+      $or: [
+        { customer: customerUserId },
+        { groupBooking: { $in: groupIds } }
+      ]
+    };
     if (status) query.status = status;
 
     const skip = (Number(page) - 1) * Number(limit);
