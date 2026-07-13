@@ -30,8 +30,6 @@ const albumSchema = new mongoose.Schema(
       watermarkPreview: { type: Boolean, default: true },
       fullHdLockedUntilPaid: { type: Boolean, default: true },
     },
-    publicId: { type: String, required: true },
-    uploadedAt: { type: Date, default: Date.now },
   },
   {
     timestamps: true,

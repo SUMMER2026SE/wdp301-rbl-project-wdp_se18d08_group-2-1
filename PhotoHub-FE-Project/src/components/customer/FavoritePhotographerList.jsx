@@ -198,7 +198,7 @@ export default function FavoritePhotographerList({ language = "vi", isDark = tru
                     <div className={`flex flex-1 items-center gap-1.5 rounded-xl px-2 py-1.5 ${isDark ? "bg-white/5" : "bg-slate-100"}`}>
                       <Star size={12} className="text-amber-400 fill-amber-400" />
                       <span className="text-xs font-bold">
-                        {pg.averageRating ? pg.averageRating.toFixed(1) : "5.0"}
+                        {pg.averageRating ? pg.averageRating.toFixed(1) : "0.0"}
                       </span>
                     </div>
                     <div className={`flex flex-1 items-center gap-1.5 rounded-xl px-2 py-1.5 ${isDark ? "bg-white/5" : "bg-slate-100"}`}>

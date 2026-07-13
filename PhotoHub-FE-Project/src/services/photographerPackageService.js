@@ -65,6 +65,7 @@ export const getMyPackages = async (filters = {}) => {
   const params = new URLSearchParams();
   if (filters.categoryIds?.length) params.append("categoryIds", filters.categoryIds.join(","));
   if (filters.styleTagIds?.length) params.append("styleTagIds", filters.styleTagIds.join(","));
+  if (filters.packageType) params.append("packageType", filters.packageType);
 
   const res = await axios.get(`${API}/packages/my?${params.toString()}`, getHeaders());
   return res.data;
@@ -87,5 +88,19 @@ export const toggleStatusPackage = async (packageId) => {
 
 export const softDeletePackage = async (packageId) => {
   const res = await axios.delete(`${API}/packages/${packageId}`, getHeaders());
+  return res.data;
+};
+
+export const getPhotographerPackages = async (photographerId, filters = {}) => {
+  const params = new URLSearchParams();
+  if (filters.categoryIds?.length) params.append("categoryIds", filters.categoryIds.join(","));
+  if (filters.styleTagIds?.length) params.append("styleTagIds", filters.styleTagIds.join(","));
+  if (filters.packageType) params.append("packageType", filters.packageType);
+
+  const query = params.toString();
+  const res = await axios.get(
+    `${API}/packages/photographer/${photographerId}${query ? `?${query}` : ""}`,
+    getHeaders()
+  );
   return res.data;
 };

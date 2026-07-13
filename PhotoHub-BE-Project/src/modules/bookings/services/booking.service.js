@@ -52,6 +52,15 @@ const buildPaymentResultUrl = (configuredUrl, params = {}) => {
 const getBookingAmount = (booking) => Number(booking.price || booking.totalPrice || 0);
 const getPayoutEligibleAt = () => new Date(Date.now() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
 
+const pushStatusLog = (booking, status, note) => {
+  booking.statusLogs = booking.statusLogs || [];
+  booking.statusLogs.push({
+    status,
+    note,
+    updatedAt: new Date(),
+  });
+};
+
 const resolvePhotographerUserId = async (photographerRef) => {
   const photographer = await Photographer.findOne({
     $or: [{ _id: photographerRef }, { user: photographerRef }],
@@ -149,6 +158,32 @@ class BookingService {
       throw new Error("Photographer already has a confirmed booking in this time range");
     }
 
+    // Validate loyalty voucher or addon rewards if provided
+    if (dto.appliedVoucherCode) {
+      const LoyaltyVoucher = require("../../loyalty/models/LoyaltyVoucher");
+      const voucher = await LoyaltyVoucher.findOne({
+        code: dto.appliedVoucherCode,
+        userId: customerUserId,
+        isUsed: false,
+        expiryDate: { $gt: new Date() }
+      });
+      if (!voucher) {
+        throw new Error("Mã giảm giá không hợp lệ hoặc đã hết hạn");
+      }
+    }
+
+    if (dto.appliedAddonRewardId) {
+      const LoyaltyAddonReward = require("../../loyalty/models/LoyaltyAddonReward");
+      const addonReward = await LoyaltyAddonReward.findOne({
+        _id: dto.appliedAddonRewardId,
+        userId: customerUserId,
+        isUsed: false
+      });
+      if (!addonReward) {
+        throw new Error("Phần thưởng tiện ích không hợp lệ hoặc đã được sử dụng");
+      }
+    }
+
     const booking = await Booking.create({
       customer: customerUserId,
       photographer: photographer._id,
@@ -161,7 +196,11 @@ class BookingService {
       price: Number(price),
       status: BOOKING_STATUS.PENDING,
       paymentStatus: PAYMENT_STATUS.UNPAID,
+      appliedVoucherCode: dto.appliedVoucherCode || null,
+      appliedAddonReward: dto.appliedAddonRewardId || null,
     });
+    pushStatusLog(booking, BOOKING_STATUS.PENDING, "Booking created");
+    await booking.save();
 
     const populated = await this.findById(booking._id);
 
@@ -184,7 +223,17 @@ class BookingService {
   }
 
   async getBookingsForCustomer(customerUserId, { status, page = 1, limit = 10 } = {}) {
-    const query = { customer: customerUserId };
+    // Lấy danh sách các nhóm mà user này là thành viên (đã tham gia)
+    const { GroupMember } = require("../../group_booking/models/groupMember.model");
+    const memberships = await GroupMember.find({ user: customerUserId }).select("group");
+    const groupIds = memberships.map((m) => m.group);
+
+    const query = {
+      $or: [
+        { customer: customerUserId },
+        { groupBooking: { $in: groupIds } }
+      ]
+    };
     if (status) query.status = status;
 
     const skip = (Number(page) - 1) * Number(limit);
@@ -239,6 +288,13 @@ class BookingService {
 
     booking.status = BOOKING_STATUS.CANCELLED;
     booking.paymentStatus = booking.paymentStatus === PAYMENT_STATUS.PAID ? PAYMENT_STATUS.PAID : PAYMENT_STATUS.CANCELLED;
+    pushStatusLog(
+      booking,
+      BOOKING_STATUS.CANCELLED,
+      booking.paymentStatus === PAYMENT_STATUS.PAID
+        ? "Customer cancelled a paid booking"
+        : "Customer cancelled the booking"
+    );
     await booking.save();
 
     const photographerUserId = await resolvePhotographerUserId(booking.photographer);
@@ -246,6 +302,11 @@ class BookingService {
       bookingId: booking._id,
       status: BOOKING_STATUS.CANCELLED,
       message: "Customer cancelled the booking",
+    });
+    safeEmit(`user:${String(booking.customer)}`, "booking-status-updated", {
+      bookingId: booking._id,
+      status: BOOKING_STATUS.CANCELLED,
+      message: "Your booking was cancelled successfully",
     });
 
     return booking;
@@ -274,12 +335,34 @@ class BookingService {
       };
     }
 
+    const loyaltyService = require("../../loyalty/services/loyalty.service");
+    const LoyaltyVoucher = require("../../loyalty/models/LoyaltyVoucher");
+
+    let discountAmount = 0;
+    if (booking.appliedVoucherCode) {
+      const voucher = await LoyaltyVoucher.findOne({
+        code: booking.appliedVoucherCode,
+        userId: customerUserId,
+        isUsed: false
+      });
+      if (voucher) {
+        discountAmount += voucher.discountAmount;
+      }
+    }
+
+    const discountPercent = await loyaltyService.getDiscountPercent(customerUserId);
+    if (discountPercent > 0) {
+      discountAmount += Math.round(getBookingAmount(booking) * discountPercent);
+    }
+
+    const finalAmount = Math.max(1000, Math.round(getBookingAmount(booking) - discountAmount));
+
     const orderCode = Number(`${Date.now()}${Math.floor(Math.random() * 90 + 10)}`.slice(-12));
     const resultParams = { bookingId: booking._id, orderCode };
 
     const paymentData = {
       orderCode,
-      amount: Math.round(getBookingAmount(booking)),
+      amount: finalAmount,
       description: `PhotoHub ${String(booking._id).slice(-8)}`.slice(0, 25),
       returnUrl: buildPaymentResultUrl(process.env.PAYOS_RETURN_URL, resultParams),
       cancelUrl: buildPaymentResultUrl(process.env.PAYOS_CANCEL_URL, { ...resultParams, canceled: true }),
@@ -287,7 +370,7 @@ class BookingService {
         {
           name: String(booking.title || "Photo booking").substring(0, 25),
           quantity: 1,
-          price: Math.round(getBookingAmount(booking)),
+          price: finalAmount,
         },
       ],
       buyerName: booking.customer?.fullName,
@@ -332,9 +415,70 @@ class BookingService {
     booking.paidAt = booking.paidAt || new Date();
     booking.paidAmount = Math.max(Number(booking.paidAmount || 0), amount || getBookingAmount(booking));
     booking.paymentLinkId = payosData.paymentLinkId || payosData.id || booking.paymentLinkId;
+    pushStatusLog(booking, booking.status, "Booking payment confirmed");
     await booking.save();
 
+    // 1. Mark voucher as used if applied
+    if (booking.appliedVoucherCode) {
+      const LoyaltyVoucher = require("../../loyalty/models/LoyaltyVoucher");
+      await LoyaltyVoucher.findOneAndUpdate(
+        { code: booking.appliedVoucherCode, userId: booking.customer },
+        { $set: { isUsed: true } }
+      );
+    }
+
+    // 2. Mark addon reward as used if applied
+    if (booking.appliedAddonReward) {
+      const LoyaltyAddonReward = require("../../loyalty/models/LoyaltyAddonReward");
+      await LoyaltyAddonReward.findByIdAndUpdate(
+        booking.appliedAddonReward,
+        { $set: { isUsed: true, bookingId: booking._id } }
+      );
+    }
+
     const photographerUserId = await resolvePhotographerUserId(booking.photographer);
+
+    // 3. Create or update Commission record
+    const Commission = require("../../admin/models/Commission");
+    const SystemSetting = require("../../admin/models/SystemSetting");
+    
+    // Get current commission rate
+    const rateSetting = await SystemSetting.findOne({ key: "commissionRate" });
+    const currentRate = rateSetting ? rateSetting.value : COMMISSION_RATE;
+    
+    const baseCommission = Math.round(booking.price * currentRate);
+    
+    // Calculate discounts applied
+    let discountAmount = 0;
+    if (booking.appliedVoucherCode) {
+      const LoyaltyVoucher = require("../../loyalty/models/LoyaltyVoucher");
+      const voucher = await LoyaltyVoucher.findOne({ code: booking.appliedVoucherCode });
+      if (voucher) discountAmount += voucher.discountAmount;
+    }
+    
+    const loyaltyService = require("../../loyalty/services/loyalty.service");
+    const discountPercent = await loyaltyService.getDiscountPercent(booking.customer);
+    if (discountPercent > 0) {
+      discountAmount += Math.round(booking.price * discountPercent);
+    }
+    
+    const finalCommission = Math.max(0, baseCommission - discountAmount);
+    
+    if (finalCommission > 0) {
+      await Commission.findOneAndUpdate(
+        { booking: booking._id },
+        {
+          $set: {
+            booking: booking._id,
+            photographer: booking.photographer,
+            amount: finalCommission,
+            rate: currentRate,
+            status: "PENDING"
+          }
+        },
+        { upsert: true, new: true }
+      );
+    }
 
     if (existingPayment) {
       existingPayment.status = "SUCCESS";
@@ -362,12 +506,12 @@ class BookingService {
       await this.ensureWallet(photographerUserId);
       await Wallet.findOneAndUpdate(
         { user: photographerUserId },
-        { $inc: { holdBalance: booking.paidAmount } },
+        { $inc: { holdBalance: booking.price } }, // Credit full booking price (discount subsidized by platform)
         { new: true }
       );
       await Photographer.findByIdAndUpdate(
         booking.photographer,
-        { $inc: { totalEarnings: booking.paidAmount } }
+        { $inc: { totalEarnings: booking.price } }
       );
     }
 
@@ -436,6 +580,7 @@ class BookingService {
     if (forceCancel) {
       booking.status = BOOKING_STATUS.CANCELLED;
       booking.paymentStatus = PAYMENT_STATUS.CANCELLED;
+      pushStatusLog(booking, BOOKING_STATUS.CANCELLED, "Customer cancelled payment on return");
       await booking.save();
 
       const code = Number(orderCode || booking.payosOrderCode);
@@ -455,6 +600,11 @@ class BookingService {
         bookingId: booking._id,
         status: BOOKING_STATUS.CANCELLED,
         message: "Customer cancelled the booking payment",
+      });
+      safeEmit(`user:${String(booking.customer)}`, "booking-status-updated", {
+        bookingId: booking._id,
+        status: BOOKING_STATUS.CANCELLED,
+        message: "Your payment was cancelled",
       });
 
       return { paid: false, payosStatus: "CANCELLED", paymentStatus: booking.paymentStatus, booking };
@@ -476,9 +626,19 @@ class BookingService {
     if (["CANCELLED", "EXPIRED", "FAILED"].includes(paymentLink.status)) {
       booking.paymentStatus = paymentLink.status === "EXPIRED" ? PAYMENT_STATUS.EXPIRED : PAYMENT_STATUS.CANCELLED;
       booking.status = BOOKING_STATUS.CANCELLED;
+      pushStatusLog(
+        booking,
+        BOOKING_STATUS.CANCELLED,
+        `PayOS payment ${paymentLink.status.toLowerCase()}`
+      );
       await booking.save();
 
       safeEmit(`user:${booking.photographer.toString()}`, "booking-status-updated", {
+        bookingId: booking._id,
+        status: BOOKING_STATUS.CANCELLED,
+        message: `Booking payment was ${paymentLink.status.toLowerCase()}`,
+      });
+      safeEmit(`user:${String(booking.customer)}`, "booking-status-updated", {
         bookingId: booking._id,
         status: BOOKING_STATUS.CANCELLED,
         message: `Booking payment was ${paymentLink.status.toLowerCase()}`,
@@ -544,6 +704,7 @@ class BookingService {
     }
 
     booking.status = BOOKING_STATUS.ACCEPTED;
+    pushStatusLog(booking, BOOKING_STATUS.ACCEPTED, "Photographer accepted the booking");
     await booking.save();
 
     safeEmit(`user:${booking.customer.toString()}`, "booking-status-updated", {
@@ -566,13 +727,80 @@ class BookingService {
     if ([BOOKING_STATUS.REJECTED, BOOKING_STATUS.CANCELLED].includes(booking.status)) {
       throw new Error("Booking is already rejected or cancelled");
     }
-    if ([BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED].includes(booking.status)) {
-      throw new Error("Cannot reject a paid booking");
+    if (booking.status === BOOKING_STATUS.COMPLETED) {
+      throw new Error("Cannot reject a completed booking");
     }
+
+    const wasPaid = booking.paymentStatus === PAYMENT_STATUS.PAID;
+    const holdAmount = Number(booking.paidAmount || booking.price || 0);
 
     booking.status = BOOKING_STATUS.REJECTED;
     booking.rejectReason = rejectReason?.trim() || "Photographer cannot take this booking";
+    pushStatusLog(booking, BOOKING_STATUS.REJECTED, booking.rejectReason);
     await booking.save();
+
+    // Kiểm tra xem Booking có liên kết với GroupBooking (Nhóm chụp chung) không
+    const { GroupBooking } = require("../../group_booking/models/groupBooking.model");
+    const group = await GroupBooking.findOne({
+      $or: [
+        { scheduledBooking: booking._id },
+        { scheduledBooking: String(booking._id) },
+      ],
+    });
+
+    if (group) {
+      // 1. Trừ holdBalance và totalEarnings của Photographer nếu đã được cộng trước đó
+      if (wasPaid && holdAmount > 0) {
+        await this.ensureWallet(photographerUserId);
+        await Wallet.findOneAndUpdate(
+          { user: photographerUserId },
+          { $inc: { holdBalance: -holdAmount } }
+        );
+        await Photographer.findByIdAndUpdate(
+          photographerProfile._id,
+          { $inc: { totalEarnings: -holdAmount } }
+        );
+      }
+
+      // 2. Gọi groupBookingService hủy nhóm và hoàn tiền cọc vào ví cho các thành viên
+      const groupBookingService = require("../../group_booking/services/groupBooking.service");
+      await groupBookingService.cancelGroup(group._id, `Nhiếp ảnh gia từ chối lịch chụp: ${booking.rejectReason}`);
+    } else {
+      // Nếu là Booking lẻ thông thường đã CONFIRMED (đã cọc)
+      if (wasPaid && holdAmount > 0) {
+        // Trừ ví Photographer
+        await this.ensureWallet(photographerUserId);
+        await Wallet.findOneAndUpdate(
+          { user: photographerUserId },
+          { $inc: { holdBalance: -holdAmount } }
+        );
+        await Photographer.findByIdAndUpdate(
+          photographerProfile._id,
+          { $inc: { totalEarnings: -holdAmount } }
+        );
+
+        // Cộng ví Customer
+        await this.ensureWallet(booking.customer);
+        await Wallet.findOneAndUpdate(
+          { user: booking.customer },
+          { $inc: { balance: holdAmount } }
+        );
+
+        // Ghi nhận Payment REFUND
+        await Payment.create({
+          booking: booking._id,
+          sender: photographerUserId,
+          receiver: booking.customer,
+          amount: holdAmount,
+          paymentType: "REFUND",
+          paymentMethod: "WALLET",
+          transactionId: `BK_REJECT_REFUND_${booking._id}_${Date.now()}`,
+          status: "SUCCESS",
+          confirmedAt: new Date(),
+          adminNote: `Hoàn tiền cọc booking lẻ ${booking.title} - Nhiếp ảnh gia từ chối lịch`,
+        });
+      }
+    }
 
     safeEmit(`user:${booking.customer.toString()}`, "booking-status-updated", {
       bookingId: booking._id,
@@ -598,11 +826,12 @@ class BookingService {
       throw new Error("Please upload the final album before marking this booking complete");
     }
 
-    const amount = Number(booking.paidAmount || booking.price || 0);
+    const amount = Number(booking.price || booking.paidAmount || 0);
     booking.status = BOOKING_STATUS.COMPLETED;
     booking.completionStatus = "completed";
     booking.completedAt = new Date();
     booking.payoutEligibleAt = getPayoutEligibleAt();
+    pushStatusLog(booking, BOOKING_STATUS.COMPLETED, "Booking marked as completed");
     await booking.save();
 
     const wallet = await this.ensureWallet(photographerUserId);
@@ -615,6 +844,14 @@ class BookingService {
       { user: photographerUserId },
       { $inc: { completedBookings: 1 } }
     );
+
+    // Kích hoạt tích lũy điểm thưởng và thưởng giới thiệu
+    try {
+      const loyaltyService = require("../../loyalty/services/loyalty.service");
+      await loyaltyService.handleBookingCompleted(booking._id);
+    } catch (loyaltyError) {
+      console.error("[Loyalty] Error earning points on booking completion:", loyaltyError.message);
+    }
 
     safeEmit(`user:${booking.customer.toString()}`, "booking-status-updated", {
       bookingId: booking._id,

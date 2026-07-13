@@ -19,6 +19,13 @@ const photographerPackageSchema = new mongoose.Schema(
       default: "",
     },
 
+    packageType: {
+      type: String,
+      enum: ["SHOOTING", "MONTHLY"],
+      default: "SHOOTING",
+      index: true,
+    },
+
     price: {
       type: Number,
       required: true,
@@ -54,6 +61,17 @@ const photographerPackageSchema = new mongoose.Schema(
     isFeatured: {
       type: Boolean,
       default: false,
+    },
+
+    /**
+     * Đánh dấu đây là gói dành riêng cho Group Booking.
+     * - true  → chỉ hiển thị trong trang Tạo nhóm
+     * - false → chỉ hiển thị trong trang Đặt lịch thường
+     */
+    isGroupPackage: {
+      type: Boolean,
+      default: false,
+      index: true,
     },
   },
   {

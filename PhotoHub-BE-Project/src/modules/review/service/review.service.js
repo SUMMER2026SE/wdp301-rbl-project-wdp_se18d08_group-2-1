@@ -48,6 +48,20 @@ class ReviewService {
     booking.isReviewed = true;
     await booking.save();
 
+    // Thưởng điểm tích lũy cho việc gửi đánh giá review (50 điểm cơ bản)
+    try {
+      const loyaltyService = require("../../loyalty/services/loyalty.service");
+      await loyaltyService.addPoints(
+        customerUserId,
+        50, // Base points
+        "Earn_Review",
+        `Thưởng đánh giá nhiếp ảnh gia cho đơn chụp #${String(bookingId).slice(-6)}`,
+        bookingId
+      );
+    } catch (loyaltyError) {
+      console.error("[Loyalty] Error earning points on review submission:", loyaltyError.message);
+    }
+
     // Recalculate average rating & total reviews for the photographer
     const stats = await Review.aggregate([
       { $match: { photographer: photographerProfile._id } },

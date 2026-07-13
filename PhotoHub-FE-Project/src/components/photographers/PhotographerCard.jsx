@@ -186,7 +186,7 @@ const PhotographerCard = ({ photographer, language, onViewClick, onRequireLogin,
               <div className="min-w-0">
                 <div className="text-[10px] font-black uppercase tracking-wide !text-slate-600 dark:!text-slate-300">{t.rating}</div>
                 <div className="mt-0.5 text-sm font-black !text-slate-950 dark:!text-white">
-                  {averageRating ? averageRating.toFixed(1) : "5.0"}
+                  {averageRating ? averageRating.toFixed(1) : "0.0"}
                 </div>
               </div>
             </div>

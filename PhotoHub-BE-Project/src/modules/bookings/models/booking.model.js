@@ -7,6 +7,9 @@ const BOOKING_STATUS = {
   COMPLETED: "completed",
   REJECTED: "rejected",
   CANCELLED: "cancelled",
+  DRAFT: "draft",
+  RESCHEDULED: "rescheduled",
+  NEED_RESCHEDULE: "need_reschedule",
 };
 
 const PAYMENT_STATUS = {
@@ -31,6 +34,16 @@ const bookingSchema = new mongoose.Schema(
       ref: "Photographer",
       required: true,
       index: true,
+    },
+    subscription: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subscription",
+      default: null,
+    },
+    subscriptionBooking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SubscriptionBooking",
+      default: null,
     },
     package: {
       type: mongoose.Schema.Types.ObjectId,
@@ -74,6 +87,22 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    statusLogs: [
+      {
+        status: {
+          type: String,
+          required: true,
+        },
+        note: {
+          type: String,
+          default: "",
+        },
+        updatedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     paymentStatus: {
       type: String,
       enum: Object.values(PAYMENT_STATUS),
@@ -82,7 +111,6 @@ const bookingSchema = new mongoose.Schema(
     payosOrderCode: {
       type: Number,
       default: null,
-      sparse: true,
     },
     paymentLinkId: {
       type: String,
@@ -125,6 +153,21 @@ const bookingSchema = new mongoose.Schema(
     isReviewed: {
       type: Boolean,
       default: false,
+    },
+    appliedVoucherCode: {
+      type: String,
+      default: null,
+    },
+    appliedAddonReward: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "LoyaltyAddonReward",
+      default: null,
+    },
+    groupBooking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "GroupBooking",
+      default: null,
+      index: true,
     },
   },
   {

@@ -34,7 +34,7 @@ const photographerVerificationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["PENDING", "APPROVED", "REJECTED"],
+      enum: ["PENDING", "VERIFIED", "REJECTED"],
       default: "PENDING",
     },
     reviewedBy: {

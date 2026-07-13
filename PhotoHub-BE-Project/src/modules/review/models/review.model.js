@@ -36,7 +36,6 @@ const reviewSchema = new mongoose.Schema(
 );
 
 reviewSchema.index({ photographer: 1 });
-reviewSchema.index({ booking: 1 }, { unique: true });
 
 module.exports =
   mongoose.models.Review ||

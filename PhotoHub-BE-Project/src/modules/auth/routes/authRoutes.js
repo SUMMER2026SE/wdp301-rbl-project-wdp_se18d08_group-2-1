@@ -3,8 +3,7 @@ const router = express.Router();
 
 const authenticate = require("../../../middlewares/authenticate");
 const ApiResponse = require("../../../utils/ApiResponse");
-const upload = require("../../../middlewares/upload.middleware");
-
+const upload = require("../../../middlewares/upload.middleware")
 
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
@@ -17,7 +16,6 @@ const ProfileController = require("../../../modules/auth/controllers/ProfileCont
 
 const auth = new AuthController();
 const profile = new ProfileController();
-
 
 // ── Upload avatar config ─ Cloudinary ────────────────────────────────────
 const avatarStorage = new CloudinaryStorage({

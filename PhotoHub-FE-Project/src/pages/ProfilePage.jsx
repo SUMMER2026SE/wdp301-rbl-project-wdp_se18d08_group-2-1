@@ -11,13 +11,16 @@ import {
     Lock,
     Save,
     MessageSquare,
+    Gift,
+    Wallet,
 } from "lucide-react";
 
 import Swal from "sweetalert2";
 import { profileService } from "../services/profileService";
 import CustomerBookingList from "../booking/CustomerBookingList";
 import PhotographerChat from "../components/photographers/PhotographerChat";
-
+import CustomerJobPostsManager from "../components/customer/CustomerJobPostsManager";
+import CustomerLoyalty from "../components/customer/CustomerLoyalty";
 
 export default function ProfilePage({
     language = "vi",
@@ -360,6 +363,20 @@ export default function ProfilePage({
                                 <Shield size={18} className={isDark ? "text-slate-400" : "text-slate-500"} />
                                 <span className="text-sm capitalize">{user?.role || t.notUpdated}</span>
                             </div>
+
+                            {user?.role === "customer" && (
+                                <div className={`flex items-center justify-between p-3 rounded-xl border border-orange-500/20 transition ${
+                                    isDark ? "bg-orange-500/5 text-orange-400" : "bg-orange-50/50 text-orange-600"
+                                }`}>
+                                    <div className="flex items-center gap-3">
+                                        <Wallet size={18} className="text-orange-500" />
+                                        <span className="text-sm font-bold">Ví PhotoHub</span>
+                                    </div>
+                                    <span className="text-sm font-black text-orange-500">
+                                        {(user?.walletBalance || 0).toLocaleString("vi-VN")}đ
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/10 w-full space-y-2">
@@ -375,34 +392,6 @@ export default function ProfilePage({
                             >
                                 <User size={18} />
                                 {language === "vi" ? "Thông tin cá nhân" : "Personal Profile"}
-                            </button>
-                            
-                            <button
-                                onClick={() => setActiveTab("bookings")}
-                                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition ${
-                                    activeTab === "bookings"
-                                        ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                                        : isDark
-                                        ? "hover:bg-white/5 text-slate-400 hover:text-white"
-                                        : "hover:bg-slate-100 text-slate-600 hover:text-slate-900"
-                                }`}
-                            >
-                                <Calendar size={18} />
-                                {language === "vi" ? "Lịch sử đặt lịch" : "My Bookings"}
-                            </button>
-
-                            <button
-                                onClick={() => setActiveTab("chat")}
-                                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition ${
-                                    activeTab === "chat"
-                                        ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                                        : isDark
-                                        ? "hover:bg-white/5 text-slate-400 hover:text-white"
-                                        : "hover:bg-slate-100 text-slate-600 hover:text-slate-900"
-                                }`}
-                            >
-                                <MessageSquare size={18} />
-                                {language === "vi" ? "Trò chuyện" : "Chat Messages"}
                             </button>
                         </div>
                     </div>
@@ -554,17 +543,34 @@ export default function ProfilePage({
                             {t.updatePassword}
                         </button>
                     </div>
-
                         </>
                     ) : activeTab === "bookings" ? (
                         <div className="animate-fadeIn">
                             <CustomerBookingList theme={theme} language={language} />
+                        </div>
+                    ) : activeTab === "loyalty" ? (
+                        <div className="animate-fadeIn">
+                            <CustomerLoyalty theme={theme} language={language} />
                         </div>
                     ) : (
                         <div className="animate-fadeIn">
                             <PhotographerChat theme={theme} language={language} initialActiveConvId={initialConvId} />
                         </div>
                     )}
+
+                    {(() => {
+                        const apiRole = user?.role;
+                        const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+                        const localRole = localUser?.role;
+                        const effectiveRole = apiRole || localRole;
+                        return effectiveRole === "customer" ? (
+                            <div className={`border rounded-3xl p-8 transition-all ${
+                                isDark ? "bg-white/5 border-white/10" : "bg-slate-50/50 border-slate-200/80 shadow-sm"
+                            }`}>
+                                <CustomerJobPostsManager theme={theme} language={language} />
+                            </div>
+                        ) : null;
+                    })()}
                 </div>
             </div>
         </div>

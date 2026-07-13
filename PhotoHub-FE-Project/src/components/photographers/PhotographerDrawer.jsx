@@ -368,7 +368,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                   <div className="flex flex-col items-center py-3">
                     <span className="flex items-center gap-1 text-amber-500 font-black text-base">
                       <Star size={13} className="fill-amber-500" />
-                      {averageRating ? averageRating.toFixed(1) : "5.0"}
+                      {averageRating ? averageRating.toFixed(1) : "0.0"}
                     </span>
                     <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mt-0.5">{t.rating}</span>
                   </div>

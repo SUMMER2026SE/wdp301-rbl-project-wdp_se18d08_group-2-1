@@ -16,18 +16,26 @@ const initSocket = (server) => {
   io.on("connection", (socket) => {
     console.log(`[Socket] Connected: ${socket.id}`);
 
-    // ─────────────────────────────────────────────────────────────
     // Join room theo userId — BẮT BUỘC để nhận thông báo cá nhân.
-    //
-    // Frontend gọi ngay sau khi connect:
-    //   socket.emit("join-user-room", currentUser._id)
-    //
-    // Server dùng: io.to(`user:${userId}`).emit(eventName, data)
-    // ─────────────────────────────────────────────────────────────
     socket.on("join-user-room", (userId) => {
       if (userId) {
         socket.join(`user:${userId}`);
         console.log(`[Socket] ${socket.id} joined room user:${userId}`);
+      }
+    });
+
+    // Join room theo groupId — cho Group Booking realtime cập nhật thành viên, giá cọc
+    socket.on("join-group-room", (groupId) => {
+      if (groupId) {
+        socket.join(`group:${groupId}`);
+        console.log(`[Socket] ${socket.id} joined group room: group:${groupId}`);
+      }
+    });
+
+    socket.on("leave-group-room", (groupId) => {
+      if (groupId) {
+        socket.leave(`group:${groupId}`);
+        console.log(`[Socket] ${socket.id} left group room: group:${groupId}`);
       }
     });
 
