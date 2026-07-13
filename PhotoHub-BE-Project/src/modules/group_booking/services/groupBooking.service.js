@@ -944,8 +944,45 @@ class GroupBookingService {
         scheduledBooking: scheduledBookingId,
       });
 
-      // Emit socket thông báo cho photographer về booking mới
+      // Cập nhật Wallet và Earnings của Photographer
       const photographer = await Photographer.findById(group.photographer).select("user");
+      if (photographer && photographer.user) {
+        await ensureWallet(photographer.user);
+        await Wallet.findOneAndUpdate(
+          { user: photographer.user },
+          { $inc: { holdBalance: newBooking.price } },
+          { new: true }
+        );
+        await Photographer.findByIdAndUpdate(
+          group.photographer,
+          { $inc: { totalEarnings: newBooking.price } }
+        );
+      }
+
+      // Tạo Commission record cho Booking nhóm
+      try {
+        const Commission = require("../../admin/models/Commission");
+        const SystemSetting = require("../../admin/models/SystemSetting");
+        const COMMISSION_RATE = Number(process.env.PHOTOGRAPHER_COMMISSION_RATE || 0.1);
+        
+        const rateSetting = await SystemSetting.findOne({ key: "commissionRate" });
+        const currentRate = rateSetting ? rateSetting.value : COMMISSION_RATE;
+        const finalCommission = Math.round(newBooking.price * currentRate);
+
+        if (finalCommission > 0) {
+          await Commission.create({
+            booking: newBooking._id,
+            photographer: group.photographer,
+            amount: finalCommission,
+            rate: currentRate,
+            status: "PENDING"
+          });
+        }
+      } catch (commError) {
+        console.error("[GroupBooking] Tạo Commission thất bại:", commError.message);
+      }
+
+      // Emit socket thông báo cho photographer về booking mới
       if (photographer) {
         safeEmit(`user:${photographer.user}`, "new-booking-request", {
           bookingId: newBooking._id,

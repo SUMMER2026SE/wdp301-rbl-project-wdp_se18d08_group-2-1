@@ -19,6 +19,13 @@ const photographerPackageSchema = new mongoose.Schema(
       default: "",
     },
 
+    packageType: {
+      type: String,
+      enum: ["SHOOTING", "MONTHLY"],
+      default: "SHOOTING",
+      index: true,
+    },
+
     price: {
       type: Number,
       required: true,

@@ -1,9 +1,8 @@
 import { Camera, Menu, Moon, ShieldCheck, Sun, X, User, LogOut, Settings, Briefcase, Heart, Bell, MessageSquare, Calendar } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import Swal from "sweetalert2";
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const iconProps = { strokeWidth: 1.5 };
 
@@ -14,6 +13,7 @@ const copy = {
       { label: "Photographer", href: "/photographers", isRoute: true },
       { label: "Booking", href: "/booking", isRoute: true },
       { label: "Group Shoot", href: "/group-booking", isRoute: true },
+      { label: "Membership", href: "/subscriptions", isRoute: true },
       { label: "Community", href: "/community", isRoute: true },
     ],
     cta: "Login",
@@ -36,6 +36,7 @@ const copy = {
       { label: "Nhi\u1ebfp \u1ea2nh Gia", href: "/photographers", isRoute: true },
       { label: "\u0110\u1eb7t L\u1ecbch", href: "/booking", isRoute: true },
       { label: "Ch\u1ee5p Nh\u00f3m", href: "/group-booking", isRoute: true },
+      { label: "Hội viên", href: "/subscriptions", isRoute: true },
       { label: "Di\u1ec5n \u0110\u00e0n", href: "/community", isRoute: true },
     ],
     cta: "\u0110\u0103ng nh\u1eadp",
@@ -97,7 +98,6 @@ function formatRelativeTime(dateStr, lang) {
 }
 
 export default function Header({ language, theme, onToggleLanguage, onToggleTheme }) {
-  const location = useLocation();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);

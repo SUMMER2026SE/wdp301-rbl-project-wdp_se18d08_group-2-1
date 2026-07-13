@@ -107,7 +107,6 @@ class ProfileController {
 
             const avatarUrl =
                 uploadResult.secure_url || uploadResult.url;
-
             user.avatar = avatarUrl;
 
             await user.save({

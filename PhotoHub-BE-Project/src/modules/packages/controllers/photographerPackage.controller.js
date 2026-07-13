@@ -21,15 +21,16 @@ class PhotographerPackageController {
         }
     }
 
-    // Cập nhật để hỗ trợ filter: GET /api/packages?categoryIds=id1,id2&styleTagIds=id3&isGroupPackage=false
+    // Cập nhật để hỗ trợ filter: GET /api/packages?categoryIds=id1,id2&styleTagIds=id3&isGroupPackage=false&packageType=SHOOTING
     async getMyPackages(req, res) {
         try {
-            const { categoryIds, styleTagIds, isGroupPackage } = req.query;
+            const { categoryIds, styleTagIds, isGroupPackage, packageType } = req.query;
 
             const filters = {
                 categoryIds: categoryIds ? categoryIds.split(",") : [],
                 styleTagIds: styleTagIds ? styleTagIds.split(",") : [],
                 isGroupPackage: isGroupPackage !== undefined ? isGroupPackage : undefined,
+                packageType: packageType || undefined,
             };
 
             const result = await PackageService.getMyPackages(
@@ -126,16 +127,17 @@ class PhotographerPackageController {
             });
         }
     }
-    // Lấy packages theo photographer, hỗ trợ filter isGroupPackage
+    // Lấy packages theo photographer, hỗ trợ filter isGroupPackage và packageType
     async getPhotographerPackages(req, res) {
         try {
             const { photographerId } = req.params;
-            const { categoryIds, styleTagIds, isGroupPackage } = req.query;
+            const { categoryIds, styleTagIds, isGroupPackage, packageType } = req.query;
 
             const filters = {
                 categoryIds: categoryIds ? categoryIds.split(",") : [],
                 styleTagIds: styleTagIds ? styleTagIds.split(",") : [],
                 isGroupPackage: isGroupPackage !== undefined ? isGroupPackage : undefined,
+                packageType: packageType || undefined,
             };
 
             const result = await PackageService.getMyPackages(
@@ -165,7 +167,6 @@ class PhotographerPackageController {
         try {
             const { photographerId } = req.query;
             const result = await PackageService.getAllGroupPackages({ photographerId });
-            // ApiResponse.success(res, data, message, statusCode)
             return ApiResponse.success(res, result, "Get group packages successfully");
         } catch (err) {
             return ApiResponse.error(res, err.message, 400);
@@ -173,5 +174,4 @@ class PhotographerPackageController {
     }
 }
 
-
-module.exports = new PhotographerPackageController();
+module.exports = new PhotographerPackageController();

@@ -4,6 +4,7 @@ const PhotographerPackage = require("../models/photographerPackage.model");
 const PackageCategory = require("../models/packageCategory.model");
 const PackageStyle = require("../models/packageStyle.model");
 const PackageImage = require("../models/packageImage.model");
+const SubscriptionPackage = require("../../subscriptions/models/subscriptionPackage.model");
 
 const ShootingCategory = require("../../common/models/shootingCategory");
 const StyleTag = require("../../common/models/styleTag");
@@ -23,6 +24,60 @@ const normalizeImageUrls = (images = []) => {
     .filter((url, index, arr) => arr.indexOf(url) === index);
 };
 
+const syncSubscriptionPackageFromPhotographerPackage = async ({ packageDoc, session }) => {
+  if (!packageDoc) return null;
+
+  const sourcePackageId = String(packageDoc._id);
+  const isMonthly = String(packageDoc.packageType || "SHOOTING").toUpperCase() === "MONTHLY";
+  const codeSuffix = sourcePackageId.slice(-8).toUpperCase();
+  const query = {
+    "metadata.source": "PHOTOGRAPHER_PACKAGE",
+    "metadata.sourcePackageId": sourcePackageId,
+  };
+
+  if (!isMonthly) {
+    await SubscriptionPackage.updateOne(query, { $set: { isActive: false } }, session ? { session } : undefined);
+    return null;
+  }
+
+  const payload = {
+    code: `MP-${codeSuffix}`,
+    slug: `monthly-${codeSuffix.toLowerCase()}`,
+    name: packageDoc.title,
+    description: packageDoc.description || "",
+    billingType: "MONTHLY",
+    monthlyPrice: Number(packageDoc.price || 0),
+    perSessionPrice: 0,
+    sessionsPerMonth: Math.max(1, Number(packageDoc.numberOfPhotos || 1)),
+    commitmentMonths: Math.max(1, Number(packageDoc.durationHours || 1)),
+    maxPauseDays: 30,
+    autoRenewDefault: true,
+    features: [
+      "Created from photographer package",
+      `Location: ${packageDoc.locationType || "ANY"}`,
+    ],
+    isActive: packageDoc.status !== "DELETED" && packageDoc.status !== "INACTIVE",
+    sortOrder: 1000,
+    metadata: {
+      source: "PHOTOGRAPHER_PACKAGE",
+      sourcePackageId,
+      photographerId: String(packageDoc.photographerId || ""),
+      packageType: packageDoc.packageType || "SHOOTING",
+      locationType: packageDoc.locationType || "ANY",
+      isFeatured: Boolean(packageDoc.isFeatured),
+    },
+  };
+
+  const existing = await SubscriptionPackage.findOne(query).session(session || null);
+  if (existing) {
+    Object.assign(existing, payload);
+    await existing.save(session ? { session } : undefined);
+    return existing;
+  }
+
+  return await SubscriptionPackage.create([payload], session ? { session } : undefined).then((items) => items[0]);
+};
+
 class PhotographerPackageService {
   async createPackage(data, photographerId) {
     const session = await mongoose.startSession();
@@ -32,6 +87,7 @@ class PhotographerPackageService {
       const {
         title,
         description,
+        packageType = "SHOOTING",
         price,
         durationHours,
         numberOfPhotos,
@@ -52,6 +108,7 @@ class PhotographerPackageService {
             photographerId,
             title,
             description,
+            packageType,
             price,
             durationHours,
             numberOfPhotos,
@@ -120,6 +177,8 @@ class PhotographerPackageService {
       await session.commitTransaction();
       session.endSession();
 
+      await syncSubscriptionPackageFromPhotographerPackage({ packageDoc: pkg[0] });
+
       return pkg[0];
     } catch (err) {
       await session.abortTransaction();
@@ -129,11 +188,11 @@ class PhotographerPackageService {
   }
 
   async getMyPackages(photographerId, filters = {}) {
-    const { categoryIds = [], styleTagIds = [], isGroupPackage } = filters;
+    const { categoryIds = [], styleTagIds = [], isGroupPackage, packageType } = filters;
 
-    const baseMatch = {
+    const matchStage = {
       photographerId: new mongoose.Types.ObjectId(photographerId),
-      isDeleted: { $ne: true },
+      isDeleted: { $ne: true }
     };
 
     // Filter isGroupPackage nếu được truyền vào (true hoặc false)
@@ -141,15 +200,28 @@ class PhotographerPackageService {
       const isGroup = isGroupPackage === true || isGroupPackage === "true";
       if (isGroup) {
         // Chỉ lấy package có isGroupPackage: true
-        baseMatch.isGroupPackage = true;
+        matchStage.isGroupPackage = true;
       } else {
         // Lấy package false + các package CŨ chưa có field này (null/undefined)
-        baseMatch.isGroupPackage = { $ne: true };
+        matchStage.isGroupPackage = { $ne: true };
       }
     }
 
+    if (packageType === "MONTHLY") {
+      matchStage.packageType = "MONTHLY";
+    } else if (packageType === "SHOOTING") {
+      matchStage.$or = [
+        { packageType: "SHOOTING" },
+        { packageType: { $exists: false } },
+        { packageType: null },
+      ];
+    }
+
     const pipeline = [
-      { $match: baseMatch },
+      // 1. base match
+      {
+        $match: matchStage
+      },
 
       // 2. categories mapping
       {
@@ -296,6 +368,7 @@ class PhotographerPackageService {
       const {
         title,
         description,
+        packageType,
         price,
         durationHours,
         numberOfPhotos,
@@ -309,7 +382,7 @@ class PhotographerPackageService {
         images
       } = data;
 
-      const updateFields = {
+      const updateData = {
         title,
         description,
         price,
@@ -320,15 +393,20 @@ class PhotographerPackageService {
         status,
         isFeatured,
       };
-      // Chỉ cập nhật isGroupPackage nếu được gửi lên
+
       if (isGroupPackage !== undefined) {
-        updateFields.isGroupPackage = !!isGroupPackage;
+        updateData.isGroupPackage = !!isGroupPackage;
       }
 
-      // Tìm và cập nhật các thông tin cơ bản của Package
+      if (packageType !== undefined) {
+        updateData.packageType = packageType;
+      }
+
       const updatedPkg = await PhotographerPackage.findByIdAndUpdate(
         packageId,
-        { $set: updateFields },
+        {
+          $set: updateData
+        },
         { new: true, session }
       );
 
@@ -377,6 +455,8 @@ class PhotographerPackageService {
       await session.commitTransaction();
       session.endSession();
 
+      await syncSubscriptionPackageFromPhotographerPackage({ packageDoc: updatedPkg });
+
       return updatedPkg;
     } catch (err) {
       await session.abortTransaction();
@@ -391,11 +471,12 @@ class PhotographerPackageService {
   async softDeletePackage(packageId) {
     const pkg = await PhotographerPackage.findByIdAndUpdate(
       packageId,
-      { $set: { isDeleted: true } },
+      { $set: { isDeleted: true, status: "DELETED" } },
       { new: true }
     );
-    if (!pkg) throw new Error("Package khĂ´ng tá»“n táº¡i");
-    return { success: true, message: "ÄĂ£ xĂ³a táº¡m thá»i gĂ³i dá»‹ch vá»¥" };
+    if (!pkg) throw new Error("Package khong ton tai");
+    await syncSubscriptionPackageFromPhotographerPackage({ packageDoc: { ...pkg.toObject(), status: "DELETED" } });
+    return { success: true, message: "Da xoa tam thoi goi dich vu" };
   }
 
   /**

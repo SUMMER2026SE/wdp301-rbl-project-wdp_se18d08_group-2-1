@@ -289,7 +289,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
     const loadPackages = async () => {
       setPackagesLoading(true);
       try {
-        const res = await bookingService.getPhotographerPackages(activeId);
+        const res = await bookingService.getPhotographerPackages(activeId, { packageType: "SHOOTING" });
         if (res.success) {
           const actualPackages = Array.isArray(res.data) ? res.data : (res.data?.data || []);
           setPackages(actualPackages);
@@ -840,7 +840,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                   <div className="mt-3 flex flex-wrap justify-center sm:justify-start gap-4 text-xs font-semibold text-slate-600 dark:text-zinc-400">
                     <span className="flex items-center gap-1.5">
                       <Star size={13} className="fill-amber-500 text-amber-500" />
-                      <strong>{t.rating}:</strong> {photographer.averageRating?.toFixed(1) || "5.0"}
+                      <strong>{t.rating}:</strong> {photographer.averageRating?.toFixed(1) || "0.0"}
                     </span>
                     <span className="flex items-center gap-1.5">
                       <Award size={13} className="text-emerald-500" />

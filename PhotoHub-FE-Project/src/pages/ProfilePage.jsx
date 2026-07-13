@@ -11,6 +11,7 @@ import {
     Lock,
     Save,
     MessageSquare,
+    Gift,
 } from "lucide-react";
 
 import Swal from "sweetalert2";
@@ -18,6 +19,7 @@ import { profileService } from "../services/profileService";
 import CustomerBookingList from "../booking/CustomerBookingList";
 import PhotographerChat from "../components/photographers/PhotographerChat";
 import CustomerJobPostsManager from "../components/customer/CustomerJobPostsManager";
+import CustomerLoyalty from "../components/customer/CustomerLoyalty";
 
 export default function ProfilePage({
     language = "vi",
@@ -404,6 +406,22 @@ export default function ProfilePage({
                                 <MessageSquare size={18} />
                                 {language === "vi" ? "Trò chuyện" : "Chat Messages"}
                             </button>
+
+                            {user?.role === "customer" && (
+                                <button
+                                    onClick={() => setActiveTab("loyalty")}
+                                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition ${
+                                        activeTab === "loyalty"
+                                            ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                                            : isDark
+                                            ? "hover:bg-white/5 text-slate-400 hover:text-white"
+                                            : "hover:bg-slate-100 text-slate-600 hover:text-slate-900"
+                                    }`}
+                                >
+                                    <Gift size={18} />
+                                    {language === "vi" ? "Điểm thưởng & Quà tặng" : "Loyalty Rewards"}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -558,6 +576,10 @@ export default function ProfilePage({
                     ) : activeTab === "bookings" ? (
                         <div className="animate-fadeIn">
                             <CustomerBookingList theme={theme} language={language} />
+                        </div>
+                    ) : activeTab === "loyalty" ? (
+                        <div className="animate-fadeIn">
+                            <CustomerLoyalty theme={theme} language={language} />
                         </div>
                     ) : (
                         <div className="animate-fadeIn">

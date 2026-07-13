@@ -90,12 +90,12 @@ export const bookingService = {
     return res.data;
   },
 
-  // 10. Lấy danh sách packages của một photographer (Customer xem — chỉ package thường, không phải group)
-  getPhotographerPackages: async (photographerId) => {
-    const res = await axios.get(
-      `${API_BASE}/packages/photographer/${photographerId}`,
-      { ...getHeaders(), params: { isGroupPackage: false } }
-    );
+  // 10. Lấy danh sách packages của một photographer (Customer xem)
+  getPhotographerPackages: async (photographerId, params = {}) => {
+    const res = await axios.get(`${API_BASE}/packages/photographer/${photographerId}`, {
+      ...getHeaders(),
+      params: { isGroupPackage: false, ...params },
+    });
     return res.data;
   },
 

@@ -120,7 +120,7 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
       const fetchPackages = async () => {
         setPackagesLoading(true);
         try {
-          const res = await bookingService.getPhotographerPackages(photographer._id);
+          const res = await bookingService.getPhotographerPackages(photographer._id, { packageType: "SHOOTING" });
           if (res.success) {
             const actualPackages = Array.isArray(res.data) ? res.data : (res.data?.data || []);
             setPackages(actualPackages);

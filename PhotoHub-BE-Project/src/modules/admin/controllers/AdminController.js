@@ -2,7 +2,7 @@ const { User, UserRole } = require("../../auth/models/User");
 const Photographer = require("../../photographers/models/Photographer");
 const Customer = require("../../customers/models/customer");
 const AdminAction = require("../models/AdminAction");
-const PhotographerVerification = require("../models/PhotographerVerification");
+const PhotographerVerification = require("../../photographers/models/photographerVerification");
 const Booking = require("../models/Booking");
 const Payment = require("../models/Payment");
 const Commission = require("../models/Commission");
@@ -269,19 +269,27 @@ class AdminController {
     }
   }
 
-  // GET /api/admin/photographer-verifications/:id - Chi tiết xác minh
+  // GET /api/admin/photographer-verifications/:id
   async getPhotographerVerificationById(req, res) {
     try {
       const verification = await PhotographerVerification.findById(req.params.id)
-        .populate("user", "fullName email avatar phoneNumber")
-        .populate("photographer")
-        .populate("PhotographerVerification");
+        .populate({
+          path: "photographer",
+          populate: {
+            path: "user",
+            select: "fullName email avatar phoneNumber",
+          },
+        });
 
       if (!verification) {
         return ApiResponse.error(res, "Không tìm thấy yêu cầu xác minh", 404);
       }
 
-      return ApiResponse.success(res, verification, "Lấy chi tiết yêu cầu xác minh thành công");
+      return ApiResponse.success(
+        res,
+        verification,
+        "Lấy chi tiết yêu cầu xác minh thành công"
+      );
     } catch (error) {
       return ApiResponse.error(res, error.message, 500);
     }
@@ -291,66 +299,90 @@ class AdminController {
   async approvePhotographerVerification(req, res) {
     try {
       const { adminNote } = req.body;
-      const verification = await PhotographerVerification.findById(req.params.id).populate("user");
+
+      const verification = await PhotographerVerification.findById(req.params.id)
+        .populate({
+          path: "photographer",
+          populate: {
+            path: "user",
+          },
+        });
 
       if (!verification) {
         return ApiResponse.error(res, "Không tìm thấy yêu cầu xác minh", 404);
       }
 
       if (verification.status !== "PENDING") {
-        return ApiResponse.error(res, "Yêu cầu này đã được xử lý từ trước", 400);
+        return ApiResponse.error(
+          res,
+          "Yêu cầu này đã được xử lý từ trước",
+          400
+        );
       }
 
-      // Cập nhật trạng thái xác minh
       verification.status = "VERIFIED";
       verification.reviewedBy = req.user.id;
       verification.reviewedAt = new Date();
       verification.adminNote = adminNote || "Hồ sơ hợp lệ";
+
       await verification.save();
 
-      // Cập nhật profile photographer
-      const photographer = await Photographer.findById(verification.photographer);
+      const photographer = verification.photographer;
+
       if (photographer) {
         photographer.verificationStatus = "VERIFIED";
         await photographer.save();
       }
 
-      // Tạo thông báo hệ thống gửi photographer
+      const user = photographer?.user;
+
       await Notification.create({
         recipientType: "SPECIFIC",
-        recipient: verification.user ? verification.user._id : null,
+        recipient: user?._id,
         title: "Hồ sơ Nhiếp ảnh gia đã được duyệt!",
         message: `Chúc mừng bạn! Hồ sơ đăng ký hoạt động nhiếp ảnh gia của bạn đã được Admin phê duyệt. Ghi chú: ${verification.adminNote}`,
-        type: "VERIFICATION"
+        type: "VERIFICATION",
       });
 
-      // Gửi email thông báo
-      if (verification.user && verification.user.email) {
-        sendApprovalEmail(verification.user.email, verification.user.fullName, verification.adminNote)
-          .catch((err) => console.error("Lỗi gửi email duyệt:", err.message));
+      if (user?.email) {
+        sendApprovalEmail(
+          user.email,
+          user.fullName,
+          verification.adminNote
+        ).catch((err) =>
+          console.error("Lỗi gửi email duyệt:", err.message)
+        );
       }
 
-      // Tạo ví Wallet cho photographer nếu chưa có
-      const existingWallet = await Wallet.findOne({ user: verification.user ? verification.user._id : null });
-      if (!existingWallet) {
+      const existingWallet = await Wallet.findOne({
+        user: user?._id,
+      });
+
+      if (!existingWallet && user?._id) {
         await Wallet.create({
-          user: verification.user ? verification.user._id : null,
+          user: user._id,
           balance: 0,
-          holdBalance: 0
+          holdBalance: 0,
         });
       }
 
-      // Ghi log
       await logAdminAction(
         req.user.id,
         "APPROVE_PHOTOGRAPHER",
         "PhotographerVerification",
         verification._id,
-        { photographerId: verification.photographer, adminNote },
+        {
+          photographerId: photographer?._id,
+          adminNote,
+        },
         req
       );
 
-      return ApiResponse.success(res, verification, "Phê duyệt hồ sơ nhiếp ảnh gia thành công");
+      return ApiResponse.success(
+        res,
+        verification,
+        "Phê duyệt hồ sơ nhiếp ảnh gia thành công"
+      );
     } catch (error) {
       return ApiResponse.error(res, error.message, 500);
     }
@@ -360,59 +392,86 @@ class AdminController {
   async rejectPhotographerVerification(req, res) {
     try {
       const { adminNote } = req.body;
+
       if (!adminNote) {
-        return ApiResponse.error(res, "Cần nhập lý do từ chối (adminNote)", 400);
+        return ApiResponse.error(
+          res,
+          "Cần nhập lý do từ chối (adminNote)",
+          400
+        );
       }
 
-      const verification = await PhotographerVerification.findById(req.params.id).populate("user");
+      const verification = await PhotographerVerification.findById(req.params.id)
+        .populate({
+          path: "photographer",
+          populate: {
+            path: "user",
+          },
+        });
+
       if (!verification) {
         return ApiResponse.error(res, "Không tìm thấy yêu cầu xác minh", 404);
       }
 
       if (verification.status !== "PENDING") {
-        return ApiResponse.error(res, "Yêu cầu này đã được xử lý từ trước", 400);
+        return ApiResponse.error(
+          res,
+          "Yêu cầu này đã được xử lý từ trước",
+          400
+        );
       }
 
-      // Cập nhật trạng thái từ chối
       verification.status = "REJECTED";
       verification.reviewedBy = req.user.id;
       verification.reviewedAt = new Date();
       verification.adminNote = adminNote;
+
       await verification.save();
 
-      // Cập nhật profile photographer
-      const photographer = await Photographer.findById(verification.photographer);
+      const photographer = verification.photographer;
+
       if (photographer) {
         photographer.verificationStatus = "REJECTED";
         await photographer.save();
       }
 
-      // Gửi thông báo từ chối
+      const user = photographer?.user;
+
       await Notification.create({
         recipientType: "SPECIFIC",
-        recipient: verification.user ? verification.user._id : null,
+        recipient: user?._id,
         title: "Yêu cầu xác minh nhiếp ảnh gia bị từ chối",
         message: `Rất tiếc, hồ sơ đăng ký của bạn không được phê duyệt. Lý do: ${adminNote}. Vui lòng cập nhật hồ sơ và gửi lại yêu cầu.`,
-        type: "VERIFICATION"
+        type: "VERIFICATION",
       });
 
-      // Gửi email thông báo
-      if (verification.user && verification.user.email) {
-        sendRejectionEmail(verification.user.email, verification.user.fullName, verification.adminNote)
-          .catch((err) => console.error("Lỗi gửi email từ chối:", err.message));
+      if (user?.email) {
+        sendRejectionEmail(
+          user.email,
+          user.fullName,
+          verification.adminNote
+        ).catch((err) =>
+          console.error("Lỗi gửi email từ chối:", err.message)
+        );
       }
 
-      // Ghi log
       await logAdminAction(
         req.user.id,
         "REJECT_PHOTOGRAPHER",
         "PhotographerVerification",
         verification._id,
-        { photographerId: verification.photographer, adminNote },
+        {
+          photographerId: photographer?._id,
+          adminNote,
+        },
         req
       );
 
-      return ApiResponse.success(res, verification, "Từ chối hồ sơ nhiếp ảnh gia thành công");
+      return ApiResponse.success(
+        res,
+        verification,
+        "Từ chối hồ sơ nhiếp ảnh gia thành công"
+      );
     } catch (error) {
       return ApiResponse.error(res, error.message, 500);
     }
