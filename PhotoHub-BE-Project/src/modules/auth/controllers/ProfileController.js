@@ -20,7 +20,15 @@ class ProfileController {
             if (!user) {
                 return ApiResponse.error(res, "Người dùng không tồn tại", 404);
             }
-            return ApiResponse.success(res, user, "Lấy thông tin thành công");
+
+            // Lấy thêm số dư ví của User
+            const Wallet = require("../../admin/models/Wallet");
+            const wallet = await Wallet.findOne({ user: user._id });
+            
+            const userObj = user.toObject();
+            userObj.walletBalance = wallet ? wallet.balance : 0;
+
+            return ApiResponse.success(res, userObj, "Lấy thông tin thành công");
         } catch (e) {
             console.error("getProfile error:", e);
             return ApiResponse.error(res, e.message, 500);

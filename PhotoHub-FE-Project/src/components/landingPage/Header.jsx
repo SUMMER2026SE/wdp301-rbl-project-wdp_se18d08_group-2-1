@@ -1,4 +1,4 @@
-import { Camera, Menu, Moon, ShieldCheck, Sun, X, User, LogOut, Settings, Briefcase, Heart, Bell, MessageSquare, Calendar } from "lucide-react";
+import { Camera, Menu, Moon, ShieldCheck, Sun, X, User, LogOut, Settings, Briefcase, Heart, Bell, MessageSquare, Calendar, Gift } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -25,6 +25,9 @@ const copy = {
     profileLabel: "Profile",
     dashboardLabel: "Photographer Space",
     favoritesLabel: "Favorite Photographers",
+    bookingsLabel: "Booking History",
+    chatLabel: "Chat",
+    rewardsLabel: "Loyalty & Rewards",
     notificationsLabel: "Notifications",
     noNotifications: "No notifications yet",
     markAllRead: "Mark all as read",
@@ -48,6 +51,9 @@ const copy = {
     profileLabel: "Hồ sơ cá nhân",
     dashboardLabel: "Không gian Nhiếp ảnh",
     favoritesLabel: "Nhiếp ảnh gia yêu thích",
+    bookingsLabel: "Lịch sử đặt lịch",
+    chatLabel: "Trò chuyện",
+    rewardsLabel: "Điểm thưởng & Quà tặng",
     notificationsLabel: "Thông báo",
     noNotifications: "Chưa có thông báo nào",
     markAllRead: "Đánh dấu đã đọc tất cả",
@@ -585,19 +591,48 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
                       to={profileTargetRoute}
                       className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
                     >
-                      {isPhotographer ? <Briefcase className="h-4 w-4 text-cyan-400" /> : <User className="h-4 w-4" />}
+                      {isPhotographer ? <Briefcase className="h-4 w-4" /> : <User className="h-4 w-4" />}
                       {isPhotographer ? t.dashboardLabel : t.profileLabel}
                     </Link>
 
                     {/* Customer favorites */}
                     {!isPhotographer && (
-                      <Link
-                        to="/favorites"
-                        className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
-                      >
-                        <Heart className="h-4 w-4 text-rose-400" />
-                        {t.favoritesLabel}
-                      </Link>
+                      <>
+                        <Link
+                          to="/favorites"
+                          className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+                        >
+                          <Heart className="h-4 w-4" />
+                          {t.favoritesLabel}
+                        </Link>
+                        <Link
+                          to="/profile"
+                          state={{ activeTab: "bookings" }}
+                          onClick={() => setShowDropdown(false)}
+                          className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+                        >
+                          <Calendar className="h-4 w-4" />
+                          {t.bookingsLabel}
+                        </Link>
+                        <Link
+                          to="/profile"
+                          state={{ activeTab: "chat" }}
+                          onClick={() => setShowDropdown(false)}
+                          className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          {t.chatLabel}
+                        </Link>
+                        <Link
+                          to="/profile"
+                          state={{ activeTab: "loyalty" }}
+                          onClick={() => setShowDropdown(false)}
+                          className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+                        >
+                          <Gift className="h-4 w-4" />
+                          {t.rewardsLabel}
+                        </Link>
+                      </>
                     )}
 
                     <Link
