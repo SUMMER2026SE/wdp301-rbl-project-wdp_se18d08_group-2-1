@@ -126,14 +126,6 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], catego
   }, [searchValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    const handler = (e) => {
-      if (sortRef.current && !sortRef.current.contains(e.target)) setSortOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  useEffect(() => {
     const handleScroll = () => {
       if (sortOpen) setSortOpen(false);
     };
@@ -195,6 +187,7 @@ const PhotographerFilters = ({ onFilterChange, onViewChange, styles = [], catego
   };
 
   const handleSortSelect = (sortValue) => {
+    console.log("Sort clicked:", sortValue);
     setCurrentSort(sortValue);
     setSortOpen(false);
     onFilterChange({ search: searchValue, ...appliedFilters, sortBy: sortValue });

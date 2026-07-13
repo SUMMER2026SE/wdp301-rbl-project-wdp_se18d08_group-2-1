@@ -102,6 +102,7 @@ export default function PhotographerList({ language = "en" }) {
 
   // Nhận filter thay đổi từ PhotographerFilters
   const handleFilterChange = useCallback((newFilters) => {
+    console.log("Parent received:", newFilters);
     setCurrentFilters((prev) => ({
       ...prev,
       ...newFilters,
