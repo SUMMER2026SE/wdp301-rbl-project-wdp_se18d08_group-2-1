@@ -566,13 +566,79 @@ class BookingService {
     if ([BOOKING_STATUS.REJECTED, BOOKING_STATUS.CANCELLED].includes(booking.status)) {
       throw new Error("Booking is already rejected or cancelled");
     }
-    if ([BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.COMPLETED].includes(booking.status)) {
-      throw new Error("Cannot reject a paid booking");
+    if (booking.status === BOOKING_STATUS.COMPLETED) {
+      throw new Error("Cannot reject a completed booking");
     }
+
+    const wasPaid = booking.paymentStatus === PAYMENT_STATUS.PAID;
+    const holdAmount = Number(booking.paidAmount || booking.price || 0);
 
     booking.status = BOOKING_STATUS.REJECTED;
     booking.rejectReason = rejectReason?.trim() || "Photographer cannot take this booking";
     await booking.save();
+
+    // Kiểm tra xem Booking có liên kết với GroupBooking (Nhóm chụp chung) không
+    const { GroupBooking } = require("../../group_booking/models/groupBooking.model");
+    const group = await GroupBooking.findOne({
+      $or: [
+        { scheduledBooking: booking._id },
+        { scheduledBooking: String(booking._id) },
+      ],
+    });
+
+    if (group) {
+      // 1. Trừ holdBalance và totalEarnings của Photographer nếu đã được cộng trước đó
+      if (wasPaid && holdAmount > 0) {
+        await this.ensureWallet(photographerUserId);
+        await Wallet.findOneAndUpdate(
+          { user: photographerUserId },
+          { $inc: { holdBalance: -holdAmount } }
+        );
+        await Photographer.findByIdAndUpdate(
+          photographerProfile._id,
+          { $inc: { totalEarnings: -holdAmount } }
+        );
+      }
+
+      // 2. Gọi groupBookingService hủy nhóm và hoàn tiền cọc vào ví cho các thành viên
+      const groupBookingService = require("../../group_booking/services/groupBooking.service");
+      await groupBookingService.cancelGroup(group._id, `Nhiếp ảnh gia từ chối lịch chụp: ${booking.rejectReason}`);
+    } else {
+      // Nếu là Booking lẻ thông thường đã CONFIRMED (đã cọc)
+      if (wasPaid && holdAmount > 0) {
+        // Trừ ví Photographer
+        await this.ensureWallet(photographerUserId);
+        await Wallet.findOneAndUpdate(
+          { user: photographerUserId },
+          { $inc: { holdBalance: -holdAmount } }
+        );
+        await Photographer.findByIdAndUpdate(
+          photographerProfile._id,
+          { $inc: { totalEarnings: -holdAmount } }
+        );
+
+        // Cộng ví Customer
+        await this.ensureWallet(booking.customer);
+        await Wallet.findOneAndUpdate(
+          { user: booking.customer },
+          { $inc: { balance: holdAmount } }
+        );
+
+        // Ghi nhận Payment REFUND
+        await Payment.create({
+          booking: booking._id,
+          sender: photographerUserId,
+          receiver: booking.customer,
+          amount: holdAmount,
+          paymentType: "REFUND",
+          paymentMethod: "WALLET",
+          transactionId: `BK_REJECT_REFUND_${booking._id}_${Date.now()}`,
+          status: "SUCCESS",
+          confirmedAt: new Date(),
+          adminNote: `Hoàn tiền cọc booking lẻ ${booking.title} - Nhiếp ảnh gia từ chối lịch`,
+        });
+      }
+    }
 
     safeEmit(`user:${booking.customer.toString()}`, "booking-status-updated", {
       bookingId: booking._id,

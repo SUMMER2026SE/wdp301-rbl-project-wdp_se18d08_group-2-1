@@ -17,6 +17,8 @@ import AiSearchPage from "./pages/AiSearchPage";
 import CommunityPage from "./pages/CommunityPage";
 import BookingPage from "./pages/BookingPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import GroupBookingPage from "./components/group_booking/GroupBookingPage";
+import GroupDetailPage from "./components/group_booking/GroupDetailPage";
 
 // Admin Imports
 import AdminLayout from "./components/admin/AdminLayout";
@@ -272,6 +274,26 @@ export default function App() {
           path="/community"
           element={
             <CommunityPage
+              language={language}
+              theme={theme}
+            />
+          }
+        />
+
+        {/* Group Booking routes */}
+        <Route
+          path="/group-booking"
+          element={
+            <GroupBookingPage
+              language={language}
+              theme={theme}
+            />
+          }
+        />
+        <Route
+          path="/group-booking/:groupId"
+          element={
+            <GroupDetailPage
               language={language}
               theme={theme}
             />

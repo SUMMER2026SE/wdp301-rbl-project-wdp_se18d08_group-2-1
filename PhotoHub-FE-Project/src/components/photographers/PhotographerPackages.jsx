@@ -63,6 +63,7 @@ export default function PhotographerPackages({
     // State quản lý việc chọn dữ liệu gốc từ BE
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [selectedStyles, setSelectedStyles] = useState([]);
+    const [isGroupPackage, setIsGroupPackage] = useState(false);
 
     // State phục vụ việc tìm kiếm các item có sẵn
     const [cateSearch, setCateSearch] = useState("");
@@ -294,6 +295,7 @@ export default function PhotographerPackages({
 
         setSelectedCategories([]);
         setSelectedStyles([]);
+        setIsGroupPackage(false);
 
         setCateSearch("");
         setStyleSearch("");
@@ -335,6 +337,7 @@ export default function PhotographerPackages({
                 categoryIds: selectedCategories,
                 styleTagIds: selectedStyles,
                 images: finalImages,
+                isGroupPackage,
             };
 
             // 👉 phân biệt CREATE vs UPDATE
@@ -399,6 +402,7 @@ export default function PhotographerPackages({
 
         setExistingImages(pkg.images || []);
         setFiles([]);
+        setIsGroupPackage(!!pkg.isGroupPackage);
 
         setOpenModal(true);
     };
@@ -412,8 +416,9 @@ export default function PhotographerPackages({
                 setShowStyleDropdown(false);
             }
         };
-        window.addEventListener("click", handleCloseDropdowns);
-        return () => window.removeEventListener("click", handleCloseDropdowns);
+        // Dùng capture phase (true) để bắt sự kiện trước khi stopPropagation của modal chặn
+        document.addEventListener("click", handleCloseDropdowns, true);
+        return () => document.removeEventListener("click", handleCloseDropdowns, true);
     }, []);
 
     const exitEditMode = () => {
@@ -438,6 +443,7 @@ export default function PhotographerPackages({
 
         setSelectedCategories([]);
         setSelectedStyles([]);
+        setIsGroupPackage(false);
 
         setCateSearch("");
         setStyleSearch("");
@@ -557,6 +563,11 @@ export default function PhotographerPackages({
                                     }`}
                             >
                                 <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                                    {p.isGroupPackage && (
+                                        <span className="flex items-center gap-0.5 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-500 border border-orange-500/20">
+                                            👥 Nhóm
+                                        </span>
+                                    )}
                                     {p.isFeatured && (
                                         <span className="flex items-center gap-0.5 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 border border-amber-500/20">
                                             <Sparkles size={10} /> Hot
@@ -661,6 +672,11 @@ export default function PhotographerPackages({
                                 <div className="space-y-2">
 
                                     <div className="flex items-center flex-wrap gap-2">
+                                        {detailData.isGroupPackage && (
+                                            <span className="flex items-center gap-0.5 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-500 border border-orange-500/20">
+                                                👥 Gói nhóm
+                                            </span>
+                                        )}
                                         {detailData.isFeatured && (
                                             <span className="flex items-center gap-0.5 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 border border-amber-500/20">
                                                 <Sparkles size={10} /> Hot
@@ -1051,6 +1067,45 @@ export default function PhotographerPackages({
                                     onChange={(e) => setDescription(e.target.value)}
                                     value={description}
                                 />
+                            </div>
+
+                            {/* isGroupPackage Toggle */}
+                            <div className="flex items-start gap-4 p-4 rounded-xl border border-orange-500/20 bg-orange-500/[0.04] dark:bg-orange-500/[0.06]">
+                                <div className="relative flex-shrink-0 mt-0.5">
+                                    <input
+                                        id="isGroupPackage"
+                                        type="checkbox"
+                                        checked={isGroupPackage}
+                                        onChange={(e) => setIsGroupPackage(e.target.checked)}
+                                        className="sr-only"
+                                    />
+                                    <div
+                                        onClick={() => setIsGroupPackage(v => !v)}
+                                        className={`w-11 h-6 flex items-center rounded-full cursor-pointer transition-colors duration-300 ${
+                                            isGroupPackage ? "bg-orange-500" : "bg-slate-300 dark:bg-slate-700"
+                                        }`}
+                                    >
+                                        <span
+                                            className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${
+                                                isGroupPackage ? "translate-x-5" : "translate-x-1"
+                                            }`}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label
+                                        htmlFor="isGroupPackage"
+                                        className="text-sm font-bold text-slate-700 dark:text-slate-200 cursor-pointer select-none"
+                                        onClick={() => setIsGroupPackage(v => !v)}
+                                    >
+                                        👥 Gói dành cho đặt lịch nhóm
+                                    </label>
+                                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
+                                        Bật để gói này chỉ hiển thị trong tính năng{" "}
+                                        <strong className="text-orange-500">Chụp Nhóm</strong>.
+                                        Tắt để hiển thị trong đặt lịch thường.
+                                    </p>
+                                </div>
                             </div>
 
                             {/* File Upload Box với tính năng Preview & Xóa từng ảnh */}

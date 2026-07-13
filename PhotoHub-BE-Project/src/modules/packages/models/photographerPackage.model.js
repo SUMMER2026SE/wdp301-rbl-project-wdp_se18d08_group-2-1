@@ -55,6 +55,17 @@ const photographerPackageSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    /**
+     * Đánh dấu đây là gói dành riêng cho Group Booking.
+     * - true  → chỉ hiển thị trong trang Tạo nhóm
+     * - false → chỉ hiển thị trong trang Đặt lịch thường
+     */
+    isGroupPackage: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   {
     timestamps: true,

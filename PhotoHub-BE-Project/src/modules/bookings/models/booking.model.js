@@ -82,7 +82,6 @@ const bookingSchema = new mongoose.Schema(
     payosOrderCode: {
       type: Number,
       default: null,
-      sparse: true,
     },
     paymentLinkId: {
       type: String,

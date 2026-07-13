@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, MapPin, Calendar as CalendarIcon, User, Clock, Check, AlertCircle, MessageCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Calendar as CalendarIcon, User, Users, Clock, Check, AlertCircle, MessageCircle } from "lucide-react";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { photographerMarketplaceService } from "../../services/photographerService";
@@ -387,6 +387,8 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
                                 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                                 : b.status === "confirmed"
                                 ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                                : b.status === "group_pending"
+                                ? "bg-amber-500/10 text-amber-500 border border-amber-500/30 border-dashed"
                                 : "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20"
                             }`}
                           >
@@ -436,9 +438,17 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
                         <div className="flex items-center gap-2">
                           <User size={13} className="text-orange-500" />
                           <span>
-                            <strong>{t.customer}</strong> {b.customer?.fullName || b.customer?.email}
+                            <strong>{t.customer}</strong> {b.customer?.fullName || b.customer?.email} (Trưởng nhóm)
                           </span>
                         </div>
+                        {b.isGroupBooking && (
+                          <div className="flex items-center gap-2">
+                            <Users size={13} className="text-orange-500" />
+                            <span>
+                              <strong>Tiến độ:</strong> {b.memberProgress}
+                            </span>
+                          </div>
+                        )}
                         <div className="flex items-center gap-2">
                           <Clock size={13} className="text-orange-500" />
                           <span>
@@ -466,10 +476,12 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
                                 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                                 : b.status === "confirmed"
                                 ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                                : b.status === "group_pending"
+                                ? "bg-amber-500/10 text-amber-500 border border-amber-500/30 border-dashed"
                                 : "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20"
                             }`}
                           >
-                            {b.status}
+                            {b.status === "group_pending" ? "Nhóm chờ cọc" : b.status}
                           </span>
                         </div>
                         {b.deliveryDeadline && (
@@ -486,7 +498,7 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
 
                       {/* Actions */}
                       <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-200 dark:border-white/[0.04]">
-                        {isPendingStatus(b.status) && (
+                        {!b.isGroupBooking && isPendingStatus(b.status) && (
                           <button
                             onClick={() => handleAccept(b)}
                             className="flex w-full items-center justify-center gap-2 rounded-lg bg-orange-500 py-2 text-xs font-bold text-white shadow-sm shadow-orange-500/10 transition hover:bg-orange-600"
@@ -504,7 +516,15 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
                             <MessageCircle size={14} />
                             {t.openChatBtn}
                           </button>
-                        )}                        {!isCompletedStatus(b.status) && (
+                        )}
+                        
+                        {b.status === "group_pending" && (
+                          <div className="text-center p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold">
+                            ⚠️ Nhóm chưa chốt cọc. Lịch này sẽ chính thức kích hoạt sau khi các thành viên hoàn tất đặt cọc.
+                          </div>
+                        )}
+
+                        {!b.isGroupBooking && !isCompletedStatus(b.status) && (
                           <button
                             onClick={() => handleReject(b.id)}
                             className="w-full py-2 rounded-lg text-xs font-bold border border-red-500/30 text-red-500 bg-red-500/5 hover:bg-red-500/10 transition"
@@ -513,7 +533,7 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
                           </button>
                         )}
 
-                        {!isCompletedStatus(b.status) && (
+                        {!b.isGroupBooking && !isCompletedStatus(b.status) && (
                           <button
                             onClick={() => {
                               setActiveUploadBookingId(b.id);
@@ -534,7 +554,7 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
                           </button>
                         )}
 
-                        {!isCompletedStatus(b.status) && (
+                        {!b.isGroupBooking && !isCompletedStatus(b.status) && (
                           <button
                             onClick={() => handleComplete(b.id)}
                             className="w-full py-2.5 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition shadow-md shadow-emerald-500/10"

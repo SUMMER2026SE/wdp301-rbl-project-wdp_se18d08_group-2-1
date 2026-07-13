@@ -39,6 +39,7 @@ class PhotographerPackageService {
         locationType,
         status,
         isFeatured,
+        isGroupPackage,
         categoryIds = [],
         styleTagIds = [],
         images = []
@@ -57,7 +58,8 @@ class PhotographerPackageService {
             editedPhotos,
             locationType,
             status,
-            isFeatured
+            isFeatured,
+            isGroupPackage: !!isGroupPackage,
           }
         ],
         { session }
@@ -127,16 +129,27 @@ class PhotographerPackageService {
   }
 
   async getMyPackages(photographerId, filters = {}) {
-    const { categoryIds = [], styleTagIds = [] } = filters;
+    const { categoryIds = [], styleTagIds = [], isGroupPackage } = filters;
+
+    const baseMatch = {
+      photographerId: new mongoose.Types.ObjectId(photographerId),
+      isDeleted: { $ne: true },
+    };
+
+    // Filter isGroupPackage nếu được truyền vào (true hoặc false)
+    if (isGroupPackage !== undefined && isGroupPackage !== null) {
+      const isGroup = isGroupPackage === true || isGroupPackage === "true";
+      if (isGroup) {
+        // Chỉ lấy package có isGroupPackage: true
+        baseMatch.isGroupPackage = true;
+      } else {
+        // Lấy package false + các package CŨ chưa có field này (null/undefined)
+        baseMatch.isGroupPackage = { $ne: true };
+      }
+    }
 
     const pipeline = [
-      // 1. base match
-      {
-        $match: {
-          photographerId: new mongoose.Types.ObjectId(photographerId),
-          isDeleted: { $ne: true }
-        }
-      },
+      { $match: baseMatch },
 
       // 2. categories mapping
       {
@@ -238,6 +251,41 @@ class PhotographerPackageService {
   }
 
   /**
+   * Lấy tất cả package nhóm ACTIVE từ mọi photographer.
+   * Dùng cho CreateGroupModal — không cần authenticate.
+   * Nếu truyền photographerId thì filter theo photographer đó.
+   */
+  async getAllGroupPackages({ photographerId } = {}) {
+    const match = {
+      isGroupPackage: true,
+      status: "ACTIVE",
+      isDeleted: { $ne: true },
+    };
+    if (photographerId) {
+      match.photographerId = new mongoose.Types.ObjectId(photographerId);
+    }
+
+    return await PhotographerPackage.aggregate([
+      { $match: match },
+      {
+        $lookup: {
+          from: "photographers",
+          localField: "photographerId",
+          foreignField: "_id",
+          as: "photographerInfo",
+        },
+      },
+      {
+        $addFields: {
+          photographer: { $arrayElemAt: ["$photographerInfo", 0] },
+        },
+      },
+      { $project: { photographerInfo: 0 } },
+      { $sort: { createdAt: -1 } },
+    ]);
+  }
+
+  /**
    * 2. Cáº¬P NHáº¬T PACKAGE (Bao gá»“m Ä‘á»“ng bá»™ láº¡i Categories, Styles vĂ  Images)
    */
   async updatePackage(packageId, data) {
@@ -255,33 +303,38 @@ class PhotographerPackageService {
         locationType,
         status,
         isFeatured,
+        isGroupPackage,
         categoryIds,
         styleTagIds,
         images
       } = data;
 
-      // TĂ¬m vĂ  cáº­p nháº­t cĂ¡c thĂ´ng tin cÆ¡ báº£n cá»§a Package
+      const updateFields = {
+        title,
+        description,
+        price,
+        durationHours,
+        numberOfPhotos,
+        editedPhotos,
+        locationType,
+        status,
+        isFeatured,
+      };
+      // Chỉ cập nhật isGroupPackage nếu được gửi lên
+      if (isGroupPackage !== undefined) {
+        updateFields.isGroupPackage = !!isGroupPackage;
+      }
+
+      // Tìm và cập nhật các thông tin cơ bản của Package
       const updatedPkg = await PhotographerPackage.findByIdAndUpdate(
         packageId,
-        {
-          $set: {
-            title,
-            description,
-            price,
-            durationHours,
-            numberOfPhotos,
-            editedPhotos,
-            locationType,
-            status,
-            isFeatured
-          }
-        },
+        { $set: updateFields },
         { new: true, session }
       );
 
       if (!updatedPkg) throw new Error("Package khĂ´ng tá»“n táº¡i");
 
-      // Äá»“ng bá»™ hĂ³a danh má»¥c náº¿u Ä‘Æ°á»£c gá»­i lĂªn
+      // Ä á»“ng bá»™ hĂ³a danh má»¥c náº¿u Ä‘Æ°á»£c gá»­i lĂªn
       if (categoryIds !== undefined) {
         await PackageCategory.deleteMany({ packageId }, { session });
         if (categoryIds.length > 0) {

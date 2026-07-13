@@ -5,6 +5,7 @@ const PORT = process.env.PORT || 3000;
 
 const { connectMongo } = require("./mongo");
 const { warmupModel } = require("./modules/airecomment/services/aiService");
+const { startGroupBookingScheduler } = require("./modules/group_booking/services/groupBooking.scheduler");
 
 async function startServer() {
   try {
@@ -13,6 +14,9 @@ async function startServer() {
 
     // Warm up AI model in background
     warmupModel();
+
+    // Khởi động Group Booking scheduler (UC103, UC104)
+    startGroupBookingScheduler();
 
     const server = http.createServer(app);
     initSocket(server);

@@ -21,14 +21,15 @@ class PhotographerPackageController {
         }
     }
 
-    // Cập nhật để hỗ trợ filter: GET /api/packages?categoryIds=id1,id2&styleTagIds=id3
+    // Cập nhật để hỗ trợ filter: GET /api/packages?categoryIds=id1,id2&styleTagIds=id3&isGroupPackage=false
     async getMyPackages(req, res) {
         try {
-            const { categoryIds, styleTagIds } = req.query;
+            const { categoryIds, styleTagIds, isGroupPackage } = req.query;
 
             const filters = {
                 categoryIds: categoryIds ? categoryIds.split(",") : [],
-                styleTagIds: styleTagIds ? styleTagIds.split(",") : []
+                styleTagIds: styleTagIds ? styleTagIds.split(",") : [],
+                isGroupPackage: isGroupPackage !== undefined ? isGroupPackage : undefined,
             };
 
             const result = await PackageService.getMyPackages(
@@ -125,15 +126,16 @@ class PhotographerPackageController {
             });
         }
     }
-    // MỚI: Lấy danh sách packages của một photographer bất kỳ (dành cho Customer xem)
+    // Lấy packages theo photographer, hỗ trợ filter isGroupPackage
     async getPhotographerPackages(req, res) {
         try {
             const { photographerId } = req.params;
-            const { categoryIds, styleTagIds } = req.query;
+            const { categoryIds, styleTagIds, isGroupPackage } = req.query;
 
             const filters = {
                 categoryIds: categoryIds ? categoryIds.split(",") : [],
-                styleTagIds: styleTagIds ? styleTagIds.split(",") : []
+                styleTagIds: styleTagIds ? styleTagIds.split(",") : [],
+                isGroupPackage: isGroupPackage !== undefined ? isGroupPackage : undefined,
             };
 
             const result = await PackageService.getMyPackages(
@@ -152,6 +154,24 @@ class PhotographerPackageController {
             });
         }
     }
+
+    /**
+     * GET /api/packages (public)
+     * Trả về tất cả package nhóm ACTIVE từ mọi photographer.
+     * Dùng cho CreateGroupModal — không cần đăng nhập.
+     * Query: ?photographerId=xxx (tùy chọn)
+     */
+    async getAllGroupPackages(req, res) {
+        try {
+            const { photographerId } = req.query;
+            const result = await PackageService.getAllGroupPackages({ photographerId });
+            // ApiResponse.success(res, data, message, statusCode)
+            return ApiResponse.success(res, result, "Get group packages successfully");
+        } catch (err) {
+            return ApiResponse.error(res, err.message, 400);
+        }
+    }
 }
 
-module.exports = new PhotographerPackageController();
+
+module.exports = new PhotographerPackageController();
