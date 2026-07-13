@@ -29,6 +29,7 @@ import AdminFinance from "./pages/admin/AdminFinance";
 import AdminDisputes from "./pages/admin/AdminDisputes";
 import AdminReportsChats from "./pages/admin/AdminReportsChats";
 import AdminSettingsPackages from "./pages/admin/AdminSettingsPackages";
+import AdminLoyalty from "./pages/admin/AdminLoyalty";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
 
@@ -249,6 +250,7 @@ export default function App() {
           <Route path="disputes" element={<AdminDisputes />} />
           <Route path="reports-chats" element={<AdminReportsChats />} />
           <Route path="settings-packages" element={<AdminSettingsPackages />} />
+          <Route path="loyalty" element={<AdminLoyalty />} />
         </Route>
         <Route
           path="/favorites"

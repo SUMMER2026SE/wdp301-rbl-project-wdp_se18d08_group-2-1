@@ -20,6 +20,21 @@ class AuthController {
     try {
       // Truyền thêm role vào service
       const result = await authService.register({ email, password, fullName, role });
+
+      // Ghi nhận referral code nếu có
+      if (req.body.referralCode) {
+        const LoyaltyAccount = require("../../loyalty/models/LoyaltyAccount");
+        const PendingReferral = require("../../loyalty/models/PendingReferral");
+        const referrerAccount = await LoyaltyAccount.findOne({ referralCode: String(req.body.referralCode).trim() });
+        if (referrerAccount) {
+          await PendingReferral.findOneAndUpdate(
+            { email },
+            { email, referrerId: referrerAccount.userId },
+            { upsert: true, new: true }
+          );
+        }
+      }
+
       return ApiResponse.success(res, result, "Register successfully", 201);
     } catch (e) {
       return ApiResponse.error(res, e.message, 400);
@@ -36,6 +51,22 @@ class AuthController {
 
     try {
       const result = await authService.verifyEmail({ email, otp });
+
+      // Nếu xác minh thành công, tạo tài khoản tích điểm và gắn referral
+      const PendingReferral = require("../../loyalty/models/PendingReferral");
+      const loyaltyService = require("../../loyalty/services/loyalty.service");
+      const pendingRef = await PendingReferral.findOne({ email });
+
+      const user = await User.findOne({ email });
+      if (user) {
+        const account = await loyaltyService.getOrCreateAccount(user._id);
+        if (pendingRef) {
+          account.referredBy = pendingRef.referrerId;
+          await account.save();
+          await PendingReferral.deleteOne({ email });
+        }
+      }
+
       return ApiResponse.success(res, result, "Verify successfully");
     } catch (e) {
       return ApiResponse.error(res, e.message, 400);

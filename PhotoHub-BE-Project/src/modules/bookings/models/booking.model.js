@@ -155,6 +155,15 @@ const bookingSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    appliedVoucherCode: {
+      type: String,
+      default: null,
+    },
+    appliedAddonReward: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "LoyaltyAddonReward",
+      default: null,
+    },
   },
   {
     timestamps: true,
