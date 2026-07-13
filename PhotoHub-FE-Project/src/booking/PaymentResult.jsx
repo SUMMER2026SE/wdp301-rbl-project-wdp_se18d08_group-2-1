@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle2, XCircle, Home, Calendar, Loader2 } from "lucide-react";
 import { bookingService } from "../services/bookingService";
+import { subscriptionService } from "../services/subscriptionService";
 
 export default function PaymentResult({ language = "vi", theme = "dark" }) {
   const isDark = theme === "dark";
@@ -10,6 +11,7 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
   const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const bookingId = queryParams.get("bookingId");
   const orderCode = queryParams.get("orderCode");
+  const source = queryParams.get("source") || "booking";
   const isCanceled = queryParams.get("canceled") === "true" || queryParams.get("cancel") === "true";
   const [checking, setChecking] = useState(Boolean((bookingId || orderCode) && !isCanceled));
   const [paid, setPaid] = useState(false);
@@ -33,13 +35,19 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
       checkingTitle: "Checking payment...",
       checkingSub: "PhotoHub is syncing the PayOS payment status. Please wait a moment.",
       successTitle: "Payment successful!",
-      successSub: "Your booking is confirmed. The payment is held securely and becomes withdrawable for the photographer after project completion.",
+      successSub: source === "subscription"
+        ? "Your subscription is confirmed. The system will auto-generate recurring shoots for the selected plan."
+        : "Your booking is confirmed. The payment is held securely and becomes withdrawable for the photographer after project completion.",
       pendingTitle: "Payment not confirmed yet",
-      pendingSub: "The transaction has not completed or PayOS has not confirmed it yet. You can return to your bookings and try again.",
+      pendingSub: source === "subscription"
+        ? "The subscription payment has not completed or PayOS has not confirmed it yet. You can return to the membership page and try again."
+        : "The transaction has not completed or PayOS has not confirmed it yet. You can return to your bookings and try again.",
       failTitle: "Payment cancelled",
-      failSub: "The transaction was cancelled. Your booking remains awaiting payment if the photographer accepted it.",
+      failSub: source === "subscription"
+        ? "The subscription payment was cancelled. You can subscribe again later."
+        : "The transaction was cancelled. Your booking remains awaiting payment if the photographer accepted it.",
       orderCodeLabel: "Order code:",
-      goBookingsBtn: "Manage My Bookings",
+      goBookingsBtn: source === "subscription" ? "Manage Subscriptions" : "Manage My Bookings",
       goHomeBtn: "Back to Home",
     },
   }[language];
@@ -56,7 +64,9 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
       try {
         const res = bookingId
           ? await bookingService.syncPaymentStatus(bookingId, orderCode, isCanceled)
-          : await bookingService.syncPaymentStatusByOrderCode(orderCode, isCanceled);
+          : source === "subscription"
+            ? await subscriptionService.getPaymentStatus(orderCode)
+            : await bookingService.syncPaymentStatusByOrderCode(orderCode, isCanceled);
         const isPaid = Boolean(res.data?.paid || res.data?.booking?.paymentStatus === "paid");
         if (!mounted) return;
         setPaid(isPaid);
@@ -71,7 +81,7 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
     };
     sync();
     return () => { mounted = false; };
-  }, [bookingId, orderCode, isCanceled]);
+  }, [bookingId, orderCode, isCanceled, source]);
 
   const state = checking ? "checking" : isCanceled ? "cancelled" : paid ? "success" : "pending";
   const isSuccess = state === "success";
@@ -98,7 +108,7 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
           </div>
         )}
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <button onClick={() => navigate("/profile")} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg transition hover:brightness-110 active:scale-95 sm:w-auto">
+          <button onClick={() => navigate(source === "subscription" ? "/subscriptions" : "/profile")} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg transition hover:brightness-110 active:scale-95 sm:w-auto">
             <Calendar size={16} />{t.goBookingsBtn}
           </button>
           <button onClick={() => navigate("/")} className={`flex w-full items-center justify-center gap-2 rounded-2xl border px-6 py-3.5 text-sm font-bold transition sm:w-auto ${isDark ? "border-white/10 bg-white/5 text-white hover:bg-white/10" : "border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50"}`}>

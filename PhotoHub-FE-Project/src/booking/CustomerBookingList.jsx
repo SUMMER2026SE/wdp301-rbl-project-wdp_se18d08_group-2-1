@@ -143,6 +143,13 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
       try {
         const res = await bookingService.cancelBooking(bookingId);
         if (res.success) {
+          if (res.data) {
+            setBookings((current) =>
+              current
+                .map((booking) => (booking._id === bookingId ? { ...booking, ...res.data } : booking))
+                .filter((booking) => !activeStatus || booking.status === activeStatus)
+            );
+          }
           Swal.fire(t.success, t.cancelSuccess, "success");
           fetchBookings(pagination.page, activeStatus);
         }

@@ -52,6 +52,15 @@ const buildPaymentResultUrl = (configuredUrl, params = {}) => {
 const getBookingAmount = (booking) => Number(booking.price || booking.totalPrice || 0);
 const getPayoutEligibleAt = () => new Date(Date.now() + PAYOUT_HOLD_DAYS * 24 * 60 * 60 * 1000);
 
+const pushStatusLog = (booking, status, note) => {
+  booking.statusLogs = booking.statusLogs || [];
+  booking.statusLogs.push({
+    status,
+    note,
+    updatedAt: new Date(),
+  });
+};
+
 const resolvePhotographerUserId = async (photographerRef) => {
   const photographer = await Photographer.findOne({
     $or: [{ _id: photographerRef }, { user: photographerRef }],
@@ -162,6 +171,8 @@ class BookingService {
       status: BOOKING_STATUS.PENDING,
       paymentStatus: PAYMENT_STATUS.UNPAID,
     });
+    pushStatusLog(booking, BOOKING_STATUS.PENDING, "Booking created");
+    await booking.save();
 
     const populated = await this.findById(booking._id);
 
@@ -239,6 +250,13 @@ class BookingService {
 
     booking.status = BOOKING_STATUS.CANCELLED;
     booking.paymentStatus = booking.paymentStatus === PAYMENT_STATUS.PAID ? PAYMENT_STATUS.PAID : PAYMENT_STATUS.CANCELLED;
+    pushStatusLog(
+      booking,
+      BOOKING_STATUS.CANCELLED,
+      booking.paymentStatus === PAYMENT_STATUS.PAID
+        ? "Customer cancelled a paid booking"
+        : "Customer cancelled the booking"
+    );
     await booking.save();
 
     const photographerUserId = await resolvePhotographerUserId(booking.photographer);
@@ -246,6 +264,11 @@ class BookingService {
       bookingId: booking._id,
       status: BOOKING_STATUS.CANCELLED,
       message: "Customer cancelled the booking",
+    });
+    safeEmit(`user:${String(booking.customer)}`, "booking-status-updated", {
+      bookingId: booking._id,
+      status: BOOKING_STATUS.CANCELLED,
+      message: "Your booking was cancelled successfully",
     });
 
     return booking;
@@ -332,6 +355,7 @@ class BookingService {
     booking.paidAt = booking.paidAt || new Date();
     booking.paidAmount = Math.max(Number(booking.paidAmount || 0), amount || getBookingAmount(booking));
     booking.paymentLinkId = payosData.paymentLinkId || payosData.id || booking.paymentLinkId;
+    pushStatusLog(booking, booking.status, "Booking payment confirmed");
     await booking.save();
 
     const photographerUserId = await resolvePhotographerUserId(booking.photographer);
@@ -436,6 +460,7 @@ class BookingService {
     if (forceCancel) {
       booking.status = BOOKING_STATUS.CANCELLED;
       booking.paymentStatus = PAYMENT_STATUS.CANCELLED;
+      pushStatusLog(booking, BOOKING_STATUS.CANCELLED, "Customer cancelled payment on return");
       await booking.save();
 
       const code = Number(orderCode || booking.payosOrderCode);
@@ -455,6 +480,11 @@ class BookingService {
         bookingId: booking._id,
         status: BOOKING_STATUS.CANCELLED,
         message: "Customer cancelled the booking payment",
+      });
+      safeEmit(`user:${String(booking.customer)}`, "booking-status-updated", {
+        bookingId: booking._id,
+        status: BOOKING_STATUS.CANCELLED,
+        message: "Your payment was cancelled",
       });
 
       return { paid: false, payosStatus: "CANCELLED", paymentStatus: booking.paymentStatus, booking };
@@ -476,9 +506,19 @@ class BookingService {
     if (["CANCELLED", "EXPIRED", "FAILED"].includes(paymentLink.status)) {
       booking.paymentStatus = paymentLink.status === "EXPIRED" ? PAYMENT_STATUS.EXPIRED : PAYMENT_STATUS.CANCELLED;
       booking.status = BOOKING_STATUS.CANCELLED;
+      pushStatusLog(
+        booking,
+        BOOKING_STATUS.CANCELLED,
+        `PayOS payment ${paymentLink.status.toLowerCase()}`
+      );
       await booking.save();
 
       safeEmit(`user:${booking.photographer.toString()}`, "booking-status-updated", {
+        bookingId: booking._id,
+        status: BOOKING_STATUS.CANCELLED,
+        message: `Booking payment was ${paymentLink.status.toLowerCase()}`,
+      });
+      safeEmit(`user:${String(booking.customer)}`, "booking-status-updated", {
         bookingId: booking._id,
         status: BOOKING_STATUS.CANCELLED,
         message: `Booking payment was ${paymentLink.status.toLowerCase()}`,
@@ -544,6 +584,7 @@ class BookingService {
     }
 
     booking.status = BOOKING_STATUS.ACCEPTED;
+    pushStatusLog(booking, BOOKING_STATUS.ACCEPTED, "Photographer accepted the booking");
     await booking.save();
 
     safeEmit(`user:${booking.customer.toString()}`, "booking-status-updated", {
@@ -572,6 +613,7 @@ class BookingService {
 
     booking.status = BOOKING_STATUS.REJECTED;
     booking.rejectReason = rejectReason?.trim() || "Photographer cannot take this booking";
+    pushStatusLog(booking, BOOKING_STATUS.REJECTED, booking.rejectReason);
     await booking.save();
 
     safeEmit(`user:${booking.customer.toString()}`, "booking-status-updated", {
@@ -603,6 +645,7 @@ class BookingService {
     booking.completionStatus = "completed";
     booking.completedAt = new Date();
     booking.payoutEligibleAt = getPayoutEligibleAt();
+    pushStatusLog(booking, BOOKING_STATUS.COMPLETED, "Booking marked as completed");
     await booking.save();
 
     const wallet = await this.ensureWallet(photographerUserId);

@@ -24,11 +24,12 @@ class PhotographerPackageController {
     // Cập nhật để hỗ trợ filter: GET /api/packages?categoryIds=id1,id2&styleTagIds=id3
     async getMyPackages(req, res) {
         try {
-            const { categoryIds, styleTagIds } = req.query;
+            const { categoryIds, styleTagIds, packageType } = req.query;
 
             const filters = {
                 categoryIds: categoryIds ? categoryIds.split(",") : [],
-                styleTagIds: styleTagIds ? styleTagIds.split(",") : []
+                styleTagIds: styleTagIds ? styleTagIds.split(",") : [],
+                packageType: packageType || undefined
             };
 
             const result = await PackageService.getMyPackages(
@@ -129,11 +130,12 @@ class PhotographerPackageController {
     async getPhotographerPackages(req, res) {
         try {
             const { photographerId } = req.params;
-            const { categoryIds, styleTagIds } = req.query;
+            const { categoryIds, styleTagIds, packageType } = req.query;
 
             const filters = {
                 categoryIds: categoryIds ? categoryIds.split(",") : [],
-                styleTagIds: styleTagIds ? styleTagIds.split(",") : []
+                styleTagIds: styleTagIds ? styleTagIds.split(",") : [],
+                packageType: packageType || undefined
             };
 
             const result = await PackageService.getMyPackages(
