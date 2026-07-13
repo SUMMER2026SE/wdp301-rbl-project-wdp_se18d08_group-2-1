@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import usePhotographers from "../../hooks/usePhotographers";
 import { aiRecommendService } from "../../services/aiRecommendService";
-import BookingModal from "../../booking/BookingModal";
 import Swal from "sweetalert2";
 import { photographerMarketplaceService } from "../../services/photographerService";
+import { getPhotographerPackages } from "../../services/photographerPackageService";
 import { bookingService } from "../../services/bookingService";
 import ReviewList from "../review/ReviewList";
 
@@ -31,6 +31,7 @@ import {
   Tag,
   DollarSign,
   Grid3X3,
+  CreditCard,
   MessageSquare,
   X,
 } from "lucide-react";
@@ -44,8 +45,9 @@ const PhotographerProfile = ({ language = "en" }) => {
   const [selectedImg, setSelectedImg] = useState(null);
   const [albums, setAlbums] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [monthlyPackages, setMonthlyPackages] = useState([]);
+  const [loadingMonthlyPackages, setLoadingMonthlyPackages] = useState(false);
   const [selectedAlbumDetail, setSelectedAlbumDetail] = useState(null); // { album, images }
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   const handleStartChat = async () => {
     const token = localStorage.getItem("token");
@@ -128,6 +130,8 @@ const PhotographerProfile = ({ language = "en" }) => {
       about: "Behind The Lens",
       styles: "Photography Styles",
       equipment: "Equipment",
+      monthlyPackages: "Monthly Plans",
+      monthlyPackagesIntro: "See the photographer's own recurring plan instead of a global subscription catalog.",
       experience: "Experience",
       completedBookings: "Completed Shoots",
       rating: "Rating",
@@ -154,6 +158,8 @@ const PhotographerProfile = ({ language = "en" }) => {
       about: "Câu Chuyện Phía Sau Ống Kính",
       styles: "Phong Cách Nhiếp Ảnh",
       equipment: "Thiết Bị",
+      monthlyPackages: "Gói tháng",
+      monthlyPackagesIntro: "Xem gói định kỳ riêng của photographer thay vì một danh mục hội viên chung.",
       experience: "Kinh Nghiệm",
       completedBookings: "Lịch Chụp Hoàn Thành",
       rating: "Đánh Giá",
@@ -211,6 +217,31 @@ const PhotographerProfile = ({ language = "en" }) => {
     loadPhotographer();
   }
 }, [id, getPhotographerDetail]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadMonthlyPackages = async () => {
+      if (!id) return;
+      setLoadingMonthlyPackages(true);
+      try {
+        const res = await getPhotographerPackages(id, { packageType: "MONTHLY" });
+        if (!mounted) return;
+        const list = res?.data?.data || res?.data || res?.packages || [];
+        setMonthlyPackages(Array.isArray(list) ? list : []);
+      } catch (err) {
+        if (mounted) setMonthlyPackages([]);
+      } finally {
+        if (mounted) setLoadingMonthlyPackages(false);
+      }
+    };
+
+    loadMonthlyPackages();
+
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
 
   useEffect(() => {
     if (
@@ -598,6 +629,75 @@ const PhotographerProfile = ({ language = "en" }) => {
           )}
 
           {/* Đánh giá từ khách hàng */}
+          {(loadingMonthlyPackages || monthlyPackages.length > 0) && (
+            <div className="rounded-3xl border border-orange-200/70 bg-gradient-to-br from-white to-orange-50/60 p-6 shadow-md transition-all duration-300 hover:shadow-lg dark:border-orange-500/20 dark:from-gray-800 dark:to-gray-900">
+              <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="flex items-center gap-2 text-xl font-black text-gray-900 dark:text-white">
+                    <CreditCard size={22} className="text-orange-500" />
+                    {t.monthlyPackages}
+                  </h3>
+                  <p className="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">
+                    {t.monthlyPackagesIntro}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/subscriptions?photographerId=${id}`)}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-orange-200 bg-white px-4 py-2 text-sm font-bold text-orange-600 transition hover:border-orange-400 hover:bg-orange-500 hover:text-white dark:border-orange-500/20 dark:bg-white/5 dark:text-orange-300"
+                >
+                  {language === "vi" ? "Mở trang hội viên" : "Open membership page"}
+                </button>
+              </div>
+
+              {loadingMonthlyPackages ? (
+                <div className="rounded-2xl border border-dashed border-orange-200 p-6 text-sm text-gray-500 dark:border-orange-500/20 dark:text-gray-400">
+                  {language === "vi" ? "Đang tải gói tháng..." : "Loading monthly plans..."}
+                </div>
+              ) : monthlyPackages.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {monthlyPackages.slice(0, 2).map((pkg) => (
+                    <div
+                      key={pkg._id}
+                      className="rounded-2xl border border-orange-100 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-white/10 dark:bg-white/5"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-500">
+                            {language === "vi" ? "Gói tháng" : "Monthly plan"}
+                          </p>
+                          <h4 className="mt-1 text-lg font-black text-gray-900 dark:text-white">
+                            {pkg.title}
+                          </h4>
+                        </div>
+                        <span className="rounded-full bg-orange-500/10 px-3 py-1 text-xs font-bold text-orange-600 dark:text-orange-300">
+                          {Number(pkg.price || 0).toLocaleString("vi-VN")} VNĐ
+                        </span>
+                      </div>
+                      <p className="mt-3 line-clamp-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                        {pkg.description || (language === "vi" ? "Gói tháng riêng của photographer này." : "The photographer's recurring plan.")}
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                        <span className="rounded-full bg-gray-100 px-3 py-1 dark:bg-gray-800">
+                          {pkg.commitmentMonths || 1} {language === "vi" ? "tháng cam kết" : "months commitment"}
+                        </span>
+                        <span className="rounded-full bg-gray-100 px-3 py-1 dark:bg-gray-800">
+                          {pkg.sessionsPerMonth || 1} {language === "vi" ? "buổi/tháng" : "sessions/month"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-orange-200 p-5 text-sm text-gray-500 dark:border-orange-500/20 dark:text-gray-400">
+                  {language === "vi"
+                    ? "Photographer này chưa có gói tháng công khai."
+                    : "This photographer does not have a public monthly plan yet."}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="rounded-3xl bg-white p-6 sm:p-8 shadow-md dark:bg-gray-800 border border-gray-100/50 dark:border-gray-700/40 transition-all duration-300 hover:shadow-lg">
             <h3 className="mb-5 flex items-center gap-2 text-xl font-black text-gray-900 dark:text-white">
               <Star size={22} className="text-amber-500 fill-amber-500" />
@@ -688,6 +788,14 @@ const PhotographerProfile = ({ language = "en" }) => {
             className="w-full rounded-2xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 px-6 py-4 font-bold text-white shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 hover:brightness-110 active:scale-[0.98] transition-all duration-300 tracking-wide text-base"
           >
             {t.bookNow}
+          </button>
+
+          <button
+            onClick={() => navigate(`/subscriptions?photographerId=${id}`)}
+            className="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-orange-500 bg-white hover:bg-orange-50 dark:bg-transparent dark:hover:bg-orange-500/10 px-6 py-3.5 font-bold text-orange-500 shadow-md hover:shadow-lg hover:shadow-orange-500/5 active:scale-[0.98] transition-all duration-300 tracking-wide text-base"
+          >
+            <CreditCard size={18} />
+            {language === "vi" ? "Xem gói tháng" : "View monthly plan"}
           </button>
 
           <button 

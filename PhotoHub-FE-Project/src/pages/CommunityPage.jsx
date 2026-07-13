@@ -417,8 +417,8 @@ export default function CommunityPage({ language = "vi", theme = "light" }) {
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {photographerProfile.styles.slice(0, 3).map((st) => (
-                          <span key={st} className="px-2 py-0.5 rounded bg-orange-500/10 text-orange-600 dark:text-orange-300 text-[10px] font-bold">
-                            {st}
+                          <span key={st._id} className="px-2 py-0.5 rounded bg-orange-500/10 text-orange-600 dark:text-orange-300 text-[10px] font-bold">
+                            {st.name}
                           </span>
                         ))}
                       </div>

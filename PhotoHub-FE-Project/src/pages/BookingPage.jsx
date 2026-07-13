@@ -289,7 +289,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
     const loadPackages = async () => {
       setPackagesLoading(true);
       try {
-        const res = await bookingService.getPhotographerPackages(activeId);
+        const res = await bookingService.getPhotographerPackages(activeId, { packageType: "SHOOTING" });
         if (res.success) {
           const actualPackages = Array.isArray(res.data) ? res.data : (res.data?.data || []);
           setPackages(actualPackages);

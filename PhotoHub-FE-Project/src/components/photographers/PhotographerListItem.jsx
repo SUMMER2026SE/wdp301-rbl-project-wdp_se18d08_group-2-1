@@ -117,7 +117,7 @@ const PhotographerListItem = ({ photographer, language, onMessageClick }) => {
             <div className="mt-3 flex flex-wrap gap-1.5">
               {styles.slice(0, 5).map((style, idx) => (
                 <span key={idx} className="inline-flex rounded-full border border-orange-100 bg-orange-50 px-2.5 py-1 text-xs font-bold text-orange-700 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-200">
-                  {style}
+                  {style.name}
                 </span>
               ))}
             </div>

@@ -47,6 +47,8 @@ export default function PhotographerPackages({
     const [selectedPackage, setSelectedPackage] = useState(null);
     const [availableCategories, setAvailableCategories] = useState([]);
     const [availableStyles, setAvailableStyles] = useState([]);
+    const [packageType, setPackageType] = useState("SHOOTING");
+    const [draftPackageType, setDraftPackageType] = useState("SHOOTING");
 
     // Form state
     const [openModal, setOpenModal] = useState(false);
@@ -77,6 +79,40 @@ export default function PhotographerPackages({
     const [filterStyles, setFilterStyles] = useState([]);
     const [showCateFilter, setShowCateFilter] = useState(false);
     const [showStyleFilter, setShowStyleFilter] = useState(false);
+
+    const packageTypeCatalog = {
+        vi: {
+            SHOOTING: {
+                label: "Gói chụp",
+                shortLabel: "Gói chụp",
+                description: "Gói dịch vụ theo buổi chụp, theo dự án hoặc theo album.",
+            },
+            MONTHLY: {
+                label: "Gói tháng",
+                shortLabel: "Gói tháng",
+                description: "Gói thành viên theo tháng dành cho khách quen hoặc khách ưu tiên.",
+            },
+        },
+        en: {
+            SHOOTING: {
+                label: "Shooting package",
+                shortLabel: "Shooting",
+                description: "One-off photoshoot packages for events, sessions, and projects.",
+            },
+            MONTHLY: {
+                label: "Monthly plan",
+                shortLabel: "Monthly",
+                description: "Recurring membership-style packages for loyal or priority clients.",
+            },
+        },
+    }[language];
+
+    const activePackageMeta = packageTypeCatalog[packageType] || packageTypeCatalog.SHOOTING;
+    const getDurationText = (pkg) => (
+        pkg?.packageType === "MONTHLY"
+            ? `${Number(pkg?.durationHours || 0).toLocaleString("vi-VN")} tháng`
+            : `${Number(pkg?.durationHours || 0).toLocaleString("vi-VN")}h`
+    );
 
     const t = {
         vi: {
@@ -139,7 +175,8 @@ export default function PhotographerPackages({
 
     const initData = async (
         categories = filterCategories,
-        styles = filterStyles
+        styles = filterStyles,
+        currentPackageType = packageType
     ) => {
 
         setLoading(true);
@@ -147,7 +184,8 @@ export default function PhotographerPackages({
             const [resPackages, resCategories, resStyles] = await Promise.all([
                 getMyPackages({
                     categoryIds: categories,
-                    styles: styles
+                    styleTagIds: styles,
+                    packageType: currentPackageType
                 }),
                 getAllCategories(),
                 getAllStyleTags()
@@ -181,8 +219,8 @@ export default function PhotographerPackages({
         }
     };
     useEffect(() => {
-        initData(filterCategories, filterStyles);
-    }, [filterCategories, filterStyles]);
+        initData(filterCategories, filterStyles, packageType);
+    }, [filterCategories, filterStyles, packageType]);
 
 
     // --- HÀM XỬ LÝ KHI BẤM XEM CHI TIẾT PACKAGE ---
@@ -266,6 +304,7 @@ export default function PhotographerPackages({
             setSelectedCategories([...selectedCategories, id]);
         }
         setCateSearch("");
+        setShowCateDropdown(false);
     };
 
     const toggleStyle = (id) => {
@@ -275,6 +314,7 @@ export default function PhotographerPackages({
             setSelectedStyles([...selectedStyles, id]);
         }
         setStyleSearch("");
+        setShowStyleDropdown(false);
     };
 
     const handleSelectImages = (e) => {
@@ -297,6 +337,7 @@ export default function PhotographerPackages({
 
         setCateSearch("");
         setStyleSearch("");
+        setDraftPackageType(packageType);
 
         setIsEditing(false);
         setEditForm(null);
@@ -330,6 +371,7 @@ export default function PhotographerPackages({
             const payload = {
                 title,
                 description,
+                packageType: draftPackageType,
                 price: Number(price),
                 durationHours: Number(duration),
                 categoryIds: selectedCategories,
@@ -384,6 +426,7 @@ export default function PhotographerPackages({
         setDescription(pkg.description || "");
         setPrice(pkg.price || "");
         setDuration(pkg.durationHours || "");
+        setDraftPackageType(pkg.packageType || "SHOOTING");
 
         setSelectedCategories(
             (pkg.categories || [])
@@ -424,6 +467,7 @@ export default function PhotographerPackages({
 
     const handleOpenCreate = () => {
         resetAll();
+        setDraftPackageType(packageType);
         setOpenModal(true);
     };
 
@@ -441,6 +485,7 @@ export default function PhotographerPackages({
 
         setCateSearch("");
         setStyleSearch("");
+        setDraftPackageType(packageType);
 
         setIsEditing(false);
         setEditForm(null);
@@ -453,10 +498,10 @@ export default function PhotographerPackages({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-5">
                 <div>
                     <h2 className="text-3xl font-black tracking-tight text-orange-500 dark:text-orange-400">
-                        {t.title}
+                        {activePackageMeta.label}
                     </h2>
                     <p className="text-sm mt-1 text-slate-500 dark:text-slate-400 font-medium">
-                        {t.subtitle}
+                        {activePackageMeta.description}
                     </p>
                 </div>
 
@@ -467,6 +512,26 @@ export default function PhotographerPackages({
                     <Plus size={18} />
                     <span>{t.create}</span>
                 </button>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+                {(["SHOOTING", "MONTHLY"]).map((type) => {
+                    const meta = packageTypeCatalog[type];
+                    const active = packageType === type;
+                    return (
+                        <button
+                            key={type}
+                            type="button"
+                            onClick={() => setPackageType(type)}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${active
+                                ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20"
+                                : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-orange-300"
+                                }`}
+                        >
+                            {meta.shortLabel}
+                        </button>
+                    );
+                })}
             </div>
 
             <div className="space-y-6 mb-8">
@@ -540,8 +605,12 @@ export default function PhotographerPackages({
                     <div className="mx-auto w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4">
                         <AlertCircle size={24} />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">{t.empty}</h3>
-                    <p className="text-sm text-slate-400 mt-1 max-w-sm mx-auto">{t.emptySub}</p>
+                    <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">
+                        {activePackageMeta.label} chưa có dữ liệu
+                    </h3>
+                    <p className="text-sm text-slate-400 mt-1 max-w-sm mx-auto">
+                        Hãy tạo gói mới cho đúng loại đang chọn để khách dễ phân biệt hơn.
+                    </p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -551,21 +620,24 @@ export default function PhotographerPackages({
                             <div
                                 key={p._id}
                                 onClick={() => handleOpenDetail(p)}
-                                className={`group relative flex flex-col justify-between p-5 rounded-2xl border transition-all duration-300 cursor-pointer ${isSelected
-                                    ? "border-orange-500 bg-orange-50/30 dark:bg-orange-500/[0.02] shadow-md ring-1 ring-orange-500"
-                                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-[#151515] hover:shadow-md"
+                                className={`group relative flex flex-col justify-between p-5 rounded-3xl border transition-all duration-300 cursor-pointer shadow-sm ${isSelected
+                                    ? "border-orange-500 bg-orange-50/50 dark:bg-orange-500/[0.04] ring-1 ring-orange-500"
+                                    : "border-slate-200 dark:border-slate-800 hover:border-orange-300 dark:hover:border-orange-500/40 bg-white dark:bg-[#151515] hover:shadow-lg"
                                     }`}
                             >
-                                <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                                <div className="flex flex-wrap items-center justify-end gap-1.5 mb-4">
+                                    <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full border bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800">
+                                        {(packageTypeCatalog[p.packageType || "SHOOTING"] || packageTypeCatalog.SHOOTING).shortLabel}
+                                    </span>
                                     {p.isFeatured && (
-                                        <span className="flex items-center gap-0.5 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                        <span className="flex items-center gap-0.5 text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20">
                                             <Sparkles size={10} /> Hot
                                         </span>
                                     )}
                                     <span
-                                        className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md border
+                                        className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full border
         ${p.status === "ACTIVE"
-                                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                                                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                                                 : "bg-red-500/10 text-red-500 border-red-500/20"
                                             }
     `}
@@ -574,25 +646,23 @@ export default function PhotographerPackages({
                                     </span>
                                 </div>
 
-                                <div>
-                                    <div className="pr-16">
-                                        <h3 className="font-bold text-lg leading-snug line-clamp-1 group-hover:text-orange-500 transition-colors">
-                                            {p.title}
-                                        </h3>
-                                    </div>
+                                <div className="space-y-3">
+                                    <h3 className="font-extrabold text-[1.05rem] leading-tight line-clamp-2 group-hover:text-orange-500 transition-colors text-slate-900 dark:text-slate-100">
+                                        {p.title}
+                                    </h3>
 
-                                    <div className="flex items-center gap-3 mt-3 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                        <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                        <div className="flex items-center gap-1.5">
                                             <Clock size={13} className="text-slate-400" />
-                                            <span>{p.durationHours}h</span>
+                                            <span>{getDurationText(p)}</span>
                                         </div>
-                                        <div className="flex items-center gap-1">
-                                            <span className="text-emerald-500 dark:text-emerald-400 font-bold text-sm">{Number(p.price || 0).toLocaleString('vi-VN')} đ</span>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-emerald-500 dark:text-emerald-400 font-extrabold text-sm">{Number(p.price || 0).toLocaleString('vi-VN')} đ</span>
                                         </div>
                                     </div>
 
                                     {p.description && (
-                                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-2.5 line-clamp-2 leading-relaxed">
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed min-h-[40px]">
                                             {p.description}
                                         </p>
                                     )}
@@ -605,11 +675,11 @@ export default function PhotographerPackages({
                                                 key={i}
                                                 src={resolveImageUrl(img)}
                                                 alt="preview"
-                                                className="w-11 h-11 rounded-lg object-cover ring-1 ring-slate-100 dark:ring-slate-800 bg-slate-100"
+                                                className="w-12 h-12 rounded-xl object-cover ring-1 ring-slate-100 dark:ring-slate-800 bg-slate-100 shadow-sm"
                                             />
                                         ))
                                     ) : (
-                                        <div className="w-11 h-11 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                                        <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
                                             <ImageIcon size={14} />
                                         </div>
                                     )}
@@ -660,11 +730,14 @@ export default function PhotographerPackages({
                             <>
                                 <div className="space-y-2">
 
-                                    <div className="flex items-center flex-wrap gap-2">
-                                        {detailData.isFeatured && (
-                                            <span className="flex items-center gap-0.5 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                                                <Sparkles size={10} /> Hot
-                                            </span>
+                                <div className="flex items-center flex-wrap gap-2">
+                                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md border bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800">
+                                        {(packageTypeCatalog[detailData.packageType || "SHOOTING"] || packageTypeCatalog.SHOOTING).label}
+                                    </span>
+                                    {detailData.isFeatured && (
+                                        <span className="flex items-center gap-0.5 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                            <Sparkles size={10} /> Hot
+                                        </span>
                                         )}
 
                                         <span
@@ -707,7 +780,7 @@ export default function PhotographerPackages({
                                     <div className="space-y-0.5 border-l border-slate-200 dark:border-slate-800 pl-4">
                                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t.labelDuration}</span>
                                         <span className="text-xl font-black text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                                            <Clock size={16} className="text-slate-400" />{detailData.durationHours}h
+                                            <Clock size={16} className="text-slate-400" />{getDurationText(detailData)}
                                         </span>
                                     </div>
                                 </div>
@@ -891,19 +964,50 @@ export default function PhotographerPackages({
 
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                                        {t.labelDuration} <span className="text-rose-500">*</span>
+                                        {draftPackageType === "MONTHLY"
+                                            ? (language === "vi" ? "THỜI HẠN (THÁNG)" : "TERM (MONTHS)")
+                                            : t.labelDuration
+                                        } <span className="text-rose-500">*</span>
                                     </label>
                                     <div className="relative">
                                         <Clock size={14} className="absolute left-3.5 top-3.5 text-slate-400" />
                                         <input
                                             type="number"
                                             required
-                                            placeholder="4"
+                                            placeholder={draftPackageType === "MONTHLY" ? "1" : "4"}
                                             className="w-full pl-9 pr-4 py-2.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium placeholder-slate-400 text-sm focus:outline-none focus:border-orange-500 transition-all"
                                             onChange={(e) => setDuration(e.target.value)}
                                             value={duration}
                                         />
                                     </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                                    {language === "vi" ? "Loại gói" : "Package type"}
+                                </label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {(["SHOOTING", "MONTHLY"]).map((type) => {
+                                        const meta = packageTypeCatalog[type];
+                                        const active = draftPackageType === type;
+                                        return (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                onClick={() => setDraftPackageType(type)}
+                                                className={`rounded-xl border px-4 py-3 text-left transition-all ${active
+                                                    ? "border-orange-500 bg-orange-500 text-white shadow-md"
+                                                    : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300"
+                                                    }`}
+                                            >
+                                                <div className="text-sm font-bold">{meta.label}</div>
+                                                <div className={`text-[11px] mt-1 ${active ? "text-white/80" : "text-slate-400"}`}>
+                                                    {meta.description}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 

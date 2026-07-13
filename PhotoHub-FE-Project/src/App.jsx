@@ -16,6 +16,7 @@ import ChatPage from "./pages/ChatPage";
 import AiSearchPage from "./pages/AiSearchPage";
 import CommunityPage from "./pages/CommunityPage";
 import BookingPage from "./pages/BookingPage";
+import SubscriptionPage from "./pages/SubscriptionPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 
 // Admin Imports
@@ -127,6 +128,7 @@ export default function App() {
         <Route path="/photographers/:id" element={<PhotographerProfile language={language} />} />
         <Route path="/booking" element={<BookingPage language={language} theme={theme} />} />
         <Route path="/booking/:photographerId" element={<BookingPage language={language} theme={theme} />} />
+        <Route path="/subscriptions" element={<SubscriptionPage language={language} theme={theme} />} />
 
         <Route
           path="/login"
