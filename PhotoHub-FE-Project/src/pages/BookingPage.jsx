@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { bookingService } from "../services/bookingService";
 import { photographerService, photographerMarketplaceService } from "../services/photographerService";
+import { loyaltyService } from "../services/loyaltyService";
 
 // Helper formatting dates
 const formatDateTimeLocal = (date) => {
@@ -90,6 +91,25 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
     price: 0,
   });
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [vouchers, setVouchers] = useState([]);
+  const [selectedVoucherCode, setSelectedVoucherCode] = useState("");
+
+  // Fetch customer vouchers when page loads
+  useEffect(() => {
+    const fetchVouchers = async () => {
+      try {
+        const res = await loyaltyService.getLoyaltyRewards();
+        const rawVouchers = res.data?.vouchers || res.vouchers || [];
+        const activeVouchers = rawVouchers.filter(
+          (v) => !v.isUsed && new Date(v.expiryDate) > new Date()
+        );
+        setVouchers(activeVouchers);
+      } catch (err) {
+        console.error("Error fetching vouchers:", err);
+      }
+    };
+    fetchVouchers();
+  }, []);
   const [conflictWarning, setConflictWarning] = useState(null); // null | { start, end, title }
   const [showAllImages, setShowAllImages] = useState(false); // expand gallery
 
@@ -668,6 +688,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
         end: endDate.toISOString(),
         location,
         price,
+        appliedVoucherCode: selectedVoucherCode || null,
       };
 
       const res = await bookingService.createBooking(payload);
@@ -691,6 +712,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
           price: 0,
         });
         setSelectedPackageId("");
+        setSelectedVoucherCode("");
         setSelectedDate(null);
 
         // Refresh schedule bookings
@@ -726,7 +748,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
   // Dropdown options mapping
   const photographerOptions = photographers.map((p) => ({
     value: p._id,
-    label: `${p.displayName} - ${p.location || ""} ($${p.hourlyRate || 0}/h)`,
+    label: `${p.displayName} - ${p.location || ""} (${Number(p.hourlyRate || 0).toLocaleString("vi-VN")} đ/giờ)`,
   }));
 
   const inputBgClass = isDark ? "bg-slate-900 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900";
@@ -846,9 +868,8 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                       <Award size={13} className="text-emerald-500" />
                       <strong>{t.exp}:</strong> {photographer.experienceYears || 0} {t.years}
                     </span>
-                    <span className="flex items-center gap-1.5">
-                      <DollarSign size={13} className="text-rose-500" />
-                      <strong>{t.hourly}:</strong> <strong className="text-rose-500">${photographer.hourlyRate}/h</strong>
+                    <span className="flex items-center gap-1.5 text-rose-500">
+                      <strong>{t.hourly}:</strong> <strong>{Number(photographer.hourlyRate || 0).toLocaleString("vi-VN")} đ/giờ</strong>
                     </span>
                   </div>
                 </div>
@@ -1285,12 +1306,50 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                   />
                 </div>
 
+                {/* Vouchers Selection (Select Dropdown) */}
+                <div>
+                  <label className={labelClass}>
+                    {language === "vi" ? "Mã giảm giá (Voucher)" : "Discount Voucher"}
+                  </label>
+                  <div className="relative">
+                    <Gift className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <select
+                      value={selectedVoucherCode}
+                      onChange={(e) => setSelectedVoucherCode(e.target.value)}
+                      disabled={vouchers.length === 0}
+                      className={`w-full rounded-2xl pl-12 pr-10 py-3.5 outline-none border transition focus:border-orange-500 appearance-none font-semibold ${inputBgClass} ${
+                        vouchers.length === 0 ? "opacity-60 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      {vouchers.length === 0 ? (
+                        <option value="">
+                          {language === "vi" ? "Bạn chưa có mã giảm giá nào khả dụng" : "No available vouchers"}
+                        </option>
+                      ) : (
+                        <>
+                          <option value="">
+                            {language === "vi" ? "Không áp dụng mã giảm giá" : "Do not apply discount code"}
+                          </option>
+                          {vouchers.map((v) => (
+                            <option key={v._id} value={v.code}>
+                              🎟 {v.code} (Giảm -{Number(v.discountAmount).toLocaleString("vi-VN")} đ)
+                            </option>
+                          ))}
+                        </>
+                      )}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
+                      ▼
+                    </div>
+                  </div>
+                </div>
+
                 {/* Pricing / Packages info messages */}
                 {!selectedPackageId && photographer?.hourlyRate && (
                   <div className={`flex items-start gap-2.5 p-3.5 rounded-2xl border text-xs font-semibold ${isDark ? "bg-orange-500/5 border-orange-500/20 text-orange-300" : "bg-orange-50/50 border-orange-200 text-orange-700"}`}>
                     <Info size={14} className="shrink-0 mt-0.5 text-orange-500" />
                     <div>
-                      <p>{t.hourlyRateInfo} <strong className="text-sm font-black text-rose-500">${photographer.hourlyRate}/h</strong></p>
+                      <p>{t.hourlyRateInfo} <strong className="text-sm font-black text-rose-500">{Number(photographer.hourlyRate || 0).toLocaleString("vi-VN")} đ/giờ</strong></p>
                       <p className="opacity-80 mt-0.5">{t.calcHourly}</p>
                     </div>
                   </div>
@@ -1309,10 +1368,35 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                     <p className="text-xs font-extrabold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
                       {t.priceLabel}
                     </p>
-                    <p className="text-2xl font-black text-rose-500 tracking-tight flex items-center">
-                      <DollarSign size={20} className="-mr-0.5 text-rose-500" />
-                      {formData.price.toLocaleString()} <span className="text-xs font-extrabold ml-1 uppercase">VNĐ</span>
-                    </p>
+                    {(() => {
+                      const matched = vouchers.find(
+                        (v) => v.code.toLowerCase() === selectedVoucherCode.toLowerCase()
+                      );
+                      const discount = matched ? matched.discountAmount : 0;
+                      
+                      if (discount > 0) {
+                        return (
+                          <div className="text-right">
+                            <p className="text-xs text-slate-500 line-through flex items-center justify-end">
+                              {formData.price.toLocaleString()} VNĐ
+                            </p>
+                            <p className="text-2xl font-black text-rose-500 tracking-tight flex items-center justify-end mt-0.5">
+                              {Math.max(1000, formData.price - discount).toLocaleString()}{" "}
+                              <span className="text-xs font-extrabold ml-1 uppercase">VNĐ</span>
+                              <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-lg ml-2">
+                                -{Number(discount).toLocaleString()}đ
+                              </span>
+                            </p>
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <p className="text-2xl font-black text-rose-500 tracking-tight flex items-center">
+                          {formData.price.toLocaleString()} <span className="text-xs font-extrabold ml-1 uppercase">VNĐ</span>
+                        </p>
+                      );
+                    })()}
                   </div>
 
                   <button

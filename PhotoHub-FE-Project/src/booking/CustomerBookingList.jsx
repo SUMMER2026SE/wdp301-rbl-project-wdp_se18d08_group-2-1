@@ -444,10 +444,23 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
                 <div className="mt-6 pt-4 border-t border-slate-200/50 dark:border-white/[0.06] flex items-center justify-between gap-4">
                   <div>
                     <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">{t.price}</span>
-                    <p className="text-xl font-black text-rose-500 flex items-center mt-0.5">
-                      <DollarSign size={16} className="-mr-0.5" />
-                      {booking.price.toLocaleString()} <span className="text-xs font-bold ml-0.5">VNĐ</span>
-                    </p>
+                    {booking.discountAmount > 0 ? (
+                      <div className="mt-0.5">
+                        <p className="text-xs text-slate-500 line-through">
+                          {booking.price.toLocaleString()} VNĐ
+                        </p>
+                        <p className="text-xl font-black text-rose-500 flex items-center mt-0.5">
+                          {booking.finalPrice.toLocaleString()} <span className="text-xs font-bold ml-0.5">VNĐ</span>
+                          <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-lg ml-2">
+                            -{Number(booking.discountAmount).toLocaleString()}đ
+                          </span>
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xl font-black text-rose-500 flex items-center mt-0.5">
+                        {booking.price.toLocaleString()} <span className="text-xs font-bold ml-0.5">VNĐ</span>
+                      </p>
+                    )}
                   </div>
 
                   {/* Action Buttons */}

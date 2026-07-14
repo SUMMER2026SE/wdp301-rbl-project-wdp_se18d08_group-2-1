@@ -196,10 +196,10 @@ export default function PhotographerBookingList({ theme = "dark", language = "vi
                 setPagination(prev => ({ ...prev, page: 1 }));
               }}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${activeStatus === tab.id
-                  ? "bg-orange-500 text-white shadow-md shadow-orange-500/20"
-                  : isDark
-                    ? "hover:bg-white/[0.04] text-slate-400 hover:text-white border border-white/5"
-                    : "hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200"
+                ? "bg-orange-500 text-white shadow-md shadow-orange-500/20"
+                : isDark
+                  ? "hover:bg-white/[0.04] text-slate-400 hover:text-white border border-white/5"
+                  : "hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200"
                 }`}
             >
               {tab.label}
@@ -297,9 +297,13 @@ export default function PhotographerBookingList({ theme = "dark", language = "vi
                   <div>
                     <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">{t.price}</span>
                     <p className="text-xl font-black text-rose-500 flex items-center mt-0.5">
-                      <DollarSign size={16} className="-mr-0.5" />
                       {booking.price.toLocaleString()} <span className="text-xs font-bold ml-0.5">VNĐ</span>
                     </p>
+                    {booking.discountAmount > 0 && (
+                      <p className="text-[10px] font-bold text-emerald-500 dark:text-emerald-400 mt-1 flex items-center gap-1.5">
+                        🎟 {language === "vi" ? "Khách dùng Voucher hệ thống (Thu nhập của bạn giữ nguyên)" : "Client used system voucher (Your earnings are unchanged)"}
+                      </p>
+                    )}
                   </div>
 
                   {/* Action Buttons */}
@@ -337,10 +341,10 @@ export default function PhotographerBookingList({ theme = "dark", language = "vi
                 onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
                 disabled={pagination.page === 1}
                 className={`p-3 rounded-2xl border transition-all ${pagination.page === 1
-                    ? "opacity-40 cursor-not-allowed"
-                    : isDark
-                      ? "border-white/5 hover:bg-white/5"
-                      : "border-slate-200 hover:bg-slate-50"
+                  ? "opacity-40 cursor-not-allowed"
+                  : isDark
+                    ? "border-white/5 hover:bg-white/5"
+                    : "border-slate-200 hover:bg-slate-50"
                   }`}
               >
                 <ChevronLeft size={16} />
@@ -352,10 +356,10 @@ export default function PhotographerBookingList({ theme = "dark", language = "vi
                 onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
                 disabled={pagination.page === pagination.totalPages}
                 className={`p-3 rounded-2xl border transition-all ${pagination.page === pagination.totalPages
-                    ? "opacity-40 cursor-not-allowed"
-                    : isDark
-                      ? "border-white/5 hover:bg-white/5"
-                      : "border-slate-200 hover:bg-slate-50"
+                  ? "opacity-40 cursor-not-allowed"
+                  : isDark
+                    ? "border-white/5 hover:bg-white/5"
+                    : "border-slate-200 hover:bg-slate-50"
                   }`}
               >
                 <ChevronRight size={16} />

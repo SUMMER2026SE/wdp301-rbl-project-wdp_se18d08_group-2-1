@@ -69,7 +69,7 @@ const resolvePhotographerUserId = async (photographerRef) => {
 };
 
 class BookingService {
-  transformBooking(booking) {
+  async transformBooking(booking) {
     if (!booking) return null;
     const obj = booking.toObject ? booking.toObject() : booking;
     if (obj.photographer && obj.photographer.user) {
@@ -83,6 +83,18 @@ class BookingService {
         user: userObj._id,
       };
     }
+    obj.discountAmount = 0;
+    if (obj.appliedVoucherCode) {
+      const LoyaltyVoucher = require("../../loyalty/models/LoyaltyVoucher");
+      const voucher = await LoyaltyVoucher.findOne({
+        code: obj.appliedVoucherCode,
+        userId: obj.customer?._id || obj.customer,
+      });
+      if (voucher) {
+        obj.discountAmount = voucher.discountAmount;
+      }
+    }
+    obj.finalPrice = Math.max(1000, obj.price - obj.discountAmount);
     return obj;
   }
 
@@ -124,7 +136,7 @@ class BookingService {
       })
       .populate("package", "title price durationHours numberOfPhotos locationType");
 
-    return this.transformBooking(booking);
+    return await this.transformBooking(booking);
   }
 
   async checkOverlap(photographerUserId, start, end, excludeBookingId = null) {
@@ -250,7 +262,7 @@ class BookingService {
       Booking.countDocuments(query),
     ]);
 
-    const bookings = rawBookings.map((b) => this.transformBooking(b));
+    const bookings = await Promise.all(rawBookings.map((b) => this.transformBooking(b)));
 
     return {
       bookings,
@@ -296,6 +308,14 @@ class BookingService {
         : "Customer cancelled the booking"
     );
     await booking.save();
+
+    if (booking.appliedVoucherCode) {
+      const LoyaltyVoucher = require("../../loyalty/models/LoyaltyVoucher");
+      await LoyaltyVoucher.findOneAndUpdate(
+        { code: booking.appliedVoucherCode, userId: booking.customer },
+        { $set: { isUsed: false } }
+      );
+    }
 
     const photographerUserId = await resolvePhotographerUserId(booking.photographer);
     safeEmit(`user:${photographerUserId}`, "booking-status-updated", {
@@ -583,6 +603,14 @@ class BookingService {
       pushStatusLog(booking, BOOKING_STATUS.CANCELLED, "Customer cancelled payment on return");
       await booking.save();
 
+      if (booking.appliedVoucherCode) {
+        const LoyaltyVoucher = require("../../loyalty/models/LoyaltyVoucher");
+        await LoyaltyVoucher.findOneAndUpdate(
+          { code: booking.appliedVoucherCode, userId: booking.customer },
+          { $set: { isUsed: false } }
+        );
+      }
+
       const code = Number(orderCode || booking.payosOrderCode);
       if (code) {
         try {
@@ -633,6 +661,14 @@ class BookingService {
       );
       await booking.save();
 
+      if (booking.appliedVoucherCode) {
+        const LoyaltyVoucher = require("../../loyalty/models/LoyaltyVoucher");
+        await LoyaltyVoucher.findOneAndUpdate(
+          { code: booking.appliedVoucherCode, userId: booking.customer },
+          { $set: { isUsed: false } }
+        );
+      }
+
       safeEmit(`user:${booking.photographer.toString()}`, "booking-status-updated", {
         bookingId: booking._id,
         status: BOOKING_STATUS.CANCELLED,
@@ -673,7 +709,7 @@ class BookingService {
       Booking.countDocuments(query),
     ]);
 
-    const bookings = rawBookings.map((b) => this.transformBooking(b));
+    const bookings = await Promise.all(rawBookings.map((b) => this.transformBooking(b)));
 
     return {
       bookings,
@@ -738,6 +774,14 @@ class BookingService {
     booking.rejectReason = rejectReason?.trim() || "Photographer cannot take this booking";
     pushStatusLog(booking, BOOKING_STATUS.REJECTED, booking.rejectReason);
     await booking.save();
+
+    if (booking.appliedVoucherCode) {
+      const LoyaltyVoucher = require("../../loyalty/models/LoyaltyVoucher");
+      await LoyaltyVoucher.findOneAndUpdate(
+        { code: booking.appliedVoucherCode, userId: booking.customer },
+        { $set: { isUsed: false } }
+      );
+    }
 
     // Kiểm tra xem Booking có liên kết với GroupBooking (Nhóm chụp chung) không
     const { GroupBooking } = require("../../group_booking/models/groupBooking.model");

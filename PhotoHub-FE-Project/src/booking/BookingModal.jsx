@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X, Calendar, MapPin, FileText, Gift, Info } from "lucide-react";
 import Swal from "sweetalert2";
 import { bookingService } from "../services/bookingService";
+import { loyaltyService } from "../services/loyaltyService";
 
 const formatDateTimeLocal = (date) => {
   if (!date) return "";
@@ -52,6 +53,8 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
   });
 
   const [loading, setLoading] = useState(false);
+  const [vouchers, setVouchers] = useState([]);
+  const [selectedVoucherCode, setSelectedVoucherCode] = useState("");
 
   const t = {
     vi: {
@@ -134,6 +137,25 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
       fetchPackages();
     }
   }, [isOpen, photographer]);
+
+  // Fetch customer vouchers when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const fetchVouchers = async () => {
+        try {
+          const res = await loyaltyService.getLoyaltyRewards();
+          const rawVouchers = res.data?.vouchers || res.vouchers || [];
+          const activeVouchers = rawVouchers.filter(
+            (v) => !v.isUsed && new Date(v.expiryDate) > new Date()
+          );
+          setVouchers(activeVouchers);
+        } catch (err) {
+          console.error("Error fetching vouchers:", err);
+        }
+      };
+      fetchVouchers();
+    }
+  }, [isOpen]);
 
   // Recalculate price and pre-fill title when package selection changes
   useEffect(() => {
@@ -243,6 +265,7 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
         end: endDate.toISOString(),
         location,
         price,
+        appliedVoucherCode: selectedVoucherCode || null,
       };
 
       const res = await bookingService.createBooking(payload);
@@ -251,6 +274,7 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
         onClose();
         setFormData({ title: "", note: "", start: "", end: "", location: "", price: 0 });
         setSelectedPackageId("");
+        setSelectedVoucherCode("");
       }
     } catch (err) {
       console.error(err);
@@ -420,6 +444,44 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
               />
             </div>
 
+            {/* Vouchers Selection (Select Dropdown) */}
+            <div>
+              <label className={labelClass}>
+                {language === "vi" ? "Mã giảm giá (Voucher)" : "Discount Voucher"}
+              </label>
+              <div className="relative">
+                <Gift className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <select
+                  value={selectedVoucherCode}
+                  onChange={(e) => setSelectedVoucherCode(e.target.value)}
+                  disabled={vouchers.length === 0}
+                  className={`w-full rounded-2xl pl-12 pr-10 py-3.5 outline-none border transition focus:border-orange-500 appearance-none font-semibold ${inputBgClass} ${
+                    vouchers.length === 0 ? "opacity-60 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {vouchers.length === 0 ? (
+                    <option value="">
+                      {language === "vi" ? "Bạn chưa có mã giảm giá nào khả dụng" : "No available vouchers"}
+                    </option>
+                  ) : (
+                    <>
+                      <option value="">
+                        {language === "vi" ? "Không áp dụng mã giảm giá" : "Do not apply discount code"}
+                      </option>
+                      {vouchers.map((v) => (
+                        <option key={v._id} value={v.code}>
+                          🎟 {v.code} (Giảm -{Number(v.discountAmount).toLocaleString("vi-VN")} đ)
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
+                  ▼
+                </div>
+              </div>
+            </div>
+
             {/* Hourly Rate Guidance (if custom) */}
             {!selectedPackageId && photographer?.hourlyRate && (
               <div
@@ -466,10 +528,36 @@ export default function BookingModal({ isOpen, onClose, photographer, theme = "d
                 <p className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                   {t.priceLabel}
                 </p>
-                <p className="text-3xl font-black text-rose-500 tracking-tight mt-1 flex items-center">
-                  {formData.price.toLocaleString("vi-VN")}{" "}
-                  <span className="text-sm font-bold ml-1 uppercase">đ</span>
-                </p>
+                {(() => {
+                  const matched = vouchers.find(
+                    (v) => v.code.toLowerCase() === selectedVoucherCode.toLowerCase()
+                  );
+                  const discount = matched ? matched.discountAmount : 0;
+                  
+                  if (discount > 0) {
+                    return (
+                      <div>
+                        <p className="text-xs text-slate-500 line-through">
+                          {formData.price.toLocaleString("vi-VN")} đ
+                        </p>
+                        <p className="text-3xl font-black text-rose-500 tracking-tight mt-0.5 flex items-center">
+                          {Math.max(1000, formData.price - discount).toLocaleString("vi-VN")}{" "}
+                          <span className="text-sm font-bold ml-1 uppercase">đ</span>
+                          <span className="text-xs font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-lg ml-2">
+                            -{Number(discount).toLocaleString("vi-VN")} đ
+                          </span>
+                        </p>
+                      </div>
+                    );
+                  }
+                  
+                  return (
+                    <p className="text-3xl font-black text-rose-500 tracking-tight mt-1 flex items-center">
+                      {formData.price.toLocaleString("vi-VN")}{" "}
+                      <span className="text-sm font-bold ml-1 uppercase">đ</span>
+                    </p>
+                  );
+                })()}
               </div>
 
               <button
