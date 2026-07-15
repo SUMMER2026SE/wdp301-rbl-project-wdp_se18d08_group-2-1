@@ -589,6 +589,7 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
 
                     <Link
                       to={profileTargetRoute}
+                      state={{ activeTab: "info" }}
                       className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
                     >
                       {isPhotographer ? <Briefcase className="h-4 w-4" /> : <User className="h-4 w-4" />}

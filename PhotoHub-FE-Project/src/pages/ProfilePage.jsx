@@ -379,21 +379,7 @@ export default function ProfilePage({
                             )}
                         </div>
 
-                        <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/10 w-full space-y-2">
-                            <button
-                                onClick={() => setActiveTab("info")}
-                                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition ${
-                                    activeTab === "info"
-                                        ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                                        : isDark
-                                        ? "hover:bg-white/5 text-slate-400 hover:text-white"
-                                        : "hover:bg-slate-100 text-slate-600 hover:text-slate-900"
-                                }`}
-                            >
-                                <User size={18} />
-                                {language === "vi" ? "Thông tin cá nhân" : "Personal Profile"}
-                            </button>
-                        </div>
+                        
                     </div>
                 </div>
 
