@@ -124,7 +124,7 @@ export default function App() {
       )}
 
       <Routes>
-        <Route path="/" element={<Home language={language} />} />
+        <Route path="/" element={<Home language={language} theme={theme} />} />
         <Route path="/photographers/:id" element={<PhotographerProfile language={language} />} />
         <Route path="/booking" element={<BookingPage language={language} theme={theme} />} />
         <Route path="/booking/:photographerId" element={<BookingPage language={language} theme={theme} />} />

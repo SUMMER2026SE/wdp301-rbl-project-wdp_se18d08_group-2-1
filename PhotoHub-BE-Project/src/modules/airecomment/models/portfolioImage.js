@@ -1,37 +1,35 @@
-// src/modules/airecomment/models/portfolioImage.js
-
 const mongoose = require("mongoose");
 
 /**
- * PortfolioImage Schema — Lưu từng ảnh trong Album portfolio.
- * Mỗi ảnh có AI Embedding 512 chiều để hỗ trợ tìm kiếm Vector Search.
+ * PortfolioImage schema.
+ * Stores each image in a portfolio album and its 512-dimension embedding for vector search.
  */
 const portfolioImageSchema = new mongoose.Schema(
   {
-    // ── Album chứa ảnh này ─────────────────────────────────────────────────
+    // Album containing this image
     album: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "PortfolioAlbum",
-      required: [true, "album là bắt buộc"],
+      required: [true, "album is required"],
       index: true,
     },
 
-    // ── Photographer (denormalized để query nhanh, không cần join album) ──
+    // Photographer (denormalized for fast queries)
     photographer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Photographer",
-      required: [true, "photographer là bắt buộc"],
+      required: [true, "photographer is required"],
       index: true,
     },
 
-    // ── URL ảnh (Cloudinary / local) ───────────────────────────────────────
+    // Image URL (Cloudinary / local)
     image_url: {
       type: String,
-      required: [true, "image_url là bắt buộc"],
+      required: [true, "image_url is required"],
       trim: true,
     },
 
-    // ── Chú thích ảnh ─────────────────────────────────────────────────────
+    // Image caption
     caption: {
       type: String,
       default: "",
@@ -39,14 +37,14 @@ const portfolioImageSchema = new mongoose.Schema(
       maxlength: [500, "Caption tối đa 500 ký tự"],
     },
 
-    // ── Vector Embedding 512 chiều (AI CLIP) ───────────────────────────────
+    // Vector embedding 512 dimensions
     embedding: {
       type: [Number],
-      required: [true, "embedding là bắt buộc"],
-      select: false, // Không trả về embedding trong query thông thường
+      required: [true, "embedding is required"],
+      select: false,
       validate: {
-        validator: (v) => v.length === 512,
-        message: "Embedding phải có đúng 512 chiều",
+        validator: (v) => Array.isArray(v) && v.length === 512,
+        message: "Embedding must have exactly 512 dimensions",
       },
     },
   },
@@ -56,7 +54,7 @@ const portfolioImageSchema = new mongoose.Schema(
   }
 );
 
-// ── Indexes ───────────────────────────────────────────────────────────────
+// Indexes
 portfolioImageSchema.index({ album: 1, createdAt: -1 });
 portfolioImageSchema.index({ photographer: 1, createdAt: -1 });
 
