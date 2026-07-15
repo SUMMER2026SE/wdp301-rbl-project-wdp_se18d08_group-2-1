@@ -21,6 +21,7 @@ import CustomerBookingList from "../booking/CustomerBookingList";
 import PhotographerChat from "../components/photographers/PhotographerChat";
 import CustomerJobPostsManager from "../components/customer/CustomerJobPostsManager";
 import CustomerLoyalty from "../components/customer/CustomerLoyalty";
+import CustomerSubscriptionHistory from "../components/customer/CustomerSubscriptionHistory";
 import MembershipAvatarFrame from "../components/common/MembershipAvatarFrame";
 import { loyaltyService } from "../services/loyaltyService";
 
@@ -607,7 +608,8 @@ export default function ProfilePage({
                     </div>
                         </>
                     ) : activeTab === "bookings" ? (
-                        <div className="animate-fadeIn">
+                        <div className="animate-fadeIn space-y-6">
+                            <CustomerSubscriptionHistory theme={theme} language={language} />
                             <CustomerBookingList theme={theme} language={language} />
                         </div>
                     ) : activeTab === "loyalty" ? (

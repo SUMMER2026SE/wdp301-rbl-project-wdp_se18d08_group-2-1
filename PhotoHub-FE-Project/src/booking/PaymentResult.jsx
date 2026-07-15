@@ -27,6 +27,7 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
       };
       localStorage.setItem("photohub-membership-effect", JSON.stringify(payload));
       window.dispatchEvent(new Event("membership_effect_changed"));
+      window.dispatchEvent(new Event("subscription_history_changed"));
     } catch (_error) {
       // best effort only
     }
@@ -88,6 +89,9 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
         if (!mounted) return;
         setPaid(isPaid);
         setMessage(res.data?.payosStatus || res.data?.paymentStatus || "");
+        if (source === "subscription") {
+          window.dispatchEvent(new Event("subscription_history_changed"));
+        }
         if (source === "subscription" && isPaid) {
           triggerMembershipCelebration(res.data?.membershipTier || res.data?.tier || "Silver");
         }
@@ -108,6 +112,7 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
             const isPaid = Boolean(res.data?.paid || res.data?.subscriptionStatus === "ACTIVE");
             setPaid(isPaid);
             setMessage(res.data?.payosStatus || res.data?.paymentStatus || "");
+            window.dispatchEvent(new Event("subscription_history_changed"));
             if (isPaid) {
               triggerMembershipCelebration(res.data?.membershipTier || res.data?.tier || "Silver");
             }
@@ -124,6 +129,9 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
         if (!mounted) return;
         setPaid(false);
         setMessage(error.response?.data?.message || error.message);
+        if (source === "subscription") {
+          window.dispatchEvent(new Event("subscription_history_changed"));
+        }
       } finally {
         if (mounted) setChecking(false);
       }
