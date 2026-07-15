@@ -153,8 +153,8 @@ export default function AdminUsers() {
 
         <div className="flex items-center gap-3">
           {/* Lọc Role */}
-          <select 
-            value={role} 
+          <select
+            value={role}
             onChange={(e) => { setRole(e.target.value); setPage(1); }}
             className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-orange-500"
           >
@@ -165,8 +165,8 @@ export default function AdminUsers() {
           </select>
 
           {/* Lọc Status */}
-          <select 
-            value={status} 
+          <select
+            value={status}
             onChange={(e) => { setStatus(e.target.value); setPage(1); }}
             className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-orange-500"
           >
@@ -181,7 +181,7 @@ export default function AdminUsers() {
 
       {/* Main Grid: List & Detail Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        
+
         {/* Table of Users */}
         <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/40 p-4 backdrop-blur-md overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-300">
@@ -235,21 +235,20 @@ export default function AdminUsers() {
                           >
                             <Eye className="h-3.5 w-3.5" />
                           </button>
-                          
+
                           {u.role !== "admin" && !u.isDeleted && (
                             <>
                               <button
                                 onClick={() => handleToggleLock(u._id, u.isBlocked)}
-                                className={`p-2 rounded-lg transition ${
-                                  u.isBlocked 
-                                    ? "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400" 
+                                className={`p-2 rounded-lg transition ${u.isBlocked
+                                    ? "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400"
                                     : "bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400"
-                                }`}
+                                  }`}
                                 title={u.isBlocked ? "Mở khóa tài khoản" : "Khóa tài khoản"}
                               >
                                 {u.isBlocked ? <UserCheck className="h-3.5 w-3.5" /> : <UserX className="h-3.5 w-3.5" />}
                               </button>
-                              
+
                               <button
                                 onClick={() => handleDeleteUser(u._id)}
                                 className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition"

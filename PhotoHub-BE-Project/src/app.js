@@ -21,11 +21,8 @@ const styleTagRoutes = require("./modules/common/routes/styleTag.routes");
 const packageRoutes = require("./modules/packages/routes/photographerPackage.routes");
 const communityRoutes = require("./modules/community/community.routes");
 const bookingRoutes = require("./modules/bookings/routes/booking.routes");
-const subscriptionRoutes = require("./modules/subscriptions/subscription.routes");
-const assistantRoutes = require("./modules/assistant/assistant.routes");
 const reviewRoutes = require("./modules/review/routes/review.routes");
 const customerJobRoutes = require("./modules/customers/customer.job.routes");
-const groupBookingRoutes = require("./modules/group_booking/routes/groupBooking.routes");
 // Middlewares
 app.use(express.json({ limit: "300mb" }));
 app.use(express.urlencoded({ limit: "300mb", extended: true }));
@@ -64,18 +61,14 @@ app.use("/api/style-tags", styleTagRoutes);
 app.use("/api/packages", packageRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/bookings", bookingRoutes);
-app.use("/api/subscriptions", subscriptionRoutes);
-app.use("/api/assistant", assistantRoutes);
 app.use("/api", reviewRoutes);
 app.use("/api/upload", require("./utils/upload.routes"));
 app.use("/api/customer/jobs", customerJobRoutes);
-app.use("/api/group-bookings", groupBookingRoutes);
 
 // Potonow additional features
 app.use("/api/blogs", require("./modules/blog/routes/blog.routes"));
 app.use("/api/marketing-events", require("./modules/events/routes/event.routes"));
 app.use("/api/booking-addons", require("./modules/bookings/routes/addon.routes"));
-app.use("/api/loyalty", require("./modules/loyalty/routes/loyalty.routes"));
 
 // Health check
 app.get("/", (_req, res) => {

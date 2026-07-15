@@ -126,10 +126,18 @@ export default function AdminFinance() {
   };
 
   // Đánh dấu đã chuyển khoản thành công (Khấu trừ ví thực tế)
-  const handleMarkPaidWithdraw = async (id) => {
+  const handleMarkPaidWithdraw = async (id, amount) => {
+    const fee = Math.round(amount * 0.10);
+    const netAmount = amount - fee;
     const result = await Swal.fire({
       title: "Xác nhận đã chuyển khoản?",
-      text: "Xác nhận bạn đã chuyển tiền ngân hàng cho đối tác. Hệ thống sẽ chính thức trừ tiền trong số dư ví khả dụng của photographer!",
+      html: `<div class="text-left text-xs space-y-2 text-slate-300">
+               <p>Xác nhận bạn đã chuyển khoản ngân hàng thủ công cho đối tác:</p>
+               <p>• Số tiền rút: <strong class="text-white">${formatCurrency(amount)}</strong></p>
+               <p>• Chiết khấu sàn (10%): <strong class="text-red-400">-${formatCurrency(fee)}</strong></p>
+               <p class="text-sm">• <strong>Số tiền thực chuyển khoản: <span class="text-emerald-400">${formatCurrency(netAmount)}</span></strong></p>
+               <p class="mt-4 text-[11px] text-slate-500">Hệ thống sẽ cập nhật trạng thái đã giải ngân và ghi nhận tất toán!</p>
+             </div>`,
       icon: "warning",
       input: "text",
       inputPlaceholder: "Mã giao dịch ngân hàng / ghi chú chuyển khoản...",
@@ -292,7 +300,8 @@ export default function AdminFinance() {
               <thead className="bg-slate-950/60 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
                 <tr>
                   <th className="py-3 px-3 rounded-l-xl">Nhiếp ảnh gia</th>
-                  <th className="py-3 px-3">Số tiền rút</th>
+                  <th className="py-3 px-3">Yêu cầu rút</th>
+                  <th className="py-3 px-3">Thực chuyển (Trừ 10%)</th>
                   <th className="py-3 px-3">Ngày yêu cầu</th>
                   <th className="py-3 px-3">Trạng thái</th>
                   <th className="py-3 px-3 text-center rounded-r-xl">Xem</th>
@@ -313,6 +322,7 @@ export default function AdminFinance() {
                           <div className="text-[11px] text-slate-500">{r.photographer?.user?.email}</div>
                         </td>
                         <td className="py-3 px-3 text-orange-400 font-bold">{formatCurrency(r.amount)}</td>
+                        <td className="py-3 px-3 text-emerald-400 font-bold">{formatCurrency(Math.round(r.amount * 0.90))}</td>
                         <td className="py-3 px-3 text-slate-400">{new Date(r.createdAt).toLocaleDateString("vi-VN")}</td>
                         <td className="py-3 px-3">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeColor}`}>
@@ -332,7 +342,7 @@ export default function AdminFinance() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="5" className="text-center py-8 text-slate-500">Không có yêu cầu rút tiền nào.</td>
+                    <td colSpan="6" className="text-center py-8 text-slate-500">Không có yêu cầu rút tiền nào.</td>
                   </tr>
                 )}
               </tbody>
@@ -389,9 +399,19 @@ export default function AdminFinance() {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800">
-                  <span className="text-slate-400 text-xs">Số tiền rút:</span>
-                  <span className="text-orange-400 text-lg font-bold">{formatCurrency(selectedWithdraw.amount)}</span>
+                <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2.5">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400">Số tiền yêu cầu rút:</span>
+                    <span className="text-white font-bold">{formatCurrency(selectedWithdraw.amount)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400">Chiết khấu hệ thống (10%):</span>
+                    <span className="text-red-400 font-semibold">-{formatCurrency(Math.round(selectedWithdraw.amount * 0.10))}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-800 text-xs font-bold">
+                    <span className="text-slate-200">Số tiền thực chuyển khoản:</span>
+                    <span className="text-emerald-400 text-sm font-black">{formatCurrency(Math.round(selectedWithdraw.amount * 0.90))}</span>
+                  </div>
                 </div>
 
                 {/* Wallets check balance if known */}
@@ -425,7 +445,7 @@ export default function AdminFinance() {
 
                   {selectedWithdraw.status === "APPROVED" && (
                     <button
-                      onClick={() => handleMarkPaidWithdraw(selectedWithdraw._id)}
+                      onClick={() => handleMarkPaidWithdraw(selectedWithdraw._id, selectedWithdraw.amount)}
                       className="w-full flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-3 font-bold transition text-xs"
                     >
                       <Check className="h-4 w-4" />
@@ -434,9 +454,12 @@ export default function AdminFinance() {
                   )}
 
                   {selectedWithdraw.status === "PAID" && (
-                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs">
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs space-y-1.5">
                       <p className="font-bold">✓ Đã tất toán thành công</p>
-                      <p className="text-[11px] text-slate-400 mt-1">Ghi chú đối soát: {selectedWithdraw.adminNote}</p>
+                      <div className="text-[11px] text-slate-400 space-y-1">
+                        <p>Số tiền đã chuyển (Đã trừ 10%): <strong className="text-emerald-400">{formatCurrency(Math.round(selectedWithdraw.amount * 0.90))}</strong></p>
+                        <p>Ghi chú đối soát: {selectedWithdraw.adminNote}</p>
+                      </div>
                     </div>
                   )}
 
