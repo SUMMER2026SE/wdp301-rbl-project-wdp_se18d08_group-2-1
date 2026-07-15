@@ -180,6 +180,14 @@ class GroupBookingService {
     if (concept.status !== "ACTIVE")
       throw new Error("Concept hiện không còn hoạt động");
 
+    // ─── Rule: Gói MONTHLY và gói không được đánh dấu Group không thể tạo nhóm ───
+    if (concept.packageType === "MONTHLY") {
+      throw new Error("Gói tháng (MONTHLY) không được phép dùng cho đặt lịch nhóm");
+    }
+    if (!concept.isGroupPackage) {
+      throw new Error("Gói này không được cấu hình cho đặt lịch nhóm. Vui lòng chọn gói có bật chức năng nhóm");
+    }
+
     // Lấy thông tin Photographer từ package
     const photographer = await Photographer.findById(
       concept.photographerId

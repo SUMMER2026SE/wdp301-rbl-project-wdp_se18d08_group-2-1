@@ -102,6 +102,9 @@ class PhotographerPackageService {
       } = data;
 
       // 1. Create package
+      // ─── Rule: Gói MONTHLY không được phép dùng cho Group Booking ───
+      const resolvedIsGroupPackage = packageType === "MONTHLY" ? false : !!isGroupPackage;
+
       const pkg = await PhotographerPackage.create(
         [
           {
@@ -116,7 +119,7 @@ class PhotographerPackageService {
             locationType,
             status,
             isFeatured,
-            isGroupPackage: !!isGroupPackage,
+            isGroupPackage: resolvedIsGroupPackage,
           }
         ],
         { session }
@@ -394,12 +397,17 @@ class PhotographerPackageService {
         isFeatured,
       };
 
-      if (isGroupPackage !== undefined) {
-        updateData.isGroupPackage = !!isGroupPackage;
-      }
-
       if (packageType !== undefined) {
         updateData.packageType = packageType;
+      }
+
+      if (isGroupPackage !== undefined) {
+        // ─── Rule: Gói MONTHLY không được phép dùng cho Group Booking ───
+        const resolvedType = updateData.packageType ?? packageType;
+        updateData.isGroupPackage = resolvedType === "MONTHLY" ? false : !!isGroupPackage;
+      } else if (updateData.packageType === "MONTHLY") {
+        // Nếu đang chuyển sang MONTHLY nhưng không gửi isGroupPackage → tự động tắt
+        updateData.isGroupPackage = false;
       }
 
       const updatedPkg = await PhotographerPackage.findByIdAndUpdate(

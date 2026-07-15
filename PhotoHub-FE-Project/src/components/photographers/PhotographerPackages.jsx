@@ -96,6 +96,11 @@ export default function PhotographerPackages({
                 shortLabel: "Gói tháng",
                 description: "Gói thành viên theo tháng dành cho khách quen hoặc khách ưu tiên.",
             },
+            GROUP: {
+                label: "Gói nhóm",
+                shortLabel: "Gói nhóm",
+                description: "Các gói chụp dành riêng cho tính năng đặt lịch nhóm (Chụp Nhóm).",
+            },
         },
         en: {
             SHOOTING: {
@@ -107,6 +112,11 @@ export default function PhotographerPackages({
                 label: "Monthly plan",
                 shortLabel: "Monthly",
                 description: "Recurring membership-style packages for loyal or priority clients.",
+            },
+            GROUP: {
+                label: "Group packages",
+                shortLabel: "Group",
+                description: "Packages exclusively available for Group Booking sessions.",
             },
         },
     }[language];
@@ -212,12 +222,17 @@ export default function PhotographerPackages({
 
         setLoading(true);
         try {
+            // Tab GROUP: filter isGroupPackage=true, packageType=SHOOTING
+            const isGroupTab = currentPackageType === "GROUP";
+            const apiFilters = {
+                categoryIds: categories,
+                styleTagIds: styles,
+                packageType: isGroupTab ? "SHOOTING" : currentPackageType,
+                ...(isGroupTab ? { isGroupPackage: true } : {}),
+            };
+
             const [resPackages, resCategories, resStyles] = await Promise.all([
-                getMyPackages({
-                    categoryIds: categories,
-                    styleTagIds: styles,
-                    packageType: currentPackageType
-                }),
+                getMyPackages(apiFilters),
                 getAllCategories(),
                 getAllStyleTags()
             ]);
@@ -502,7 +517,13 @@ export default function PhotographerPackages({
 
     const handleOpenCreate = () => {
         resetAll();
-        setDraftPackageType(packageType);
+        // Tab GROUP → mặc định gói chụp + bật sẵn isGroupPackage
+        if (packageType === "GROUP") {
+            setDraftPackageType("SHOOTING");
+            setIsGroupPackage(true);
+        } else {
+            setDraftPackageType(packageType);
+        }
         setOpenModal(true);
     };
 
@@ -551,7 +572,7 @@ export default function PhotographerPackages({
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-                {(["SHOOTING", "MONTHLY"]).map((type) => {
+                {(["SHOOTING", "MONTHLY", "GROUP"]).map((type) => {
                     const meta = packageTypeCatalog[type];
                     const active = packageType === type;
                     return (
@@ -559,10 +580,13 @@ export default function PhotographerPackages({
                             key={type}
                             type="button"
                             onClick={() => setPackageType(type)}
-                            className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${active
-                                ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20"
-                                : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-orange-300"
-                                }`}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
+                                active
+                                    ? type === "GROUP"
+                                        ? "bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20"
+                                        : "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20"
+                                    : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-orange-300"
+                            }`}
                         >
                             {meta.shortLabel}
                         </button>
@@ -815,7 +839,7 @@ export default function PhotographerPackages({
                                     <div className="flex items-center flex-wrap gap-2">
                                         {detailData.isGroupPackage && (
                                             <span className="flex items-center gap-0.5 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-500 border border-orange-500/20">
-                                                👥 Gói nhóm
+                                                Gói nhóm
                                             </span>
                                         )}
                                         <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md border bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800">
@@ -1082,7 +1106,13 @@ export default function PhotographerPackages({
                                             <button
                                                 key={type}
                                                 type="button"
-                                                onClick={() => setDraftPackageType(type)}
+                                                onClick={() => {
+                                                    setDraftPackageType(type);
+                                                    // Rule: Gói tháng không cho phép đặt lịch nhóm
+                                                    if (type === "MONTHLY") {
+                                                        setIsGroupPackage(false);
+                                                    }
+                                                }}
                                                 className={`rounded-xl border px-4 py-3 text-left transition-all ${active
                                                     ? "border-orange-500 bg-orange-500 text-white shadow-md"
                                                     : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300"
@@ -1244,42 +1274,44 @@ export default function PhotographerPackages({
                                 />
                             </div>
 
-                            {/* isGroupPackage Toggle */}
-                            <div className="flex items-start gap-4 p-4 rounded-xl border border-orange-500/20 bg-orange-500/[0.04] dark:bg-orange-500/[0.06]">
-                                <div className="relative flex-shrink-0 mt-0.5">
-                                    <input
-                                        id="isGroupPackage"
-                                        type="checkbox"
-                                        checked={isGroupPackage}
-                                        onChange={(e) => setIsGroupPackage(e.target.checked)}
-                                        className="sr-only"
-                                    />
-                                    <div
-                                        onClick={() => setIsGroupPackage(v => !v)}
-                                        className={`w-11 h-6 flex items-center rounded-full cursor-pointer transition-colors duration-300 ${isGroupPackage ? "bg-orange-500" : "bg-slate-300 dark:bg-slate-700"
-                                            }`}
-                                    >
-                                        <span
-                                            className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isGroupPackage ? "translate-x-5" : "translate-x-1"
-                                                }`}
+                            {/* isGroupPackage Toggle — chỉ hiện cho Gói chụp (SHOOTING) */}
+                            {draftPackageType === "SHOOTING" && (
+                                <div className="flex items-start gap-4 p-4 rounded-xl border border-orange-500/20 bg-orange-500/[0.04] dark:bg-orange-500/[0.06]">
+                                    <div className="relative flex-shrink-0 mt-0.5">
+                                        <input
+                                            id="isGroupPackage"
+                                            type="checkbox"
+                                            checked={isGroupPackage}
+                                            onChange={(e) => setIsGroupPackage(e.target.checked)}
+                                            className="sr-only"
                                         />
+                                        <div
+                                            onClick={() => setIsGroupPackage(v => !v)}
+                                            className={`w-11 h-6 flex items-center rounded-full cursor-pointer transition-colors duration-300 ${isGroupPackage ? "bg-orange-500" : "bg-slate-300 dark:bg-slate-700"
+                                                }`}
+                                        >
+                                            <span
+                                                className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isGroupPackage ? "translate-x-5" : "translate-x-1"
+                                                    }`}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label
+                                            htmlFor="isGroupPackage"
+                                            className="text-sm font-bold text-slate-700 dark:text-slate-200 cursor-pointer select-none"
+                                            onClick={() => setIsGroupPackage(v => !v)}
+                                        >
+                                            👥 Gói dành cho đặt lịch nhóm
+                                        </label>
+                                        <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
+                                            Bật để gói này chỉ hiển thị trong tính năng{" "}
+                                            <strong className="text-orange-500">Chụp Nhóm</strong>.
+                                            Tắt để hiển thị trong đặt lịch thường.
+                                        </p>
                                     </div>
                                 </div>
-                                <div>
-                                    <label
-                                        htmlFor="isGroupPackage"
-                                        className="text-sm font-bold text-slate-700 dark:text-slate-200 cursor-pointer select-none"
-                                        onClick={() => setIsGroupPackage(v => !v)}
-                                    >
-                                        👥 Gói dành cho đặt lịch nhóm
-                                    </label>
-                                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                                        Bật để gói này chỉ hiển thị trong tính năng{" "}
-                                        <strong className="text-orange-500">Chụp Nhóm</strong>.
-                                        Tắt để hiển thị trong đặt lịch thường.
-                                    </p>
-                                </div>
-                            </div>
+                            )}
 
                             {/* File Upload Box với tính năng Preview & Xóa từng ảnh */}
                             <div className="space-y-1.5">

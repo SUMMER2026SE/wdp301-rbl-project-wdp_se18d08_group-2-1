@@ -66,6 +66,7 @@ export const getMyPackages = async (filters = {}) => {
   if (filters.categoryIds?.length) params.append("categoryIds", filters.categoryIds.join(","));
   if (filters.styleTagIds?.length) params.append("styleTagIds", filters.styleTagIds.join(","));
   if (filters.packageType) params.append("packageType", filters.packageType);
+  if (filters.isGroupPackage !== undefined) params.append("isGroupPackage", filters.isGroupPackage);
 
   const res = await axios.get(`${API}/packages/my?${params.toString()}`, getHeaders());
   return res.data;
