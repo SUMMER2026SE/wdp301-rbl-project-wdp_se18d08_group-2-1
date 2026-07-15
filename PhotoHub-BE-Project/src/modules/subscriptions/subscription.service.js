@@ -316,6 +316,11 @@ class SubscriptionService {
     if (paymentRecordId) {
       const paymentRecord = await SubscriptionPayment.findById(paymentRecordId);
       if (paymentRecord) {
+        if (paymentRecord.status !== SubscriptionPaymentStatus.SUCCESS) {
+          paymentRecord.status = SubscriptionPaymentStatus.SUCCESS;
+          paymentRecord.paidAt = paymentRecord.paidAt || new Date();
+          await paymentRecord.save(session ? { session } : {});
+        }
         updated.amountPaid += Number(paymentRecord.amount || 0);
         updated.lastPaymentOrderCode = paymentRecord.orderCode;
       }
@@ -692,6 +697,44 @@ class SubscriptionService {
       throw new Error("You are not authorized to view this payment");
     }
 
+    let payosStatus = "";
+    try {
+      const payosInfo = await paymentService.getPayOSPaymentStatus(payment.paymentLinkId || payment.orderCode);
+      payosStatus = String(payosInfo?.status || payosInfo?.data?.status || "").toUpperCase();
+
+      if (payosStatus === "PAID" || payosStatus === "SUCCESS" || payosStatus === "SUCCESSFUL" || payosStatus === "00") {
+        if (payment.status !== SubscriptionPaymentStatus.SUCCESS) {
+          await paymentService.markSuccess(payment, payosInfo);
+        }
+
+        if (![SubscriptionStatus.ACTIVE, SubscriptionStatus.EXPIRED, SubscriptionStatus.CANCELLED].includes(subscription.status)) {
+          subscription.amountPaid += Number(payment.amount || 0);
+          subscription.status = SubscriptionStatus.ACTIVE;
+          subscription.lastPaymentStatus = SubscriptionPaymentStatus.SUCCESS;
+          subscription.lastPaymentAt = new Date();
+          subscription.lastPaymentOrderCode = payment.orderCode;
+          await subscription.save();
+
+          if (payment.paymentKind === SubscriptionPaymentKind.PURCHASE) {
+            await this.activateSubscription(subscription._id, subscription.customer, {
+              paymentRecordId: payment._id,
+              autoGenerateSessions: true,
+            });
+          } else if (payment.paymentKind === SubscriptionPaymentKind.RENEWAL) {
+            await scheduleService.generateSessions(subscription, { cycleIndex: subscription.renewalCount, force: true });
+          }
+        }
+      } else if (payosStatus === "CANCELLED" || payosStatus === "CANCELED" || payosStatus === "EXPIRED") {
+        if (payment.status !== SubscriptionPaymentStatus.FAILED) {
+          await paymentService.markFailed(payment, `PayOS payment ${payosStatus.toLowerCase()}`, payosInfo);
+        }
+        subscription.lastPaymentStatus = SubscriptionPaymentStatus.FAILED;
+        await subscription.save();
+      }
+    } catch (syncError) {
+      console.warn("[Subscription] paymentStatus sync skipped:", syncError.message);
+    }
+
     return {
       payment,
       subscription,
@@ -699,6 +742,7 @@ class SubscriptionService {
       subscriptionStatus: subscription.status,
       paid: payment.status === SubscriptionPaymentStatus.SUCCESS,
       orderCode: payment.orderCode,
+      payosStatus,
     };
   }
 

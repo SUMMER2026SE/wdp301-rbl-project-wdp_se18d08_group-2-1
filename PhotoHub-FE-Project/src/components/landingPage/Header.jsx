@@ -3,6 +3,8 @@ import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import Swal from "sweetalert2";
+import MembershipAvatarFrame from "../common/MembershipAvatarFrame";
+import { loyaltyService } from "../../services/loyaltyService";
 
 const iconProps = { strokeWidth: 1.5 };
 
@@ -109,6 +111,10 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [user, setUser] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [membershipTier, setMembershipTier] = useState("Silver");
+  const [membershipCelebration, setMembershipCelebration] = useState(false);
+  const userId = user?._id || user?.id || "";
+  const userRole = user?.role || "";
 
   const [notifications, setNotifications] = useState(() => {
     try {
@@ -140,6 +146,69 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
       window.removeEventListener("storage", checkUser);
     };
   }, []);
+
+  useEffect(() => {
+    const syncMembershipFx = () => {
+      try {
+        const raw = localStorage.getItem("photohub-membership-effect");
+        if (!raw) {
+          setMembershipCelebration(false);
+          return;
+        }
+
+        const effect = JSON.parse(raw);
+        if (effect?.expiresAt && Date.now() > effect.expiresAt) {
+          localStorage.removeItem("photohub-membership-effect");
+          setMembershipCelebration(false);
+          return;
+        }
+
+        setMembershipCelebration(Boolean(effect?.active));
+        if (effect?.tier) {
+          setMembershipTier(effect.tier);
+        }
+      } catch (_error) {
+        setMembershipCelebration(false);
+      }
+    };
+
+    syncMembershipFx();
+    window.addEventListener("storage", syncMembershipFx);
+    window.addEventListener("membership_effect_changed", syncMembershipFx);
+    return () => {
+      window.removeEventListener("storage", syncMembershipFx);
+      window.removeEventListener("membership_effect_changed", syncMembershipFx);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!userId || userRole !== "customer") return;
+
+    let mounted = true;
+    const loadTier = async () => {
+      try {
+        const res = await loyaltyService.getLoyaltyAccount();
+        const account = res?.data || res;
+        const tier = account?.membershipTier || "Silver";
+        if (!mounted) return;
+        setMembershipTier(tier);
+        setUser((prev) => {
+          if (!prev || prev.membershipTier === tier) return prev;
+          const updated = { ...prev, membershipTier: tier };
+          localStorage.setItem("user", JSON.stringify(updated));
+          window.dispatchEvent(new Event("storage_user_changed"));
+          return updated;
+        });
+      } catch (_error) {
+        // Best effort only.
+      }
+    };
+
+    loadTier();
+    return () => {
+      mounted = false;
+    };
+  }, [userId, userRole]);
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -402,6 +471,7 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
   const avatarUrl = user?.avatar
     ? `${user.avatar}`
     : null;
+  const resolvedMembershipTier = user?.membershipTier || membershipTier || "Silver";
 
   return (
     <header className="fixed inset-x-0 top-0 z-[100] px-4 py-4 sm:px-6 lg:px-8">
@@ -557,19 +627,14 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
               onMouseEnter={() => setShowDropdown(true)}
               onMouseLeave={() => setShowDropdown(false)}
             >
-              <div className="h-10 w-10 overflow-hidden rounded-full bg-cyan-500">
-                {user?.avatar ? (
-                  <img
-                    src={avatarUrl}
-                    alt={user.fullName}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-white font-semibold">
-                    {user?.fullName?.charAt(0)?.toUpperCase() || "U"}
-                  </div>
-                )}
-              </div>
+              <MembershipAvatarFrame
+                avatarUrl={avatarUrl}
+                name={user?.fullName}
+                tier={resolvedMembershipTier}
+                celebrating={membershipCelebration}
+                size={40}
+                showBadge={false}
+              />
 
               {/* DROPDOWN MENU */}
               {showDropdown && (

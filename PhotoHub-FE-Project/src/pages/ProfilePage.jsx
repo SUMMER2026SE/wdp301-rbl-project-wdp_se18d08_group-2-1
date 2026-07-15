@@ -21,6 +21,8 @@ import CustomerBookingList from "../booking/CustomerBookingList";
 import PhotographerChat from "../components/photographers/PhotographerChat";
 import CustomerJobPostsManager from "../components/customer/CustomerJobPostsManager";
 import CustomerLoyalty from "../components/customer/CustomerLoyalty";
+import MembershipAvatarFrame from "../components/common/MembershipAvatarFrame";
+import { loyaltyService } from "../services/loyaltyService";
 
 export default function ProfilePage({
     language = "vi",
@@ -72,6 +74,10 @@ export default function ProfilePage({
     const t = text[language];
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
+    const [membershipTier, setMembershipTier] = useState("Silver");
+    const [membershipCelebration, setMembershipCelebration] = useState(false);
+    const userId = user?._id || user?.id || "";
+    const userRole = user?.role || "";
 
     const [formData, setFormData] = useState({
         fullName: "",
@@ -105,6 +111,67 @@ export default function ProfilePage({
     useEffect(() => {
         fetchProfile();
     }, []);
+
+    useEffect(() => {
+        const syncMembershipFx = () => {
+            try {
+                const raw = localStorage.getItem("photohub-membership-effect");
+                if (!raw) {
+                    setMembershipCelebration(false);
+                    return;
+                }
+
+                const effect = JSON.parse(raw);
+                if (effect?.expiresAt && Date.now() > effect.expiresAt) {
+                    localStorage.removeItem("photohub-membership-effect");
+                    setMembershipCelebration(false);
+                    return;
+                }
+
+                setMembershipCelebration(Boolean(effect?.active));
+                if (effect?.tier) setMembershipTier(effect.tier);
+            } catch (_error) {
+                setMembershipCelebration(false);
+            }
+        };
+
+        syncMembershipFx();
+        window.addEventListener("storage", syncMembershipFx);
+        window.addEventListener("membership_effect_changed", syncMembershipFx);
+        return () => {
+            window.removeEventListener("storage", syncMembershipFx);
+            window.removeEventListener("membership_effect_changed", syncMembershipFx);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!userId || userRole !== "customer") return;
+
+        let mounted = true;
+        const loadTier = async () => {
+            try {
+                const res = await loyaltyService.getLoyaltyAccount();
+                const account = res?.data || res;
+                const tier = account?.membershipTier || "Silver";
+                if (!mounted) return;
+                setMembershipTier(tier);
+                setUser((prev) => {
+                    if (!prev || prev.membershipTier === tier) return prev;
+                    const updated = { ...prev, membershipTier: tier };
+                    localStorage.setItem("user", JSON.stringify(updated));
+                    window.dispatchEvent(new Event("storage_user_changed"));
+                    return updated;
+                });
+            } catch (_error) {
+                // best effort only
+            }
+        };
+
+        loadTier();
+        return () => {
+            mounted = false;
+        };
+    }, [userId, userRole]);
 
     const fetchProfile = async () => {
         try {
@@ -321,16 +388,20 @@ export default function ProfilePage({
                     }`}>
                     <div className="flex flex-col items-center">
                         <div className="relative">
-                            <img
-                                src={
+                            <MembershipAvatarFrame
+                                avatarUrl={
                                     user?.avatar
                                         ? user.avatar.startsWith("http")
-                                            ? user.avatar                                  // Cloudinary URL đầy đủ
-                                            : `http://localhost:3000${user.avatar}`        // Đường dẫn local cũ
-                                        : "https://i.pravatar.cc/300"                     // Fallback
+                                            ? user.avatar
+                                            : `http://localhost:3000${user.avatar}`
+                                        : "https://i.pravatar.cc/300"
                                 }
-                                alt="avatar"
-                                className="w-36 h-36 rounded-full object-cover border-4 border-orange-400"
+                                name={user?.fullName}
+                                tier={user?.membershipTier || membershipTier}
+                                celebrating={membershipCelebration}
+                                size={144}
+                                showBadge={true}
+                                className="shadow-2xl shadow-orange-500/10"
                             />
                             <label className="absolute bottom-0 right-0 bg-orange-500 p-3 rounded-full cursor-pointer hover:bg-orange-400 transition text-white shadow-lg">
                                 <Camera size={18} />
@@ -341,6 +412,11 @@ export default function ProfilePage({
                         <h2 className="mt-5 text-2xl font-bold transition-colors text-center">
                             {user?.fullName || t.notUpdated}
                         </h2>
+                        {user?.role === "customer" && (
+                            <div className={`mt-2 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] ${membershipCelebration ? "border-orange-400/30 bg-orange-500/10 text-orange-500" : membershipTier === "Platinum" ? "border-cyan-400/20 bg-cyan-500/10 text-cyan-500" : membershipTier === "Gold" ? "border-amber-400/20 bg-amber-500/10 text-amber-500" : "border-slate-300/60 bg-slate-100 text-slate-500"}`}>
+                                {membershipCelebration ? "Membership upgraded" : `${membershipTier} member`}
+                            </div>
+                        )}
                         <p className={`transition-colors text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                             {user?.email}
                         </p>

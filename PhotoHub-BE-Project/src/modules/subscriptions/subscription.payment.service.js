@@ -19,6 +19,27 @@ const payos = hasPayOSConfig()
 
 const createOrderCode = () => Number(String(Date.now()).slice(-9)) + Math.floor(Math.random() * 1000);
 
+const appendQuery = (baseUrl, params = {}) => {
+  const url = new URL(baseUrl);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") return;
+    url.searchParams.set(key, String(value));
+  });
+  return url.toString();
+};
+
+const getPaymentLinkInfo = async (orderCodeOrPaymentLinkId) => {
+  if (!payos) {
+    throw new Error("PayOS is not configured");
+  }
+
+  if (payos.paymentRequests?.get) {
+    return await payos.paymentRequests.get(orderCodeOrPaymentLinkId);
+  }
+
+  return await payos.getPaymentLinkInformation(orderCodeOrPaymentLinkId);
+};
+
 const buildCheckoutPayload = (payment) => ({
   orderCode: payment.orderCode,
   amount: payment.amount,
@@ -66,8 +87,14 @@ class SubscriptionPaymentService {
 
   async createPayOSLink(paymentRecord) {
     if (!payos || process.env.SUBSCRIPTION_ALLOW_MOCK_PAYMENT === "true") {
-      const packageName = encodeURIComponent(String(paymentRecord.metadata?.packageName || paymentRecord.metadata?.packageTitle || paymentRecord.paymentKind || "Subscription"));
-      const mockUrl = `${RETURN_URL}?mock=true&orderCode=${paymentRecord.orderCode}&paymentKind=${paymentRecord.paymentKind}&packageName=${packageName}`;
+      const packageName = String(paymentRecord.metadata?.packageName || paymentRecord.metadata?.packageTitle || paymentRecord.paymentKind || "Subscription");
+      const mockUrl = appendQuery(RETURN_URL, {
+        mock: "true",
+        source: "subscription",
+        orderCode: paymentRecord.orderCode,
+        paymentKind: paymentRecord.paymentKind,
+        packageName,
+      });
       paymentRecord.paymentLink = mockUrl;
       paymentRecord.provider = "MOCK";
       await paymentRecord.save();
@@ -80,6 +107,18 @@ class SubscriptionPaymentService {
     }
 
     const payload = buildCheckoutPayload(paymentRecord);
+    payload.returnUrl = appendQuery(RETURN_URL, {
+      source: "subscription",
+      orderCode: paymentRecord.orderCode,
+      paymentKind: paymentRecord.paymentKind,
+      packageName: paymentRecord.metadata?.packageName || paymentRecord.metadata?.packageTitle || paymentRecord.metadata?.subscriptionName || "",
+    });
+    payload.cancelUrl = appendQuery(CANCEL_URL, {
+      source: "subscription",
+      orderCode: paymentRecord.orderCode,
+      paymentKind: paymentRecord.paymentKind,
+      packageName: paymentRecord.metadata?.packageName || paymentRecord.metadata?.packageTitle || paymentRecord.metadata?.subscriptionName || "",
+    });
     const result = payos.paymentRequests?.create
       ? await payos.paymentRequests.create(payload)
       : await payos.createPaymentLink(payload);
@@ -113,6 +152,10 @@ class SubscriptionPaymentService {
 
   async findByOrderCode(orderCode) {
     return SubscriptionPayment.findOne({ orderCode: Number(orderCode) });
+  }
+
+  async getPayOSPaymentStatus(orderCodeOrPaymentLinkId) {
+    return await getPaymentLinkInfo(orderCodeOrPaymentLinkId);
   }
 
   async markSuccess(paymentRecord, payload = {}) {
