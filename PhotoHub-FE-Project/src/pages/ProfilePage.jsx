@@ -10,8 +10,6 @@ import {
     Shield,
     Lock,
     Save,
-    MessageSquare,
-    Gift,
     Wallet,
 } from "lucide-react";
 

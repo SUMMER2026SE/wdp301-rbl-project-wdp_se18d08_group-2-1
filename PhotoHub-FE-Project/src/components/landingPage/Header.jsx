@@ -192,13 +192,6 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
         const tier = account?.membershipTier || "Silver";
         if (!mounted) return;
         setMembershipTier(tier);
-        setUser((prev) => {
-          if (!prev || prev.membershipTier === tier) return prev;
-          const updated = { ...prev, membershipTier: tier };
-          localStorage.setItem("user", JSON.stringify(updated));
-          window.dispatchEvent(new Event("storage_user_changed"));
-          return updated;
-        });
       } catch (_error) {
         // Best effort only.
       }
