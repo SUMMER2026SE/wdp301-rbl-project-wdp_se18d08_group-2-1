@@ -318,13 +318,13 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
 
       const msgContent = isPhotog
         ? {
-            en: `Booking ${bookingId} has been paid. Amount: ${formattedAmount} VND.`,
-            vi: `Lịch đặt ${bookingId} đã được thanh toán. Số tiền: ${formattedAmount} VNĐ.`,
-          }
+          en: `Booking ${bookingId} has been paid. Amount: ${formattedAmount} VND.`,
+          vi: `Lịch đặt ${bookingId} đã được thanh toán. Số tiền: ${formattedAmount} VNĐ.`,
+        }
         : {
-            en: `Deposit for booking ${bookingId} was paid successfully. Amount: ${formattedAmount} VND.`,
-            vi: `Thanh toán cọc cho lịch đặt ${bookingId} thành công. Số tiền: ${formattedAmount} VNĐ.`,
-          };
+          en: `Deposit for booking ${bookingId} was paid successfully. Amount: ${formattedAmount} VND.`,
+          vi: `Thanh toán cọc cho lịch đặt ${bookingId} thành công. Số tiền: ${formattedAmount} VNĐ.`,
+        };
 
       const target = isPhotog ? "/photographerProfile" : "/profile";
 
@@ -492,9 +492,8 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
                           <div
                             key={notif.id}
                             onClick={() => handleNotificationClick(notif)}
-                            className={`flex gap-3 px-4 py-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/[0.08] transition duration-200 border-b border-slate-100 dark:border-white/5 last:border-0 ${
-                              isUnread ? "bg-orange-500/[0.03] dark:bg-orange-500/[0.04]" : ""
-                            }`}
+                            className={`flex gap-3 px-4 py-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/[0.08] transition duration-200 border-b border-slate-100 dark:border-white/5 last:border-0 ${isUnread ? "bg-orange-500/[0.03] dark:bg-orange-500/[0.04]" : ""
+                              }`}
                           >
                             <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-white/[0.06] text-orange-500">
                               {notif.type === "chat" ? (
@@ -648,6 +647,7 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
                       onClick={() => {
                         localStorage.removeItem("token");
                         localStorage.removeItem("user");
+                        localStorage.removeItem("photohub-notifications");
                         window.location.href = "/";
                       }}
                       className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-500 transition hover:bg-red-500/10"
@@ -741,8 +741,14 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
 
               <button
                 onClick={() => {
+                  setNotifications([]); // Xóa state trước
+
                   localStorage.removeItem("token");
                   localStorage.removeItem("user");
+                  localStorage.removeItem("photohub-notifications");
+
+                  window.dispatchEvent(new Event("storage_notifications_changed"));
+
                   window.location.href = "/";
                 }}
                 className="mt-1 flex w-full items-center justify-between rounded-2xl bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-400 hover:bg-red-500/20"

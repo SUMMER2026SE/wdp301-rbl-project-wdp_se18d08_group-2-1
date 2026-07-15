@@ -74,6 +74,7 @@ export default function WithdrawMoney({ theme = "dark", language = "vi" }) {
     try {
       // Fetch balance details from revenue
       const revRes = await photographerMarketplaceService.getRevenue();
+      console.log("Revenue data:", revRes.data);
       setBalance(revRes.data?.withdrawableAmount || 0);
       setNetBalance(revRes.data?.netWithdrawableAmount || 0);
       setEligibleBookings(revRes.data?.eligibleBookings || []);

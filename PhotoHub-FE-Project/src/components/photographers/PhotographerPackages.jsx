@@ -632,98 +632,139 @@ export default function PhotographerPackages({
 
             {/* MAIN LIST SECTION */}
             {loading ? (
-                <div className="py-24 flex flex-col items-center justify-center gap-3">
-                    <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-xs font-medium text-slate-400 animate-pulse">Loading packages...</span>
+                <div className="py-32 flex flex-col items-center justify-center gap-4">
+                    <div className="relative w-14 h-14">
+                        <div className="absolute inset-0 border-4 border-orange-200 dark:border-orange-900/30 rounded-full" />
+                        <div className="absolute inset-0 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                    <span className="text-sm font-semibold text-slate-400 animate-pulse tracking-wide uppercase">
+                        Đang tải dữ liệu...
+                    </span>
                 </div>
             ) : packages.length === 0 ? (
-                <div className="text-center py-20 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-slate-50/50 dark:bg-slate-900/20">
-                    <div className="mx-auto w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4">
-                        <AlertCircle size={24} />
+                <div className="text-center py-24 border border-dashed border-slate-300 dark:border-slate-700 rounded-[2rem] bg-slate-50/50 dark:bg-slate-800/10 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                    <div className="mx-auto w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-orange-400 mb-5 ring-1 ring-slate-200 dark:ring-slate-700">
+                        <AlertCircle size={32} strokeWidth={1.5} />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">
-                        {activePackageMeta.label} chưa có dữ liệu
+                    <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">
+                        {activePackageMeta.label} hiện chưa có dữ liệu
                     </h3>
-                    <p className="text-sm text-slate-400 mt-1 max-w-sm mx-auto">
-                        Hãy tạo gói mới cho đúng loại đang chọn để khách dễ phân biệt hơn.
+                    <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+                        Hãy tạo gói dịch vụ mới thuộc danh mục này để khách hàng dễ dàng tìm kiếm và phân biệt nhé.
                     </p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-7">
                     {packages.map((p) => {
                         const isSelected = selectedPackage?._id === p._id;
+
                         return (
                             <div
                                 key={p._id}
                                 onClick={() => handleOpenDetail(p)}
-                                className={`group relative flex flex-col justify-between p-5 rounded-3xl border transition-all duration-300 cursor-pointer shadow-sm ${isSelected
-                                    ? "border-orange-500 bg-orange-50/50 dark:bg-orange-500/[0.04] ring-1 ring-orange-500"
-                                    : "border-slate-200 dark:border-slate-800 hover:border-orange-300 dark:hover:border-orange-500/40 bg-white dark:bg-[#151515] hover:shadow-lg"
+                                className={`group flex flex-col bg-white dark:bg-[#121212] rounded-[1.5rem] transition-all duration-300 cursor-pointer overflow-hidden ${isSelected
+                                    ? "ring-2 ring-orange-500 shadow-lg shadow-orange-500/15 scale-[1.02]"
+                                    : "border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:-translate-y-1 hover:border-orange-300 dark:hover:border-orange-500/50"
                                     }`}
                             >
-                                <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                                    {p.isGroupPackage && (
-                                        <span className="flex items-center gap-0.5 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-500 border border-orange-500/20">
-                                            👥 Nhóm
-                                        </span>
+                                {/* --- HEADER: COVER IMAGE & BADGES --- */}
+                                <div className="relative h-44 w-full bg-slate-100 dark:bg-slate-900 overflow-hidden">
+                                    {p.images && p.images.length > 0 ? (
+                                        <>
+                                            <img
+                                                src={resolveImageUrl(p.images[0])}
+                                                alt={p.title}
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
+                                            />
+                                            {/* Overlay gradient cho dễ đọc text */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+                                        </>
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                                            <ImageIcon size={36} strokeWidth={1} />
+                                        </div>
                                     )}
-                                    <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full border bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800">
-                                        {(packageTypeCatalog[p.packageType || "SHOOTING"] || packageTypeCatalog.SHOOTING).shortLabel}
-                                    </span>
-                                    {p.isFeatured && (
-                                        <span className="flex items-center gap-0.5 text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/20">
-                                            <Sparkles size={10} /> Hot
+
+                                    {/* Top Right Badges */}
+                                    <div className="absolute top-3 right-3 flex flex-col gap-2 items-end">
+                                        {p.isFeatured && (
+                                            <span className="flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full bg-amber-500 text-white shadow-sm shadow-amber-500/30">
+                                                <Sparkles size={12} /> Hot
+                                            </span>
+                                        )}
+                                        <span
+                                            className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full backdrop-blur-md shadow-sm border ${p.status === "ACTIVE"
+                                                ? "bg-emerald-500/90 text-white border-emerald-400"
+                                                : "bg-red-500/90 text-white border-red-400"
+                                                }`}
+                                        >
+                                            {p.status === "ACTIVE" ? t.active : t.inactive}
                                         </span>
-                                    )}
-                                    <span
-                                        className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full border
-        ${p.status === "ACTIVE"
-                                                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                                : "bg-red-500/10 text-red-500 border-red-500/20"
-                                            }
-    `}
-                                    >
-                                        {p.status === "ACTIVE" ? t.active : t.inactive}
-                                    </span>
+                                    </div>
+
+                                    {/* Bottom Tags (Type & Group) */}
+                                    <div className="absolute bottom-3 left-3 flex flex-wrap gap-2">
+                                        <span className="backdrop-blur-md bg-white/90 dark:bg-black/70 text-slate-800 dark:text-slate-200 text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-lg">
+                                            {(packageTypeCatalog[p.packageType || "SHOOTING"] || packageTypeCatalog.SHOOTING).shortLabel}
+                                        </span>
+                                        {p.isGroupPackage && (
+                                            <span className="backdrop-blur-md bg-orange-500/90 text-white text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-lg flex items-center gap-1">
+                                                👥 Nhóm
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
 
-                                <div className="space-y-3">
-                                    <h3 className="font-extrabold text-[1.05rem] leading-tight line-clamp-2 group-hover:text-orange-500 transition-colors text-slate-900 dark:text-slate-100">
+                                {/* --- BODY: TITLE & DESC --- */}
+                                <div className="flex-1 p-5 flex flex-col">
+                                    <h3 className="font-bold text-lg leading-snug line-clamp-2 text-slate-900 dark:text-slate-100 group-hover:text-orange-500 transition-colors mb-2.5">
                                         {p.title}
                                     </h3>
 
-                                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                        <div className="flex items-center gap-1.5">
-                                            <Clock size={13} className="text-slate-400" />
-                                            <span>{getDurationText(p)}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <span className="text-emerald-500 dark:text-emerald-400 font-extrabold text-sm">{Number(p.price || 0).toLocaleString('vi-VN')} đ</span>
-                                        </div>
-                                    </div>
-
-                                    {p.description && (
-                                        <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed min-h-[40px]">
+                                    {p.description ? (
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed mb-4 flex-1">
                                             {p.description}
                                         </p>
-                                    )}
-                                </div>
-
-                                <div className="flex gap-2 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/60">
-                                    {(p.images || []).length > 0 ? (
-                                        (p.images || []).slice(0, 3).map((img, i) => (
-                                            <img
-                                                key={i}
-                                                src={resolveImageUrl(img)}
-                                                alt="preview"
-                                                className="w-12 h-12 rounded-xl object-cover ring-1 ring-slate-100 dark:ring-slate-800 bg-slate-100 shadow-sm"
-                                            />
-                                        ))
                                     ) : (
-                                        <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
-                                            <ImageIcon size={14} />
+                                        <div className="mb-4 flex-1" />
+                                    )}
+
+                                    {/* Hàng Thumbnail phụ (nếu có nhiều ảnh) */}
+                                    {p.images && p.images.length > 1 && (
+                                        <div className="flex -space-x-2 mb-4">
+                                            {p.images.slice(1, 4).map((img, i) => (
+                                                <img
+                                                    key={i}
+                                                    src={resolveImageUrl(img)}
+                                                    alt="thumbnail"
+                                                    className="w-7 h-7 rounded-full object-cover border-2 border-white dark:border-[#121212]"
+                                                />
+                                            ))}
+                                            {p.images.length > 4 && (
+                                                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500 border-2 border-white dark:border-[#121212]">
+                                                    +{p.images.length - 4}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
+
+                                    {/* --- FOOTER: PRICE & DURATION --- */}
+                                    <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-end justify-between gap-3">
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider mb-1">
+                                                Chi phí
+                                            </span>
+                                            <span className="text-orange-500 dark:text-orange-400 font-black text-lg sm:text-xl leading-none">
+                                                {Number(p.price || 0).toLocaleString('vi-VN')}
+                                                <span className="text-sm font-bold ml-1 align-top">đ</span>
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-300 font-medium text-xs">
+                                            <Clock size={14} className="text-slate-400" />
+                                            <span>{getDurationText(p)}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -1215,14 +1256,12 @@ export default function PhotographerPackages({
                                     />
                                     <div
                                         onClick={() => setIsGroupPackage(v => !v)}
-                                        className={`w-11 h-6 flex items-center rounded-full cursor-pointer transition-colors duration-300 ${
-                                            isGroupPackage ? "bg-orange-500" : "bg-slate-300 dark:bg-slate-700"
-                                        }`}
+                                        className={`w-11 h-6 flex items-center rounded-full cursor-pointer transition-colors duration-300 ${isGroupPackage ? "bg-orange-500" : "bg-slate-300 dark:bg-slate-700"
+                                            }`}
                                     >
                                         <span
-                                            className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${
-                                                isGroupPackage ? "translate-x-5" : "translate-x-1"
-                                            }`}
+                                            className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isGroupPackage ? "translate-x-5" : "translate-x-1"
+                                                }`}
                                         />
                                     </div>
                                 </div>

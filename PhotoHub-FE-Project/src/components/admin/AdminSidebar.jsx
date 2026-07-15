@@ -33,6 +33,7 @@ export default function AdminSidebar() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("photohub-notifications");
     window.location.href = "/";
   };
 
