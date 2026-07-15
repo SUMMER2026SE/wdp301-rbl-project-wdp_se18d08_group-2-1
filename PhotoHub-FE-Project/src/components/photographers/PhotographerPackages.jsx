@@ -656,12 +656,12 @@ export default function PhotographerPackages({
                             <div
                                 key={p._id}
                                 onClick={() => handleOpenDetail(p)}
-                                className={`group relative flex flex-col justify-between p-5 rounded-3xl border transition-all duration-300 cursor-pointer shadow-sm ${isSelected
+                                className={`group relative flex min-h-[320px] flex-col justify-between gap-4 overflow-hidden rounded-3xl border p-5 pt-6 transition-all duration-300 cursor-pointer shadow-sm ${isSelected
                                     ? "border-orange-500 bg-orange-50/50 dark:bg-orange-500/[0.04] ring-1 ring-orange-500"
                                     : "border-slate-200 dark:border-slate-800 hover:border-orange-300 dark:hover:border-orange-500/40 bg-white dark:bg-[#151515] hover:shadow-lg"
                                     }`}
                             >
-                                <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                                <div className="flex flex-wrap items-center gap-2">
                                     {p.isGroupPackage && (
                                         <span className="flex items-center gap-0.5 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-500 border border-orange-500/20">
                                             👥 Nhóm
@@ -688,7 +688,7 @@ export default function PhotographerPackages({
                                 </div>
 
                                 <div className="space-y-3">
-                                    <h3 className="font-extrabold text-[1.05rem] leading-tight line-clamp-2 group-hover:text-orange-500 transition-colors text-slate-900 dark:text-slate-100">
+                                    <h3 className="min-h-[3.1rem] text-[1.05rem] font-extrabold leading-tight line-clamp-2 group-hover:text-orange-500 transition-colors text-slate-900 dark:text-slate-100">
                                         {p.title}
                                     </h3>
 
@@ -703,13 +703,13 @@ export default function PhotographerPackages({
                                     </div>
 
                                     {p.description && (
-                                        <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed min-h-[40px]">
+                                        <p className="min-h-[44px] text-sm leading-relaxed text-slate-500 line-clamp-2 dark:text-slate-400">
                                             {p.description}
                                         </p>
                                     )}
                                 </div>
 
-                                <div className="flex gap-2 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/60">
+                                <div className="flex min-h-[64px] gap-2 border-t border-slate-100 pt-4 dark:border-slate-800/60">
                                     {(p.images || []).length > 0 ? (
                                         (p.images || []).slice(0, 3).map((img, i) => (
                                             <img
