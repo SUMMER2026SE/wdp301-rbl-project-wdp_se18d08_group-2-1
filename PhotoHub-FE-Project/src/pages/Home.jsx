@@ -1,5 +1,5 @@
 import PhotoHubLanding from "../components/landingPage/PhotoHubLanding";
-import AIChatWidget from "../components/landingPage/AIChatWidget";
+import AIChatWidget from "../components/landingPage/AIChatWidget.js";
 
 export default function Home({ language, theme }) {
   return (
