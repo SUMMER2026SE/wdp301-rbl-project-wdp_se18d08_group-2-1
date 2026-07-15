@@ -230,15 +230,15 @@ class GroupBookingService {
       throw new Error("Thời gian hết hạn phải là trong tương lai");
     }
 
-    // Validate số lượng thành viên (min: 2, max: 5)
+    // Validate số lượng thành viên (min: 2, max: 10)
     const min = Number(minMembers);
     const max = Number(maxMembers);
-    if (min < 2 || min > 5) {
-      throw new Error("Số thành viên tối thiểu phải từ 2 đến 5 người");
+    if (min < 2 || min > 10) {
+      throw new Error("Số thành viên tối thiểu phải từ 2 đến 10 người");
     }
-    if (max < min || max > 5) {
+    if (max < min || max > 10) {
       throw new Error(
-        "Số thành viên tối đa phải từ 2 đến 5 và lớn hơn hoặc bằng số tối thiểu"
+        "Số thành viên tối đa phải từ 2 đến 10 và lớn hơn hoặc bằng số tối thiểu"
       );
     }
 
@@ -418,8 +418,8 @@ class GroupBookingService {
     const amount = Math.round(group.currentPrice);
     const frontendUrl =
       process.env.FRONTEND_URL || DEFAULT_FRONTEND_URL;
-    const returnUrl = `${frontendUrl}/group-booking/${groupId}/payment-result?orderCode=${orderCode}&groupId=${groupId}`;
-    const cancelUrl = `${frontendUrl}/group-booking/${groupId}/payment-result?orderCode=${orderCode}&groupId=${groupId}&canceled=true`;
+    const returnUrl = `${frontendUrl}/group-booking/${groupId}?orderCode=${orderCode}&groupId=${groupId}`;
+    const cancelUrl = `${frontendUrl}/group-booking/${groupId}?orderCode=${orderCode}&groupId=${groupId}&canceled=true`;
 
     const paymentData = {
       orderCode,

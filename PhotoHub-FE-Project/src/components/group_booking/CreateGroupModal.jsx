@@ -39,7 +39,7 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
 
   const [form, setForm] = useState({
     minMembers: 2,
-    maxMembers: 5,
+    maxMembers: 10,
     expireHours: 24,
     note: "",
     shootDate: getTomorrowString(),
@@ -85,12 +85,12 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
       Date.now() + form.expireHours * 60 * 60 * 1000
     ).toISOString();
 
-    if (Number(form.minMembers) < 2 || Number(form.minMembers) > 5) {
-      Swal.fire({ icon: "warning", title: "Lỗi", text: "Số thành viên tối thiểu phải từ 2 đến 5 người", background: isDark ? "#0f172a" : "#fff", color: isDark ? "#fff" : "#000" });
+    if (Number(form.minMembers) < 2 || Number(form.minMembers) > 10) {
+      Swal.fire({ icon: "warning", title: "Lỗi", text: "Số thành viên tối thiểu phải từ 2 đến 10 người", background: isDark ? "#0f172a" : "#fff", color: isDark ? "#fff" : "#000" });
       return;
     }
-    if (Number(form.maxMembers) < Number(form.minMembers) || Number(form.maxMembers) > 5) {
-      Swal.fire({ icon: "warning", title: "Lỗi", text: "Số thành viên tối đa phải từ 2 đến 5 người và lớn hơn hoặc bằng số tối thiểu", background: isDark ? "#0f172a" : "#fff", color: isDark ? "#fff" : "#000" });
+    if (Number(form.maxMembers) < Number(form.minMembers) || Number(form.maxMembers) > 10) {
+      Swal.fire({ icon: "warning", title: "Lỗi", text: "Số thành viên tối đa phải từ 2 đến 10 người và lớn hơn hoặc bằng số tối thiểu", background: isDark ? "#0f172a" : "#fff", color: isDark ? "#fff" : "#000" });
       return;
     }
 
@@ -310,7 +310,7 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
                   <input
                     type="number"
                     min={form.minMembers}
-                    max={5}
+                    max={10}
                     value={form.maxMembers}
                     onChange={(e) => setForm((p) => ({ ...p, maxMembers: e.target.value }))}
                     className={inputCls}
