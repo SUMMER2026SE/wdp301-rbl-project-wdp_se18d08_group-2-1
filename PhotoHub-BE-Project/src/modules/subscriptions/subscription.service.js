@@ -8,6 +8,7 @@ const SubscriptionSchedule = require("./models/subscriptionSchedule.model");
 const SubscriptionBooking = require("./models/subscriptionBooking.model");
 const { Booking } = require("../bookings/models/booking.model");
 const Photographer = require("../photographers/models/photographer");
+const Wallet = require("../admin/models/Wallet");
 const { UserRole, User } = require("../auth/models/User");
 const Notification = require("../admin/models/Notification");
 const { getIO } = require("../../socket");
@@ -48,6 +49,13 @@ const safeEmit = (userId, event, payload) => {
 const normalizeRole = (role) => String(role || "").toLowerCase();
 
 const normalizeUserId = (value) => String(value?._id || value?.id || value || "");
+
+const ensureWallet = async (userId, session = null) =>
+  await Wallet.findOneAndUpdate(
+    { user: userId },
+    { $setOnInsert: { user: userId, balance: 0, holdBalance: 0, currency: "VND" } },
+    { new: true, upsert: true, ...(session ? { session } : {}) }
+  );
 
 const withOptionalTransaction = async (handler) => {
   const session = await mongoose.startSession();
@@ -134,6 +142,65 @@ const createSystemNotification = async ({ recipientId, title, message, type = "S
   } catch (_error) {
     // Notification is best-effort.
   }
+};
+
+const creditSubscriptionRevenue = async ({ subscription, paymentRecord, session = null }) => {
+  if (!subscription || !paymentRecord) return { credited: false };
+
+  const alreadyCredited = Boolean(paymentRecord.metadata?.walletCreditedAt);
+  if (alreadyCredited) {
+    return { credited: false, reason: "already_credited" };
+  }
+
+  const photographerDoc = await Photographer.findById(subscription.photographer).select("user displayName");
+  const photographerUserId = normalizeUserId(photographerDoc?.user);
+  if (!photographerUserId) {
+    return { credited: false, reason: "photographer_user_missing" };
+  }
+
+  const amount = Number(paymentRecord.amount || 0);
+  if (!amount || amount <= 0) {
+    return { credited: false, reason: "invalid_amount" };
+  }
+
+  const wallet = await ensureWallet(photographerUserId, session);
+  wallet.balance = Number(wallet.balance || 0) + amount;
+  await wallet.save(session ? { session } : {});
+
+  await Photographer.findByIdAndUpdate(
+    subscription.photographer,
+    { $inc: { totalEarnings: amount } },
+    session ? { session } : {}
+  );
+
+  paymentRecord.metadata = {
+    ...(paymentRecord.metadata || {}),
+    walletCreditedAt: new Date().toISOString(),
+    walletCreditedAmount: amount,
+  };
+  await paymentRecord.save(session ? { session } : {});
+
+  safeEmit(photographerUserId, "wallet-updated", {
+    balance: wallet.balance,
+    amount,
+    subscriptionId: subscription._id,
+    paymentKind: paymentRecord.paymentKind,
+    orderCode: paymentRecord.orderCode,
+  });
+
+  await createSystemNotification({
+    recipientId: photographerUserId,
+    title: "Subscription payment received",
+    message: `A customer payment of ${amount.toLocaleString("vi-VN")} VND has been credited to your wallet.`,
+    meta: {
+      subscriptionId: subscription._id,
+      paymentId: paymentRecord._id,
+      amount,
+      orderCode: paymentRecord.orderCode,
+    },
+  });
+
+  return { credited: true, wallet, photographerUserId };
 };
 
 class SubscriptionService {
@@ -321,7 +388,12 @@ class SubscriptionService {
           paymentRecord.paidAt = paymentRecord.paidAt || new Date();
           await paymentRecord.save(session ? { session } : {});
         }
-        updated.amountPaid += Number(paymentRecord.amount || 0);
+        if (!paymentRecord.metadata?.walletCreditedAt) {
+          const creditResult = await creditSubscriptionRevenue({ subscription: updated, paymentRecord, session });
+          if (creditResult?.credited) {
+            updated.amountPaid += Number(paymentRecord.amount || 0);
+          }
+        }
         updated.lastPaymentOrderCode = paymentRecord.orderCode;
       }
     }
@@ -332,12 +404,25 @@ class SubscriptionService {
       await scheduleService.generateSessions(updated, { cycleIndex: 0, force: true, session });
     }
 
-    await createSystemNotification({
-      recipientId: updated.customer,
-      title: "Subscription activated",
-      message: `Your subscription ${updated._id} is now active.`,
-      meta: { subscriptionId: updated._id },
-    });
+      await createSystemNotification({
+        recipientId: updated.customer,
+        title: "Subscription activated",
+        message: `Your subscription ${updated._id} is now active.`,
+        meta: { subscriptionId: updated._id },
+      });
+
+    try {
+      const photographerDoc = await Photographer.findById(updated.photographer).populate("user", "fullName email avatar role");
+      const photographerUserId = normalizeUserId(photographerDoc?.user);
+      if (photographerUserId) {
+        safeEmit(photographerUserId, "subscription-updated", {
+          subscriptionId: updated._id,
+          status: updated.status,
+        });
+      }
+    } catch (_error) {
+      // best effort only
+    }
 
     return updated;
   }
@@ -480,6 +565,7 @@ class SubscriptionService {
         paymentRecord.paidAt = new Date();
         await paymentRecord.save({ session });
 
+        await creditSubscriptionRevenue({ subscription, paymentRecord, session });
         subscription.amountPaid += amount;
         subscription.renewalCount += 1;
         subscription.status = SubscriptionStatus.ACTIVE;
@@ -636,7 +722,10 @@ class SubscriptionService {
       const subscription = await Subscription.findById(payment.subscription);
       if (!subscription) throw new Error("Subscription not found");
       if (payment.paymentKind === SubscriptionPaymentKind.PURCHASE || payment.paymentKind === SubscriptionPaymentKind.RENEWAL) {
-        subscription.amountPaid += Number(payment.amount || 0);
+        const creditResult = await creditSubscriptionRevenue({ subscription, paymentRecord: payment });
+        if (creditResult?.credited) {
+          subscription.amountPaid += Number(payment.amount || 0);
+        }
         subscription.status = SubscriptionStatus.ACTIVE;
         subscription.lastPaymentStatus = SubscriptionPaymentStatus.SUCCESS;
         subscription.lastPaymentAt = new Date();
@@ -708,7 +797,10 @@ class SubscriptionService {
         }
 
         if (![SubscriptionStatus.ACTIVE, SubscriptionStatus.EXPIRED, SubscriptionStatus.CANCELLED].includes(subscription.status)) {
-          subscription.amountPaid += Number(payment.amount || 0);
+          const creditResult = await creditSubscriptionRevenue({ subscription, paymentRecord: payment });
+          if (creditResult?.credited) {
+            subscription.amountPaid += Number(payment.amount || 0);
+          }
           subscription.status = SubscriptionStatus.ACTIVE;
           subscription.lastPaymentStatus = SubscriptionPaymentStatus.SUCCESS;
           subscription.lastPaymentAt = new Date();

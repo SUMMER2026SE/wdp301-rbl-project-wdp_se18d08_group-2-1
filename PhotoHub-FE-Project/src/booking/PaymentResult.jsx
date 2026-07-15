@@ -28,6 +28,7 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
       localStorage.setItem("photohub-membership-effect", JSON.stringify(payload));
       window.dispatchEvent(new Event("membership_effect_changed"));
       window.dispatchEvent(new Event("subscription_history_changed"));
+      window.dispatchEvent(new Event("subscription_changed"));
     } catch (_error) {
       // best effort only
     }

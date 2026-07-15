@@ -37,6 +37,7 @@ import PhotographerJobPosts from "../components/photographers/PhotographerJobPos
 import PhotographerRecommendedJobs from "../components/photographers/PhotographerRecommendedJobs";
 import PhotographerChat from "../components/photographers/PhotographerChat";
 import PhotographerRevenueDashboard from "../components/photographers/PhotographerRevenueDashboard";
+import PhotographerSubscriptionManager from "../components/photographers/PhotographerSubscriptionManager";
 import WithdrawMoney from "../components/photographers/WithdrawMoney";
 import PhotographerPortfolioManager from "../components/photographers/PhotographerPortfolioManager";
 import PhotographerPackages from "../components/photographers/PhotographerPackages";
@@ -787,6 +788,7 @@ export default function PhotographerDashboard({
                                 { id: "profile", label: t.profile, icon: User },
                                 { id: "portfolio", label: "Portfolio", icon: Layers },
                                 { id: "packages", label: "Packages", icon: CreditCard },
+                                { id: "subscriptions", label: language === "vi" ? "Gói tháng" : "Monthly plans", icon: CreditCard },
                                 { id: "bookings", label: language === "vi" ? "Yêu cầu đặt lịch" : "Booking Requests", icon: CheckCircle },
                                 { id: "calendar", label: t.calendar, icon: Calendar },
                                 { id: "jobs", label: t.jobs, icon: Briefcase },
@@ -1284,6 +1286,10 @@ export default function PhotographerDashboard({
                     {/* PACKAGES TAB */}
                     {activeTab === "packages" && (
                         <PhotographerPackages theme={theme} language={language} />
+                    )}
+
+                    {activeTab === "subscriptions" && (
+                        <PhotographerSubscriptionManager theme={theme} language={language} />
                     )}
 
                     {/* CALENDAR TAB */}

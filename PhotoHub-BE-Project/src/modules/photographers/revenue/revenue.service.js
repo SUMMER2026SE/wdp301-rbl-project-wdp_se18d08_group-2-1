@@ -1,4 +1,5 @@
 const { Booking } = require("../../bookings/models/booking.model");
+const SubscriptionPayment = require("../../subscriptions/models/subscriptionPayment.model");
 const WithdrawRequest = require("../withdraw/withdrawRequest.model");
 const Bid = require("../bid/bid.model");
 const Payment = require("../../admin/models/Payment");
@@ -77,7 +78,15 @@ class RevenueService {
       Bid.find({ photographerId: { $in: identity.ids } }).select("status price createdAt"),
     ]);
 
+    const successfulSubscriptionPayments = await SubscriptionPayment.find({
+      photographer: { $in: identity.ids },
+      status: "SUCCESS",
+      paymentKind: { $in: ["PURCHASE", "RENEWAL", "PENALTY"] },
+    }).select("amount paymentKind createdAt metadata");
+
     const totalRevenue = completedBookings.reduce((sum, b) => sum + getBookingAmount(b), 0);
+    const totalSubscriptionRevenue = successfulSubscriptionPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    const totalGrossRevenue = totalRevenue + totalSubscriptionRevenue;
     const completedBookingsCount = completedBookings.length;
 
     const totalWithdrawn = withdrawRequests
@@ -123,7 +132,7 @@ class RevenueService {
       );
     });
 
-    const eligibleRevenue = eligibleBookings.reduce((sum, booking) => sum + getBookingAmount(booking), 0);
+    const eligibleRevenue = eligibleBookings.reduce((sum, booking) => sum + getBookingAmount(booking), 0) + totalSubscriptionRevenue;
     const escrowAmount = Math.max(
       0,
       paidBlockedBookings.reduce((sum, booking) => sum + getBookingAmount(booking), 0) + pendingWithdrawn
@@ -161,6 +170,14 @@ class RevenueService {
       incrementMap(packageRevenueMap, b.packageName || "Standard", bookingAmount);
     });
 
+    successfulSubscriptionPayments.forEach((payment) => {
+      const month = monthKey(payment.createdAt || new Date());
+      const amount = Number(payment.amount || 0);
+      monthlyRevenueMap[month] = (monthlyRevenueMap[month] || 0) + amount;
+      const packageName = payment.metadata?.packageName || payment.metadata?.packageTitle || payment.metadata?.subscriptionName || "Monthly plan";
+      incrementMap(packageRevenueMap, packageName, amount);
+    });
+
     const monthlyRevenue = Object.keys(monthlyRevenueMap)
       .sort()
       .map((month) => ({
@@ -186,6 +203,8 @@ class RevenueService {
 
     return {
       totalRevenue,
+      subscriptionRevenue: totalSubscriptionRevenue,
+      grossRevenue: totalGrossRevenue,
       completedBookings: completedBookingsCount,
       totalBookings: allBookings.length,
       totalWithdrawn,
