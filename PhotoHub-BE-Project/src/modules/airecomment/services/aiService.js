@@ -1,124 +1,265 @@
-// src/modules/airecomment/services/aiService.js
+const crypto = require("crypto");
 
-/**
- * AI Service — Singleton wrapper cho CLIP model (@xenova/transformers).
- */
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_CHAT_MODEL = process.env.GROQ_CHAT_MODEL || "llama-3.3-70b-versatile";
+const GROQ_VISION_MODEL = process.env.GROQ_VISION_MODEL || "meta-llama/llama-4-scout-17b-16e-instruct";
+const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
+const VECTOR_SIZE = 512;
 
-const { AutoProcessor, CLIPVisionModelWithProjection, RawImage, env } = require("@xenova/transformers");
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
+const stopwords = new Set([
+  "a", "an", "the", "and", "or", "to", "of", "in", "on", "with", "for", "by", "from",
+  "is", "are", "was", "were", "be", "been", "this", "that", "these", "those", "it",
+  "photo", "image", "picture", "ảnh", "hinh", "hình", "một", "mot", "the", "and",
+]);
 
-// Cache model vào .model_cache/ trong thư mục gốc project
-env.cacheDir = "./.model_cache";
-
-let _processorInstance = null;
-let _modelInstance = null;
-let _loadPromise = null;
-
-/**
- * Tải model CLIP Vision và Processor - Singleton.
- */
-async function getClipModels() {
-  if (_processorInstance && _modelInstance) {
-    return { processor: _processorInstance, model: _modelInstance };
-  }
-
-  if (_loadPromise) {
-    return _loadPromise;
-  }
-
-  console.log("[AI Service] Đang tải CLIP model và processor lần đầu, vui lòng chờ...");
-
-  const modelId = "Xenova/clip-vit-base-patch32";
-
-  _loadPromise = Promise.all([
-    AutoProcessor.from_pretrained(modelId, { revision: "main" }),
-    CLIPVisionModelWithProjection.from_pretrained(modelId, { revision: "main" })
-  ])
-    .then(([processor, model]) => {
-      _processorInstance = processor;
-      _modelInstance = model;
-      _loadPromise = null;
-      console.log("[AI Service] ✅ CLIP model và processor đã sẵn sàng");
-      return { processor, model };
-    })
-    .catch((err) => {
-      _loadPromise = null;
-      console.error("[AI Service] ❌ Lỗi tải model:", err.message);
-      throw err;
-    });
-
-  return _loadPromise;
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-/**
- * Sinh Vector 512 chiều từ một ảnh.
- *
- * @param {Buffer} imageBuffer  Buffer nhị phân của ảnh (từ multer memoryStorage)
- * @param {string} mimeType     MIME type của ảnh, vd: "image/jpeg", "image/png"
- * @returns {Promise<number[]>} Mảng 512 số thực chuẩn hoá (unit vector)
- */
-async function generateEmbedding(imageBuffer, mimeType) {
-  if (!imageBuffer || imageBuffer.length === 0) {
-    throw new Error("imageBuffer không được rỗng");
+function tokenize(value) {
+  return normalizeText(value)
+    .split(" ")
+    .map((token) => token.trim())
+    .filter((token) => token && token.length > 1 && !stopwords.has(token));
+}
+
+function normalizeVector(vector) {
+  const magnitude = Math.sqrt(vector.reduce((sum, value) => sum + value * value, 0));
+  if (!magnitude) return vector;
+  return vector.map((value) => Number((value / magnitude).toFixed(8)));
+}
+
+function hashToken(token) {
+  const digest = crypto.createHash("sha256").update(token).digest();
+  return digest.readUInt32BE(0);
+}
+
+function vectorFromText(text) {
+  const vector = new Array(VECTOR_SIZE).fill(0);
+  const tokens = tokenize(text);
+
+  if (!tokens.length) {
+    return vector;
   }
 
-  // Tạo file tạm để RawImage.read đọc trực tiếp
-  const tempDir = os.tmpdir();
-  const tempFilePath = path.join(
-    tempDir,
-    `clip_temp_${Date.now()}_${Math.round(Math.random() * 1e9)}.jpg`
-  );
-  await fs.promises.writeFile(tempFilePath, imageBuffer);
+  tokens.forEach((token, index) => {
+    const hash = hashToken(`${token}:${index % 7}`);
+    const bucket = hash % VECTOR_SIZE;
+    const sign = hash % 2 === 0 ? 1 : -1;
+    vector[bucket] += sign * (1 + (token.length % 5) * 0.2);
+  });
 
-  let image;
+  return normalizeVector(vector);
+}
+
+function vectorFromBuffer(buffer) {
+  const vector = new Array(VECTOR_SIZE).fill(0);
+  const digest = crypto.createHash("sha256").update(buffer).digest();
+
+  for (let i = 0; i < VECTOR_SIZE; i += 1) {
+    const byte = digest[i % digest.length];
+    vector[i] = (byte / 127.5) - 1;
+  }
+
+  return normalizeVector(vector);
+}
+
+function parseJsonLike(rawText) {
+  if (!rawText) return null;
+  const cleaned = String(rawText)
+    .trim()
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/\s*```$/i, "");
+
   try {
-    // RawImage.read xử lý rất tốt các đường dẫn file cục bộ trong Node.js
-    image = await RawImage.read(tempFilePath);
-  } finally {
-    // Luôn luôn dọn dẹp file tạm sau khi đã đọc xong
+    return JSON.parse(cleaned);
+  } catch (_error) {
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (!match) return null;
     try {
-      await fs.promises.unlink(tempFilePath);
-    } catch (err) {
-      console.warn("[AI Service] ⚠️ Không thể xóa file tạm:", err.message);
+      return JSON.parse(match[0]);
+    } catch (_nestedError) {
+      return null;
     }
   }
-
-  // Lấy processor và model
-  const { processor, model } = await getClipModels();
-
-  // Tiền xử lý ảnh thành pixel_values
-  const imageInputs = await processor(image);
-
-  // Suy luận tạo embeddings
-  const { image_embeds } = await model(imageInputs);
-
-  // Chuyển tensor sang array JS thông thường
-  const embedding = Array.from(image_embeds.data);
-
-  if (embedding.length !== 512) {
-    throw new Error(
-      `Vector embedding không hợp lệ: nhận ${embedding.length} chiều, cần 512`
-    );
-  }
-
-  return embedding;
 }
 
-/**
- * Warm-up: Gọi khi server khởi động để tải trước model.
- */
-async function warmupModel() {
+async function groqChatCompletion({
+  messages,
+  model = GROQ_CHAT_MODEL,
+  temperature = 0.4,
+  maxTokens = 700,
+  responseFormat = undefined,
+}) {
+  if (!GROQ_API_KEY) {
+    throw new Error("GROQ_API_KEY is missing");
+  }
+
+  const response = await fetch(GROQ_API_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${GROQ_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature,
+      max_tokens: maxTokens,
+      ...(responseFormat ? { response_format: responseFormat } : {}),
+    }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.error?.message || payload?.message || `Groq request failed with status ${response.status}`);
+  }
+
+  const content = payload?.choices?.[0]?.message?.content;
+  return {
+    content: typeof content === "string" ? content : JSON.stringify(content || {}),
+    raw: payload,
+  };
+}
+
+async function analyzeImageWithGroq(imageBuffer, mimeType) {
+  const dataUrl = `data:${mimeType || "image/jpeg"};base64,${imageBuffer.toString("base64")}`;
+  const prompt = [
+    {
+      role: "system",
+      content:
+        "You are an image analyst for a photography marketplace. Return ONLY valid JSON with keys: caption, summary, styleTags, subjects, colors, mood, setting, qualitySignals. Keep it concise and descriptive. Avoid markdown.",
+    },
+    {
+      role: "user",
+      content: [
+        { type: "text", text: "Analyze this image for style matching and portfolio search." },
+        {
+          type: "image_url",
+          image_url: {
+            url: dataUrl,
+          },
+        },
+      ],
+    },
+  ];
+
+  const { content } = await groqChatCompletion({
+    messages: prompt,
+    model: GROQ_VISION_MODEL,
+    temperature: 0.15,
+    maxTokens: 500,
+  });
+
+  return parseJsonLike(content) || {
+    caption: content,
+    summary: content,
+    styleTags: [],
+    subjects: [],
+    colors: [],
+    mood: "",
+    setting: "",
+    qualitySignals: [],
+  };
+}
+
+async function generateEmbedding(imageBuffer, mimeType) {
+  if (!imageBuffer || imageBuffer.length === 0) {
+    throw new Error("imageBuffer is required");
+  }
+
   try {
-    await getClipModels();
-    console.log("[AI Service] ✅ Model warm-up hoàn tất");
-  } catch (err) {
-    console.warn("[AI Service] ⚠️  Warm-up thất bại:", err.message);
+    if (!GROQ_API_KEY) {
+      return vectorFromBuffer(imageBuffer);
+    }
+
+    const analysis = await analyzeImageWithGroq(imageBuffer, mimeType);
+    const descriptor = [
+      analysis.caption,
+      analysis.summary,
+      ...(Array.isArray(analysis.styleTags) ? analysis.styleTags : []),
+      ...(Array.isArray(analysis.subjects) ? analysis.subjects : []),
+      ...(Array.isArray(analysis.colors) ? analysis.colors : []),
+      analysis.mood,
+      analysis.setting,
+      ...(Array.isArray(analysis.qualitySignals) ? analysis.qualitySignals : []),
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    return descriptor ? vectorFromText(descriptor) : vectorFromBuffer(imageBuffer);
+  } catch (error) {
+    console.warn("[Groq AI] Falling back to deterministic vector:", error.message);
+    return vectorFromBuffer(imageBuffer);
+  }
+}
+
+async function chatWithGroq({
+  messages = [],
+  systemPrompt = "You are a helpful assistant.",
+  model = GROQ_CHAT_MODEL,
+  temperature = 0.45,
+  maxTokens = 700,
+} = {}) {
+  const sanitizedMessages = Array.isArray(messages)
+    ? messages
+        .filter((message) => message && typeof message.content === "string")
+        .map((message) => ({
+          role: ["system", "assistant", "user"].includes(message.role) ? message.role : "user",
+          content: message.content,
+        }))
+    : [];
+
+  const { content, raw } = await groqChatCompletion({
+    model,
+    temperature,
+    maxTokens,
+    messages: [
+      { role: "system", content: systemPrompt },
+      ...sanitizedMessages.filter((message) => message.role !== "system"),
+    ],
+  });
+
+  return {
+    reply: content,
+    model: raw?.model || model,
+    raw,
+  };
+}
+
+async function warmupModel() {
+  if (!GROQ_API_KEY) {
+    console.warn("[Groq AI] GROQ_API_KEY is not configured; AI features will use fallback vectors only.");
+    return;
+  }
+
+  try {
+    await groqChatCompletion({
+      model: GROQ_CHAT_MODEL,
+      temperature: 0,
+      maxTokens: 8,
+      messages: [
+        {
+          role: "user",
+          content: "Reply with OK to confirm the Groq connection is ready.",
+        },
+      ],
+    });
+    console.log("[Groq AI] Groq warm-up completed");
+  } catch (error) {
+    console.warn("[Groq AI] Warm-up failed:", error.message);
   }
 }
 
 module.exports = {
   generateEmbedding,
   warmupModel,
+  chatWithGroq,
 };
