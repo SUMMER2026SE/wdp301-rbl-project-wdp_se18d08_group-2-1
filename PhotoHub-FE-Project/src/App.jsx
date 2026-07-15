@@ -34,6 +34,7 @@ import AdminSettingsPackages from "./pages/admin/AdminSettingsPackages";
 import AdminLoyalty from "./pages/admin/AdminLoyalty";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
+import AIChatWidget from "./components/landingPage/AIChatWidget";
 
 function getInitialTheme() {
   const storedTheme = localStorage.getItem("photohub-theme");
@@ -306,6 +307,14 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+      {/* AI Chat Widget */}
+      {!isAdminRoute && (
+        <AIChatWidget
+          language={language}
+          theme={theme}
+        />
+      )}
 
       {/* Hide footer on login and admin routes */}
       {!isAuthPage && !isAdminRoute && <Footer language={language} />}
