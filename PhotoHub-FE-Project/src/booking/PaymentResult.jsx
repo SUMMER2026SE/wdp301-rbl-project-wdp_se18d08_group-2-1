@@ -18,6 +18,19 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
   const [checking, setChecking] = useState(Boolean((bookingId || orderCode) && !isCanceled));
   const [paid, setPaid] = useState(false);
   const [message, setMessage] = useState("");
+  const triggerMembershipCelebration = (tier = "Silver") => {
+    try {
+      const payload = {
+        active: true,
+        tier,
+        expiresAt: Date.now() + 1000 * 60 * 60 * 12,
+      };
+      localStorage.setItem("photohub-membership-effect", JSON.stringify(payload));
+      window.dispatchEvent(new Event("membership_effect_changed"));
+    } catch (_error) {
+      // best effort only
+    }
+  };
 
   const t = {
     vi: {
@@ -75,6 +88,9 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
         if (!mounted) return;
         setPaid(isPaid);
         setMessage(res.data?.payosStatus || res.data?.paymentStatus || "");
+        if (source === "subscription" && isPaid) {
+          triggerMembershipCelebration(res.data?.membershipTier || res.data?.tier || "Silver");
+        }
       } catch (error) {
         const shouldRetryAsSubscription =
           Boolean(orderCode) &&
@@ -92,6 +108,9 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
             const isPaid = Boolean(res.data?.paid || res.data?.subscriptionStatus === "ACTIVE");
             setPaid(isPaid);
             setMessage(res.data?.payosStatus || res.data?.paymentStatus || "");
+            if (isPaid) {
+              triggerMembershipCelebration(res.data?.membershipTier || res.data?.tier || "Silver");
+            }
             setChecking(false);
             return;
           } catch (fallbackError) {
