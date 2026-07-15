@@ -39,6 +39,7 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
   const [loading, setLoading] = useState(true);
   const [subscriptions, setSubscriptions] = useState([]);
   const [busyId, setBusyId] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   const t = useMemo(() => {
     const vi = {
@@ -176,6 +177,28 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
     return { total: subscriptions.length, active, paused, pending, revenue };
   }, [subscriptions]);
 
+  const filteredSubscriptions = useMemo(() => {
+    if (statusFilter === "ALL") return subscriptions;
+    if (statusFilter === "PAID") {
+      return subscriptions.filter((item) => String(item.lastPaymentStatus || "").toUpperCase() === "SUCCESS" || Number(item.amountPaid || 0) > 0);
+    }
+    if (statusFilter === "PENDING_PAYMENT") {
+      return subscriptions.filter((item) => String(item.lastPaymentStatus || "").toUpperCase() === "PENDING");
+    }
+    return subscriptions.filter((item) => String(item.status || "").toUpperCase() === statusFilter);
+  }, [statusFilter, subscriptions]);
+
+  const filterOptions = [
+    { value: "ALL", label: language === "vi" ? "Tất cả" : "All" },
+    { value: "PAID", label: language === "vi" ? "Đã thanh toán" : "Paid" },
+    { value: "PENDING_PAYMENT", label: language === "vi" ? "Chờ thanh toán" : "Pending" },
+    { value: "ACTIVE", label: language === "vi" ? "Đang hoạt động" : "Active" },
+    { value: "PAUSED", label: language === "vi" ? "Tạm dừng" : "Paused" },
+    { value: "PENDING_CANCEL", label: language === "vi" ? "Chờ hủy" : "Pending cancel" },
+    { value: "CANCELLED", label: language === "vi" ? "Đã hủy" : "Cancelled" },
+    { value: "EXPIRED", label: language === "vi" ? "Hết hạn" : "Expired" },
+  ];
+
   return (
     <section className={`rounded-3xl border p-5 md:p-6 ${isDark ? "border-white/10 bg-white/5" : "border-slate-200/80 bg-white shadow-sm"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -209,18 +232,40 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
         ))}
       </div>
 
+      <div className="mt-4 flex flex-wrap gap-2 overflow-x-auto pb-1">
+        {filterOptions.map((option) => {
+          const active = statusFilter === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setStatusFilter(option.value)}
+              className={`rounded-full border px-3.5 py-2 text-xs font-bold uppercase tracking-[0.14em] transition ${
+                active
+                  ? "border-orange-500 bg-orange-500 text-white shadow-sm shadow-orange-500/20"
+                  : isDark
+                    ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                    : "border-slate-200 bg-slate-50 text-slate-600 hover:border-orange-300 hover:text-orange-600"
+              }`}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="mt-5">
         {loading ? (
           <div className={`rounded-2xl border border-dashed px-4 py-8 text-center text-sm ${isDark ? "border-white/10 text-slate-400" : "border-slate-200 text-slate-500"}`}>
             {language === "vi" ? "Đang tải gói tháng..." : "Loading monthly plans..."}
           </div>
-        ) : subscriptions.length === 0 ? (
+        ) : filteredSubscriptions.length === 0 ? (
           <div className={`rounded-2xl border border-dashed px-4 py-8 text-center text-sm ${isDark ? "border-white/10 text-slate-400" : "border-slate-200 text-slate-500"}`}>
             {t.empty}
           </div>
         ) : (
           <div className="grid gap-4">
-            {subscriptions.map((item) => {
+            {filteredSubscriptions.map((item) => {
               const customer = item.customer || {};
               const customerAvatar = avatarUrl(customer.avatar);
               const status = item.status || "PENDING_PAYMENT";

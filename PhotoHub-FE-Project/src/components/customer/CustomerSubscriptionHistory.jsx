@@ -56,6 +56,7 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
   const [loading, setLoading] = useState(true);
   const [subscriptions, setSubscriptions] = useState([]);
   const [error, setError] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
 
   const t = useMemo(() => {
     const vi = {
@@ -144,6 +145,28 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
     );
   };
 
+  const filteredSubscriptions = useMemo(() => {
+    if (statusFilter === "ALL") return subscriptions;
+    if (statusFilter === "PAID") {
+      return subscriptions.filter((item) => String(item.lastPaymentStatus || "").toUpperCase() === "SUCCESS" || Number(item.amountPaid || 0) > 0);
+    }
+    if (statusFilter === "PENDING_PAYMENT") {
+      return subscriptions.filter((item) => String(item.lastPaymentStatus || "").toUpperCase() === "PENDING");
+    }
+    return subscriptions.filter((item) => String(item.status || "").toUpperCase() === statusFilter);
+  }, [statusFilter, subscriptions]);
+
+  const filterOptions = [
+    { value: "ALL", label: language === "vi" ? "Tất cả" : "All" },
+    { value: "PAID", label: language === "vi" ? "Đã thanh toán" : "Paid" },
+    { value: "PENDING_PAYMENT", label: language === "vi" ? "Chờ thanh toán" : "Pending" },
+    { value: "ACTIVE", label: language === "vi" ? "Đang hoạt động" : "Active" },
+    { value: "PAUSED", label: language === "vi" ? "Tạm dừng" : "Paused" },
+    { value: "PENDING_CANCEL", label: language === "vi" ? "Chờ hủy" : "Pending cancel" },
+    { value: "CANCELLED", label: language === "vi" ? "Đã hủy" : "Cancelled" },
+    { value: "EXPIRED", label: language === "vi" ? "Hết hạn" : "Expired" },
+  ];
+
   return (
     <section className={`rounded-2xl border p-4 md:p-5 ${isDark ? "border-white/10 bg-white/5" : "border-slate-200/80 bg-white shadow-sm"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -151,14 +174,36 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
           <h3 className="text-lg font-black tracking-tight md:text-xl">{t.title}</h3>
           <p className={`mt-1 text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>{t.subtitle}</p>
         </div>
-        <button
-          type="button"
-          onClick={loadSubscriptions}
-          className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3.5 py-2 text-sm font-bold text-orange-600 transition hover:border-orange-400 hover:bg-orange-500 hover:text-white dark:border-white/10 dark:bg-white/5 dark:text-white"
-        >
-          <RefreshCcw size={15} />
-          {t.refresh}
-        </button>
+          <button
+            type="button"
+            onClick={loadSubscriptions}
+            className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3.5 py-2 text-sm font-bold text-orange-600 transition hover:border-orange-400 hover:bg-orange-500 hover:text-white dark:border-white/10 dark:bg-white/5 dark:text-white"
+          >
+            <RefreshCcw size={15} />
+            {t.refresh}
+          </button>
+        </div>
+
+      <div className="mt-4 flex flex-wrap gap-2 overflow-x-auto pb-1">
+        {filterOptions.map((option) => {
+          const active = statusFilter === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setStatusFilter(option.value)}
+              className={`rounded-full border px-3.5 py-2 text-xs font-bold uppercase tracking-[0.14em] transition ${
+                active
+                  ? "border-orange-500 bg-orange-500 text-white shadow-sm shadow-orange-500/20"
+                  : isDark
+                    ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                    : "border-slate-200 bg-slate-50 text-slate-600 hover:border-orange-300 hover:text-orange-600"
+              }`}
+            >
+              {option.label}
+            </button>
+          );
+        })}
       </div>
 
       <div className="mt-4">
@@ -170,13 +215,13 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
           <div className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? "border-red-500/20 bg-red-500/10 text-red-200" : "border-red-100 bg-red-50 text-red-700"}`}>
             {error}
           </div>
-        ) : subscriptions.length === 0 ? (
+        ) : filteredSubscriptions.length === 0 ? (
           <div className={`rounded-2xl border border-dashed px-4 py-6 text-center text-sm ${isDark ? "border-white/10 text-slate-400" : "border-slate-200 text-slate-500"}`}>
             {t.empty}
           </div>
         ) : (
           <div className="grid gap-3">
-            {subscriptions.map((item) => {
+            {filteredSubscriptions.map((item) => {
               const photographer = item.photographer?.user || item.photographer?.userId || item.photographer || {};
               const avatar = resolveAvatar(photographer.avatar);
               const packageName = item.package?.name || item.package?.title || item.package?.code || "Monthly plan";
