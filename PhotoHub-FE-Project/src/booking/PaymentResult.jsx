@@ -11,7 +11,9 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
   const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const bookingId = queryParams.get("bookingId");
   const orderCode = queryParams.get("orderCode");
-  const source = queryParams.get("source") || "booking";
+  const explicitSource = queryParams.get("source");
+  const paymentKind = queryParams.get("paymentKind");
+  const source = explicitSource || (paymentKind ? "subscription" : "booking");
   const isCanceled = queryParams.get("canceled") === "true" || queryParams.get("cancel") === "true";
   const [checking, setChecking] = useState(Boolean((bookingId || orderCode) && !isCanceled));
   const [paid, setPaid] = useState(false);
@@ -62,16 +64,44 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
       }
       setChecking(true);
       try {
-        const res = bookingId
-          ? await bookingService.syncPaymentStatus(bookingId, orderCode, isCanceled)
-          : source === "subscription"
-            ? await subscriptionService.getPaymentStatus(orderCode)
-            : await bookingService.syncPaymentStatusByOrderCode(orderCode, isCanceled);
+        const loadSubscriptionStatus = () => subscriptionService.getPaymentStatus(orderCode);
+        const loadBookingStatus = () => (
+          bookingId
+            ? bookingService.syncPaymentStatus(bookingId, orderCode, isCanceled)
+            : bookingService.syncPaymentStatusByOrderCode(orderCode, isCanceled)
+        );
+        const res = source === "subscription" ? await loadSubscriptionStatus() : await loadBookingStatus();
         const isPaid = Boolean(res.data?.paid || res.data?.booking?.paymentStatus === "paid");
         if (!mounted) return;
         setPaid(isPaid);
         setMessage(res.data?.payosStatus || res.data?.paymentStatus || "");
       } catch (error) {
+        const shouldRetryAsSubscription =
+          Boolean(orderCode) &&
+          source !== "subscription" &&
+          (
+            String(error?.response?.data?.message || error?.message || "").toLowerCase().includes("booking not found") ||
+            String(error?.response?.data?.message || error?.message || "").toLowerCase().includes("not found") ||
+            String(error?.response?.status || "") === "400"
+          );
+
+        if (shouldRetryAsSubscription) {
+          try {
+            const res = await subscriptionService.getPaymentStatus(orderCode);
+            if (!mounted) return;
+            const isPaid = Boolean(res.data?.paid || res.data?.subscriptionStatus === "ACTIVE");
+            setPaid(isPaid);
+            setMessage(res.data?.payosStatus || res.data?.paymentStatus || "");
+            setChecking(false);
+            return;
+          } catch (fallbackError) {
+            if (!mounted) return;
+            setPaid(false);
+            setMessage(fallbackError.response?.data?.message || fallbackError.message);
+            setChecking(false);
+            return;
+          }
+        }
         if (!mounted) return;
         setPaid(false);
         setMessage(error.response?.data?.message || error.message);
