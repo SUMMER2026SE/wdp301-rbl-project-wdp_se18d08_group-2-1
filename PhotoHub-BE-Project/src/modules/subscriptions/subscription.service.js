@@ -7,6 +7,7 @@ const SubscriptionPayment = require("./models/subscriptionPayment.model");
 const SubscriptionSchedule = require("./models/subscriptionSchedule.model");
 const SubscriptionBooking = require("./models/subscriptionBooking.model");
 const { Booking } = require("../bookings/models/booking.model");
+const PhotographerPackage = require("../../packages/models/photographerPackage.model");
 const Photographer = require("../photographers/models/photographer");
 const Wallet = require("../admin/models/Wallet");
 const { UserRole, User } = require("../auth/models/User");
@@ -264,6 +265,14 @@ class SubscriptionService {
       const subscriptionPackage = await SubscriptionPackage.findById(dto.packageId).session(session);
       if (!subscriptionPackage || !subscriptionPackage.isActive) {
         throw new Error("Subscription package not found");
+      }
+
+      const sourcePackageId = subscriptionPackage?.metadata?.sourcePackageId;
+      if (sourcePackageId) {
+        const sourcePackage = await PhotographerPackage.findById(sourcePackageId).session(session);
+        if (!sourcePackage || String(sourcePackage.status || "").toUpperCase() !== "ACTIVE") {
+          throw new Error("This monthly plan is no longer available");
+        }
       }
 
       const photographer = await resolvePhotographer(dto.photographerId);

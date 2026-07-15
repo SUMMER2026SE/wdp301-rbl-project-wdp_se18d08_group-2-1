@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
-import { CircleDollarSign, PauseCircle, PlayCircle, RotateCcw, Shield, User, XCircle, ArrowRight } from "lucide-react";
+import { CircleDollarSign, PauseCircle, PlayCircle, RotateCcw, Shield, User, ArrowRight } from "lucide-react";
 import { subscriptionService } from "../../services/subscriptionService";
 
 const statusTone = {
@@ -60,11 +60,8 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
       openPlan: "Mở trang gói",
       pause: "Tạm dừng",
       resume: "Khôi phục",
-      cancel: "Hủy gói",
       confirmPause: "Tạm dừng gói này 30 ngày?",
       confirmResume: "Khôi phục gói này?",
-      confirmCancel: "Hủy gói này từ dashboard?",
-      cancelReason: "Photographer dashboard cancel",
       actionError: "Không thể xử lý gói tháng",
     };
     const en = {
@@ -86,11 +83,8 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
       openPlan: "Open plan page",
       pause: "Pause",
       resume: "Resume",
-      cancel: "Cancel plan",
       confirmPause: "Pause this plan for 30 days?",
       confirmResume: "Resume this plan?",
-      confirmCancel: "Cancel this plan from dashboard?",
-      cancelReason: "Photographer dashboard cancel",
       actionError: "Could not manage the monthly plan",
     };
     return language === "vi" ? vi : en;
@@ -152,19 +146,6 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
         });
         if (!result.isConfirmed) return;
         await subscriptionService.resumeSubscription(id);
-      }
-
-      if (action === "cancel") {
-        const result = await Swal.fire({
-          title: t.cancel,
-          text: t.confirmCancel,
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonText: language === "vi" ? "Hủy gói" : "Cancel plan",
-          cancelButtonText: language === "vi" ? "Không" : "No",
-        });
-        if (!result.isConfirmed) return;
-        await subscriptionService.cancelSubscription(id, t.cancelReason);
       }
 
       await loadSubscriptions();
@@ -326,16 +307,6 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
                         >
                           <PlayCircle size={15} />
                           {t.resume}
-                        </button>
-                      )}
-                      {status !== "CANCELLED" && status !== "EXPIRED" && (
-                        <button
-                          disabled={busyId === item._id}
-                          onClick={() => handleAction(item._id, "cancel")}
-                          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200 px-4 py-2.5 text-sm font-bold text-rose-600 transition hover:bg-rose-500 hover:text-white dark:border-rose-500/20 dark:text-rose-300"
-                        >
-                          <XCircle size={15} />
-                          {t.cancel}
                         </button>
                       )}
                     </div>

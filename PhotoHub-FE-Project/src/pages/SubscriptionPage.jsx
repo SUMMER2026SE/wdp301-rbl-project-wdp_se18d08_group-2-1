@@ -34,6 +34,9 @@ const resolveImageUrl = (image) => {
   return `http://localhost:3000/${raw}`;
 };
 
+const normalizePlanStatus = (plan) => String(plan?.status || "ACTIVE").toUpperCase();
+const isPlanBookable = (plan) => normalizePlanStatus(plan) === "ACTIVE" && plan?.subscriptionPackageActive !== false;
+
 export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
   const isDark = theme === "dark";
   const navigate = useNavigate();
@@ -139,6 +142,7 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
             return {
               ...item,
               subscriptionPackageId: matched?._id || "",
+              subscriptionPackageActive: Boolean(matched) && matched?.isActive !== false,
               previewImages: Array.isArray(item.images) ? item.images : [],
             };
           });
@@ -174,10 +178,13 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
     : Array.isArray(selectedPlan?.previewImages)
       ? selectedPlan.previewImages
       : [];
+  const openPlans = useMemo(() => monthlyPackages.filter((plan) => isPlanBookable(plan)), [monthlyPackages]);
+  const closedPlans = useMemo(() => monthlyPackages.filter((plan) => !isPlanBookable(plan)), [monthlyPackages]);
 
   useEffect(() => {
     if (!selectedPlanId && monthlyPackages.length > 0) {
-      setSelectedPlanId(monthlyPackages[0]._id);
+      const firstOpen = monthlyPackages.find((plan) => isPlanBookable(plan));
+      setSelectedPlanId(firstOpen?._id || monthlyPackages[0]._id);
     }
   }, [monthlyPackages, selectedPlanId]);
 
@@ -226,6 +233,16 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
         confirmButtonColor: "#f97316",
       }).then((result) => {
         if (result.isConfirmed) navigate("/login");
+      });
+      return;
+    }
+
+    if (!isPlanBookable(plan)) {
+      Swal.fire({
+        icon: "info",
+        title: language === "vi" ? "Gói đã đóng" : "Plan closed",
+        text: language === "vi" ? "Gói tháng này đã đóng nên không thể đặt nữa." : "This monthly plan is closed and cannot be purchased.",
+        confirmButtonColor: "#f97316",
       });
       return;
     }
@@ -350,6 +367,103 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
     );
   };
 
+  const renderPlanCard = (pkg) => {
+    const bookable = isPlanBookable(pkg);
+    const statusLabel = bookable
+      ? (language === "vi" ? "Đang mở" : "Open")
+      : (language === "vi" ? "Đã đóng" : "Closed");
+    const statusClass = bookable
+      ? "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:text-emerald-300 dark:border-emerald-500/20"
+      : "bg-slate-500/10 text-slate-600 border-slate-200 dark:text-slate-300 dark:border-white/10";
+
+    return (
+      <div
+        key={pkg._id}
+        className={`rounded-[24px] border p-5 transition hover:-translate-y-1 ${String(selectedPlanId) === String(pkg._id) ? "border-orange-400 bg-orange-50/70 shadow-lg shadow-orange-500/10 dark:bg-orange-500/10" : isDark ? "border-white/10 bg-black/20" : "border-orange-100 bg-orange-50/40"}`}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-500">
+              {pkg.code || "PLAN"}
+            </p>
+            <h4 className="mt-1 break-words text-xl font-black">{pkg.title}</h4>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${statusClass}`}>
+              {statusLabel}
+            </span>
+            <span className="rounded-full bg-orange-500/10 px-3 py-1 text-xs font-black text-orange-600">
+              VNĐ {formatMoney(pkg.price)}
+            </span>
+          </div>
+        </div>
+
+        <p className={`mt-3 text-sm leading-6 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+          {pkg.description || t.emptyPlans}
+        </p>
+
+        {Array.isArray(pkg.previewImages) && pkg.previewImages.length > 0 && (
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+            {pkg.previewImages.slice(0, 3).map((img, index) => {
+              const url = resolveImageUrl(img);
+              if (!url) return null;
+              return (
+                <img
+                  key={`${pkg._id}-${index}`}
+                  src={url}
+                  alt={pkg.title}
+                  className="h-16 w-16 shrink-0 rounded-2xl object-cover ring-1 ring-orange-200 dark:ring-white/10"
+                />
+              );
+            })}
+          </div>
+        )}
+
+        <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-slate-500 dark:text-slate-300">
+          <span className={`rounded-full px-3 py-1 ${isDark ? "bg-white/5" : "bg-white"}`}>
+            {pkg.commitmentMonths || 1} {language === "vi" ? "tháng cam kết" : "months commitment"}
+          </span>
+          <span className={`rounded-full px-3 py-1 ${isDark ? "bg-white/5" : "bg-white"}`}>
+            {pkg.sessionsPerMonth || 1} {language === "vi" ? "buổi/tháng" : "sessions/month"}
+          </span>
+        </div>
+
+        <div className="mt-5 flex gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedPlanId(pkg._id);
+              setShowPlanDetailModal(true);
+            }}
+            className={`flex-1 rounded-2xl border px-4 py-3 text-sm font-bold transition ${String(selectedPlanId) === String(pkg._id) ? "border-orange-500 bg-orange-500 text-white" : "border-orange-200 bg-white text-orange-600 hover:border-orange-400 hover:bg-orange-50 dark:border-white/10 dark:bg-white/5 dark:text-white"}`}
+          >
+            <span className="inline-flex items-center gap-2">
+              <Eye size={16} />
+              {language === "vi" ? "Xem chi tiết" : "View details"}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handlePurchasePlan(pkg)}
+            disabled={!bookable || purchasingPlanId === pkg._id}
+            className={`flex-1 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold shadow-lg transition disabled:cursor-not-allowed disabled:opacity-60 ${
+              bookable
+                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-orange-500/20 hover:brightness-110"
+                : "border border-slate-200 bg-slate-100 text-slate-500 shadow-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300"
+            }`}
+          >
+            {purchasingPlanId === pkg._id ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <CreditCard size={16} />
+            )}
+            {bookable ? (language === "vi" ? "Đăng ký" : "Subscribe") : (language === "vi" ? "Đã đóng" : "Closed")}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={`min-h-screen px-4 pb-16 pt-28 transition-colors duration-300 ${isDark ? "bg-[#050816] text-white" : "bg-[#fffaf6] text-slate-900"}`}>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
@@ -423,80 +537,38 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
                     {language === "vi" ? "Đang tải gói tháng..." : "Loading monthly plans..."}
                   </div>
                 ) : monthlyPackages.length > 0 ? (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {monthlyPackages.map((pkg) => (
-                      <div
-                        key={pkg._id}
-                        className={`rounded-[24px] border p-5 transition hover:-translate-y-1 ${String(selectedPlanId) === String(pkg._id) ? "border-orange-400 bg-orange-50/70 shadow-lg shadow-orange-500/10 dark:bg-orange-500/10" : isDark ? "border-white/10 bg-black/20" : "border-orange-100 bg-orange-50/40"}`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-500">
-                              {pkg.code || "PLAN"}
-                            </p>
-                            <h4 className="mt-1 text-xl font-black">{pkg.title}</h4>
-                          </div>
-                          <span className="rounded-full bg-orange-500/10 px-3 py-1 text-xs font-black text-orange-600">
-                            VNĐ {formatMoney(pkg.price)}
+                  <div className="space-y-6">
+                    {openPlans.length > 0 && (
+                      <div>
+                        <div className="mb-3 flex items-center justify-between">
+                          <h4 className="text-sm font-black uppercase tracking-[0.18em] text-emerald-500">
+                            {language === "vi" ? "Có thể đặt" : "Bookable plans"}
+                          </h4>
+                          <span className={`text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                            {language === "vi" ? "Đang mở bán" : "Open for purchase"}
                           </span>
                         </div>
-                        <p className={`mt-3 text-sm leading-6 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
-                          {pkg.description || t.emptyPlans}
-                        </p>
-                        {Array.isArray(pkg.previewImages) && pkg.previewImages.length > 0 && (
-                          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-                            {pkg.previewImages.slice(0, 3).map((img, index) => {
-                              const url = resolveImageUrl(img);
-                              if (!url) return null;
-                              return (
-                                <img
-                                  key={`${pkg._id}-${index}`}
-                                  src={url}
-                                  alt={pkg.title}
-                                  className="h-16 w-16 shrink-0 rounded-2xl object-cover ring-1 ring-orange-200 dark:ring-white/10"
-                                />
-                              );
-                            })}
-                          </div>
-                        )}
-                        <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-slate-500 dark:text-slate-300">
-                          <span className={`rounded-full px-3 py-1 ${isDark ? "bg-white/5" : "bg-white"}`}>
-                            {pkg.commitmentMonths || 1} {language === "vi" ? "tháng cam kết" : "months commitment"}
-                          </span>
-                          <span className={`rounded-full px-3 py-1 ${isDark ? "bg-white/5" : "bg-white"}`}>
-                            {pkg.sessionsPerMonth || 1} {language === "vi" ? "buổi/tháng" : "sessions/month"}
-                          </span>
-                        </div>
-                        <div className="mt-5 flex gap-3">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedPlanId(pkg._id);
-                              setShowPlanDetailModal(true);
-                            }}
-                            className={`flex-1 rounded-2xl border px-4 py-3 text-sm font-bold transition ${String(selectedPlanId) === String(pkg._id) ? "border-orange-500 bg-orange-500 text-white" : "border-orange-200 bg-white text-orange-600 hover:border-orange-400 hover:bg-orange-50 dark:border-white/10 dark:bg-white/5 dark:text-white"}`}
-                          >
-                            <span className="inline-flex items-center gap-2">
-                              <Eye size={16} />
-                              {language === "vi" ? "Xem chi tiết" : "View details"}
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handlePurchasePlan(pkg)}
-                            disabled={purchasingPlanId === pkg._id}
-                            className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {purchasingPlanId === pkg._id ? (
-                              <Loader2 size={16} className="animate-spin" />
-                            ) : (
-                              <CreditCard size={16} />
-                            )}
-                            {language === "vi" ? "Đăng ký" : "Subscribe"}
-                          </button>
+                        <div className="grid gap-4 md:grid-cols-2">
+                          {openPlans.map(renderPlanCard)}
                         </div>
                       </div>
-                    ))}
+                    )}
+
+                    {closedPlans.length > 0 && (
+                      <div>
+                        <div className="mb-3 flex items-center justify-between">
+                          <h4 className="text-sm font-black uppercase tracking-[0.18em] text-slate-400">
+                            {language === "vi" ? "Đã đóng" : "Closed plans"}
+                          </h4>
+                          <span className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                            {language === "vi" ? "Không thể đặt" : "Not bookable"}
+                          </span>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                          {closedPlans.map(renderPlanCard)}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className={`rounded-2xl border border-dashed p-6 text-sm ${isDark ? "border-white/10 text-slate-400" : "border-orange-200 text-slate-500"}`}>
