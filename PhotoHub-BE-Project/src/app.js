@@ -22,6 +22,7 @@ const packageRoutes = require("./modules/packages/routes/photographerPackage.rou
 const communityRoutes = require("./modules/community/community.routes");
 const bookingRoutes = require("./modules/bookings/routes/booking.routes");
 const subscriptionRoutes = require("./modules/subscriptions/subscription.routes");
+const assistantRoutes = require("./modules/assistant/assistant.routes");
 const reviewRoutes = require("./modules/review/routes/review.routes");
 const customerJobRoutes = require("./modules/customers/customer.job.routes");
 const groupBookingRoutes = require("./modules/group_booking/routes/groupBooking.routes");
@@ -64,6 +65,7 @@ app.use("/api/packages", packageRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/assistant", assistantRoutes);
 app.use("/api", reviewRoutes);
 app.use("/api/upload", require("./utils/upload.routes"));
 app.use("/api/customer/jobs", customerJobRoutes);
