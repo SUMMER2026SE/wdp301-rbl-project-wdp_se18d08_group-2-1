@@ -21,6 +21,7 @@ export default function CustomerLoyalty({ language = "vi", theme = "dark" }) {
   const [account, setAccount] = useState(null);
   const [history, setHistory] = useState([]);
   const [rewards, setRewards] = useState({ vouchers: [], addons: [] });
+  const [voucherCatalog, setVoucherCatalog] = useState([]);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -30,15 +31,17 @@ export default function CustomerLoyalty({ language = "vi", theme = "dark" }) {
   const fetchLoyaltyData = async () => {
     try {
       setLoading(true);
-      const [accRes, histRes, rewRes] = await Promise.all([
+      const [accRes, histRes, rewRes, catalogRes] = await Promise.all([
         loyaltyService.getLoyaltyAccount(),
         loyaltyService.getLoyaltyHistory(),
-        loyaltyService.getLoyaltyRewards()
+        loyaltyService.getLoyaltyRewards(),
+        loyaltyService.getRewardCatalog()
       ]);
 
       if (accRes.success) setAccount(accRes.data);
       if (histRes.success) setHistory(histRes.data);
       if (rewRes.success) setRewards(rewRes.data);
+      if (catalogRes.success) setVoucherCatalog(catalogRes.data.vouchers || []);
     } catch (error) {
       console.error("Lỗi lấy dữ liệu tích điểm:", error);
     } finally {
@@ -132,24 +135,19 @@ export default function CustomerLoyalty({ language = "vi", theme = "dark" }) {
 
   const nextTier = getNextTierInfo();
 
-  // Predefined catalog items
   const catalog = [
-    {
-      id: "VOUCHER_50",
-      name: language === "vi" ? "Mã giảm giá 50,000 VND" : "Voucher 50,000 VND",
-      desc: language === "vi" ? "Khấu trừ trực tiếp vào đơn đặt chụp tiếp theo." : "Direct discount on your next shoot booking.",
-      cost: 500,
+    ...voucherCatalog.map((voucher) => ({
+      id: `VOUCHER_TEMPLATE_${voucher._id}`,
+      name: language === "vi"
+        ? `Voucher giảm ${Number(voucher.discountAmount).toLocaleString("vi-VN")} VND`
+        : `${Number(voucher.discountAmount).toLocaleString()} VND voucher`,
+      desc: language === "vi"
+        ? `Đổi từ chương trình ${voucher.code}, dùng cho đơn đặt chụp sau khi đổi.`
+        : `Redeem from ${voucher.code} before using it for a booking.`,
+      cost: voucher.pointsCost,
       icon: Ticket,
-      color: "from-amber-500 to-orange-600"
-    },
-    {
-      id: "VOUCHER_100",
-      name: language === "vi" ? "Mã giảm giá 100,000 VND" : "Voucher 100,000 VND",
-      desc: language === "vi" ? "Khấu trừ trực tiếp vào đơn đặt chụp tiếp theo." : "Direct discount on your next shoot booking.",
-      cost: 1000,
-      icon: Ticket,
-      color: "from-orange-500 to-red-600"
-    },
+      color: "from-amber-500 to-orange-600",
+    })),
     {
       id: "EXTRA_TIME",
       name: language === "vi" ? "Tặng 30 phút chụp hình" : "Extra 30 Mins Shoot",

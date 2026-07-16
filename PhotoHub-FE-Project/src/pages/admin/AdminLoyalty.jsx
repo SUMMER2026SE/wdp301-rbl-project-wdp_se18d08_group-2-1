@@ -10,6 +10,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { loyaltyService } from "../../services/loyaltyService";
+import AdminVouchers from "./AdminVouchers";
 
 export default function AdminLoyalty() {
   const [activeTab, setActiveTab] = useState("accounts");
@@ -25,6 +26,7 @@ export default function AdminLoyalty() {
   const [histories, setHistories] = useState([]);
   const [historiesPage, setHistoriesPage] = useState(1);
   const [historiesTotalPages, setHistoriesTotalPages] = useState(1);
+  const [voucherAccounts, setVoucherAccounts] = useState([]);
 
   // KPI stats
   const [kpis, setKpis] = useState({
@@ -37,8 +39,12 @@ export default function AdminLoyalty() {
   useEffect(() => {
     if (activeTab === "accounts") {
       fetchAccounts(accountsPage);
-    } else {
+    } else if (activeTab === "histories") {
       fetchHistories(historiesPage);
+    } else if (voucherAccounts.length === 0) {
+      loyaltyService.adminGetAccounts(1, 100).then((res) => {
+        if (res.success) setVoucherAccounts(res.data.accounts || []);
+      });
     }
   }, [activeTab, accountsPage, historiesPage]);
 
@@ -179,6 +185,17 @@ export default function AdminLoyalty() {
           <History size={16} />
           Nhật ký điểm toàn hệ thống
         </button>
+        <button
+          onClick={() => setActiveTab("vouchers")}
+          className={`px-6 py-4 text-sm font-semibold border-b-2 transition flex items-center gap-2 ${
+            activeTab === "vouchers"
+              ? "border-orange-500 text-orange-500"
+              : "border-transparent text-slate-400 hover:text-white"
+          }`}
+        >
+          <Gift size={16} />
+          Quản lý voucher
+        </button>
       </div>
 
       {/* Content Table Area */}
@@ -188,6 +205,8 @@ export default function AdminLoyalty() {
             <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
             <span className="text-slate-400">Đang đồng bộ dữ liệu điểm thưởng...</span>
           </div>
+        ) : activeTab === "vouchers" ? (
+          <AdminVouchers accounts={voucherAccounts} />
         ) : activeTab === "accounts" ? (
           /* ACCOUNTS TABLE */
           <div>
