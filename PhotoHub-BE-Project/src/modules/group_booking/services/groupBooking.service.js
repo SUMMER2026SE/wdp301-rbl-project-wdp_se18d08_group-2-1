@@ -326,6 +326,21 @@ class GroupBookingService {
         throw new Error("Nhóm đã bị Trưởng nhóm khóa đăng ký mới");
       }
 
+      // Join qua link mời phải idempotent: nếu trình duyệt gửi lặp request,
+      // trả lại membership hiện tại thay vì báo lỗi sau khi lượt đầu đã thành công.
+      const existing = await GroupMember.findOne({
+        group: freshGroup._id,
+        user: userId,
+      });
+      if (existing) {
+        return {
+          member: existing,
+          group: freshGroup,
+          alreadyJoined: true,
+          nextStep: "Bạn đã ở trong nhóm này",
+        };
+      }
+
       // Đếm tổng số thành viên đã đăng ký tham gia (bất kể trạng thái cọc) để kiểm tra slot đăng ký
       const totalMemberCount = await GroupMember.countDocuments({
         group: freshGroup._id,
@@ -333,13 +348,6 @@ class GroupBookingService {
       if (totalMemberCount >= freshGroup.maxMembers) {
         throw new Error("Nhóm đã đủ số lượng đăng ký chờ thanh toán, không còn slot trống");
       }
-
-      // Kiểm tra user chưa trong nhóm
-      const existing = await GroupMember.findOne({
-        group: freshGroup._id,
-        user: userId,
-      });
-      if (existing) throw new Error("Bạn đã tham gia nhóm này rồi");
 
       // Tạo bản ghi GroupMember → PENDING (chờ thanh toán)
       const member = await GroupMember.create({
@@ -589,7 +597,7 @@ class GroupBookingService {
     }
 
     const frontendUrl = process.env.FRONTEND_URL || DEFAULT_FRONTEND_URL;
-    const inviteUrl = `${frontendUrl}/group-booking/join?code=${group.groupCode}`;
+    const inviteUrl = `${frontendUrl}/group-booking?code=${group.groupCode}`;
 
     return {
       groupCode: group.groupCode,
@@ -598,7 +606,7 @@ class GroupBookingService {
       shareUrls: {
         facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(inviteUrl)}`,
         zalo: `https://zalo.me/share?url=${encodeURIComponent(inviteUrl)}`,
-        tiktok: `https://www.tiktok.com/share?url=${encodeURIComponent(inviteUrl)}`,
+        whatsapp: `https://wa.me/?text=${encodeURIComponent(`Tham gia nhóm chụp ảnh PhotoHub (${group.groupCode}): ${inviteUrl}`)}`,
       },
       remainingSlots: group.maxMembers - paidCount,
       expireTime: group.expireTime,
@@ -1310,13 +1318,54 @@ class GroupBookingService {
    * @param {number} [query.page]       - Trang (default: 1)
    * @param {number} [query.limit]      - Số lượng/trang (default: 12)
    */
-  async discoverGroups({ conceptId, page = 1, limit = 12 } = {}) {
+  async discoverGroups({ conceptId, search, shootDate, status, availableOnly, page = 1, limit = 12 } = {}) {
     const filter = {
-      status: GROUP_STATUS.PENDING,
-      expireTime: { $gt: new Date() },
+      ...(status === GROUP_STATUS.CONFIRMED
+        ? { status: GROUP_STATUS.CONFIRMED }
+        : { status: GROUP_STATUS.PENDING, expireTime: { $gt: new Date() } }),
     };
+    if (shootDate) {
+      filter.shootDate = shootDate;
+    }
+    if (search?.trim()) {
+      const escapedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const searchRegex = new RegExp(escapedSearch, "i");
+      const matchingConcepts = await PhotographerPackage.find({
+        title: searchRegex,
+      }).distinct("_id");
+
+      const searchConditions = [
+        { groupCode: searchRegex },
+        { note: searchRegex },
+        { concept: { $in: matchingConcepts } },
+      ];
+      if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: searchConditions }];
+        delete filter.$or;
+      } else {
+        filter.$or = searchConditions;
+      }
+    }
+    if (availableOnly === true || availableOnly === "true") {
+      filter.$expr = { $lt: ["$currentMemberCount", "$maxMembers"] };
+    }
+
+    const facetRows = await GroupBooking.aggregate([
+      { $match: filter },
+      { $group: { _id: "$concept", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]);
+    const facetPackages = await PhotographerPackage.find({
+      _id: { $in: facetRows.map((row) => row._id) },
+    }).select("title");
+    const conceptFacets = facetRows.map((row) => ({
+      _id: row._id,
+      title: facetPackages.find((pkg) => String(pkg._id) === String(row._id))?.title || "Gói chụp",
+      count: row.count,
+    }));
+
     if (conceptId && mongoose.Types.ObjectId.isValid(conceptId)) {
-      filter.concept = conceptId;
+      filter.concept = new mongoose.Types.ObjectId(conceptId);
     }
 
     const skip = (Number(page) - 1) * Number(limit);
@@ -1351,6 +1400,7 @@ class GroupBookingService {
         limit: Number(limit),
         totalPages: Math.ceil(total / Number(limit)),
       },
+      conceptFacets,
     };
   }
 

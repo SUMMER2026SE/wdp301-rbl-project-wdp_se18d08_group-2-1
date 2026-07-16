@@ -97,12 +97,58 @@ function ProgressBar({ current, max, isDark }) {
 // ─── Invite Modal ─────────────────────────────────────────────────────────────
 
 function InviteModal({ isDark, groupCode, inviteData, onClose }) {
-  const [copied, setCopied] = useState(false);
+  const [copiedField, setCopiedField] = useState(null);
+  const inviteUrl = `${window.location.origin}/group-booking?code=${encodeURIComponent(groupCode)}`;
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(inviteData?.inviteUrl || "");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(inviteUrl);
+    setCopiedField("link");
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const copyCode = async () => {
+    await navigator.clipboard.writeText(groupCode);
+    setCopiedField("code");
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const shareToInstalledApps = async () => {
+    const shareData = {
+      title: "Mời bạn tham gia nhóm chụp ảnh PhotoHub",
+      text: `Tham gia nhóm chụp ảnh PhotoHub với mã ${groupCode}`,
+      url: inviteUrl,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        if (error.name !== "AbortError") await copyLink();
+      }
+      return;
+    }
+
+    await copyLink();
+  };
+
+  const shareOnSocialNetwork = (platform) => {
+    const shareText = `Tham gia nhóm chụp ảnh PhotoHub (${groupCode}): ${inviteUrl}`;
+
+    // Facebook không cho website tự ghi trực tiếp vào ô soạn bài.
+    // Sao chép trước để người dùng có thể Ctrl+V nếu Facebook bỏ nội dung localhost.
+    if (platform === "facebook") {
+      navigator.clipboard.writeText(inviteUrl).then(() => {
+        setCopiedField("link");
+        setTimeout(() => setCopiedField(null), 2000);
+      }).catch(() => {});
+    }
+
+    const urls = {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(inviteUrl)}&quote=${encodeURIComponent(shareText)}`,
+      zalo: `https://zalo.me/share?url=${encodeURIComponent(inviteUrl)}`,
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+    };
+    window.open(urls[platform], "_blank", "noopener,noreferrer,width=720,height=640");
   };
 
   return (
@@ -127,39 +173,56 @@ function InviteModal({ isDark, groupCode, inviteData, onClose }) {
             </p>
           </div>
           <button
-            onClick={copyLink}
+            onClick={copyCode}
+            aria-label="Sao chép mã nhóm"
             className="p-3 rounded-xl bg-orange-500/15 text-orange-400 hover:bg-orange-500/25 transition-all"
           >
-            {copied ? <CheckCircle size={18} /> : <Copy size={18} />}
+            {copiedField === "code" ? <CheckCircle size={18} /> : <Copy size={18} />}
           </button>
         </div>
 
         {/* Share Link */}
-        {inviteData?.inviteUrl && (
-          <div className={`p-3 rounded-xl text-xs font-mono break-all mb-4 ${isDark ? "bg-white/[0.05] text-slate-400" : "bg-slate-100 text-slate-600"}`}>
-            {inviteData.inviteUrl}
+        {inviteUrl && (
+          <div className={`mb-4 flex items-center gap-2 rounded-xl p-2 pl-3 ${isDark ? "bg-white/[0.05] text-slate-400" : "bg-slate-100 text-slate-600"}`}>
+            <span className="min-w-0 flex-1 break-all font-mono text-xs">{inviteUrl}</span>
+            <button
+              type="button"
+              onClick={copyLink}
+              aria-label="Sao chép đường dẫn mời"
+              title="Sao chép đường dẫn"
+              className="shrink-0 rounded-lg bg-orange-500/15 p-2.5 text-orange-400 transition-all hover:bg-orange-500/25"
+            >
+              {copiedField === "link" ? <CheckCircle size={17} /> : <Copy size={17} />}
+            </button>
           </div>
         )}
 
         {/* Share Buttons */}
         {inviteData?.shareUrls && (
-          <div className="grid grid-cols-3 gap-2 mb-5">
+          <div className="grid grid-cols-2 gap-2 mb-5 sm:grid-cols-4">
             {[
               { key: "facebook", label: "Facebook", emoji: "📘", color: "from-blue-600 to-blue-700" },
               { key: "zalo", label: "Zalo", emoji: "💬", color: "from-sky-500 to-sky-600" },
-              { key: "tiktok", label: "TikTok", emoji: "🎵", color: "from-slate-800 to-slate-900" },
+              { key: "whatsapp", label: "WhatsApp", emoji: "🟢", color: "from-emerald-500 to-emerald-600" },
             ].map((platform) => (
-              <a
+              <button
+                type="button"
                 key={platform.key}
-                href={inviteData.shareUrls[platform.key]}
-                target="_blank"
-                rel="noopener noreferrer"
+                onClick={() => shareOnSocialNetwork(platform.key)}
                 className={`flex flex-col items-center gap-1 py-2.5 rounded-xl bg-gradient-to-b ${platform.color} text-white text-xs font-bold hover:opacity-90 transition-all`}
               >
                 <span className="text-lg">{platform.emoji}</span>
                 {platform.label}
-              </a>
+              </button>
             ))}
+            <button
+              type="button"
+              onClick={shareToInstalledApps}
+              className="flex flex-col items-center gap-1 rounded-xl bg-gradient-to-b from-orange-500 to-amber-600 py-2.5 text-xs font-bold text-white transition-all hover:opacity-90"
+            >
+              <Share2 size={18} />
+              Chia sẻ khác
+            </button>
           </div>
         )}
 

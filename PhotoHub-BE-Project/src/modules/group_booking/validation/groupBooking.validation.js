@@ -145,6 +145,28 @@ const validateListQuery = [
     .isMongoId()
     .withMessage("conceptId không hợp lệ"),
 
+  query("search")
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage("Từ khóa tìm kiếm không được vượt quá 100 ký tự"),
+
+  query("shootDate")
+    .optional()
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
+    .withMessage("shootDate phải có định dạng YYYY-MM-DD")
+    .custom((value) => {
+      const date = new Date(`${value}T00:00:00Z`);
+      return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+    })
+    .withMessage("shootDate không phải là ngày hợp lệ"),
+
+  query("availableOnly")
+    .optional()
+    .isBoolean()
+    .withMessage("availableOnly phải là true hoặc false")
+    .toBoolean(),
+
   query("status")
     .optional()
     .isIn(["PENDING", "CONFIRMED", "CANCELED"])
