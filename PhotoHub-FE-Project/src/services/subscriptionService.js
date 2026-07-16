@@ -28,6 +28,11 @@ export const subscriptionService = {
     return res.data;
   },
 
+  updatePreferredSchedule: async (id, preferredSchedule = []) => {
+    const res = await axios.post(`${API_BASE}/${id}/preferred-schedule`, { preferredSchedule }, getAuthHeaders());
+    return res.data;
+  },
+
   createSubscription: async (payload) => {
     const res = await axios.post(`${API_BASE}/purchase`, payload, getAuthHeaders());
     return res.data;

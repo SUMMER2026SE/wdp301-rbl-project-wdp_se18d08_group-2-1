@@ -36,6 +36,22 @@ const photographerPackageSchema = new mongoose.Schema(
       default: 0,
     },
 
+    sessionsPerMonth: {
+      type: Number,
+      default: 0,
+    },
+
+    commitmentMonths: {
+      type: Number,
+      default: 0,
+    },
+
+    maxCustomers: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     numberOfPhotos: {
       type: Number,
       default: 0,

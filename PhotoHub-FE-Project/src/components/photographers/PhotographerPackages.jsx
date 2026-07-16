@@ -56,6 +56,9 @@ export default function PhotographerPackages({
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
     const [duration, setDuration] = useState("");
+    const [sessionsPerMonth, setSessionsPerMonth] = useState("");
+    const [commitmentMonths, setCommitmentMonths] = useState("");
+    const [maxCustomers, setMaxCustomers] = useState("");
     const [files, setFiles] = useState([]);
     const [existingImages, setExistingImages] = useState([]);
     const [uploading, setUploading] = useState(false);
@@ -124,7 +127,7 @@ export default function PhotographerPackages({
     const activePackageMeta = packageTypeCatalog[packageType] || packageTypeCatalog.SHOOTING;
     const getDurationText = (pkg) => (
         pkg?.packageType === "MONTHLY"
-            ? `${Number(pkg?.durationHours || 0).toLocaleString("vi-VN")} tháng`
+            ? `${Number(pkg?.commitmentMonths || pkg?.durationHours || 0).toLocaleString("vi-VN")} tháng`
             : `${Number(pkg?.durationHours || 0).toLocaleString("vi-VN")}h`
     );
 
@@ -374,6 +377,9 @@ export default function PhotographerPackages({
         setDescription("");
         setPrice("");
         setDuration("");
+        setSessionsPerMonth("");
+        setCommitmentMonths("");
+        setMaxCustomers("");
 
         setFiles([]);
         setExistingImages([]);
@@ -393,7 +399,8 @@ export default function PhotographerPackages({
     const handleSubmit = async () => {
         try {
             // validate cơ bản
-            if (!title || !price || !duration) {
+            const requiresMonthlyFields = draftPackageType === "MONTHLY";
+            if (!title || !price || (!requiresMonthlyFields && !duration) || (requiresMonthlyFields && (!sessionsPerMonth || !commitmentMonths))) {
                 Swal.fire("Warning", "Please fill required fields", "warning");
                 return;
             }
@@ -415,17 +422,20 @@ export default function PhotographerPackages({
 
             const finalImages = [...imageUrls, ...newImageUrls];
 
-            const payload = {
-                title,
-                description,
-                packageType: draftPackageType,
-                price: Number(price),
-                durationHours: Number(duration),
-                categoryIds: selectedCategories,
-                styleTagIds: selectedStyles,
-                images: finalImages,
-                isGroupPackage,
-            };
+        const payload = {
+            title,
+            description,
+            packageType: draftPackageType,
+            price: Number(price),
+            durationHours: draftPackageType === "MONTHLY" ? Number(commitmentMonths) : Number(duration),
+            sessionsPerMonth: draftPackageType === "MONTHLY" ? Number(sessionsPerMonth) : 0,
+            commitmentMonths: draftPackageType === "MONTHLY" ? Number(commitmentMonths) : 0,
+            maxCustomers: draftPackageType === "MONTHLY" ? Number(maxCustomers || 0) : 0,
+            categoryIds: selectedCategories,
+            styleTagIds: selectedStyles,
+            images: finalImages,
+            isGroupPackage,
+        };
 
             // 👉 phân biệt CREATE vs UPDATE
             if (isEditing) {
@@ -474,6 +484,9 @@ export default function PhotographerPackages({
         setDescription(pkg.description || "");
         setPrice(pkg.price || "");
         setDuration(pkg.durationHours || "");
+        setSessionsPerMonth(pkg.sessionsPerMonth || "");
+        setCommitmentMonths(pkg.commitmentMonths || "");
+        setMaxCustomers(pkg.maxCustomers || "");
         setDraftPackageType(pkg.packageType || "SHOOTING");
 
         setSelectedCategories(
@@ -532,6 +545,9 @@ export default function PhotographerPackages({
         setDescription("");
         setPrice("");
         setDuration("");
+        setSessionsPerMonth("");
+        setCommitmentMonths("");
+        setMaxCustomers("");
 
         setFiles([]);
         setExistingImages([]);
@@ -1073,25 +1089,84 @@ export default function PhotographerPackages({
                                     </div>
                                 </div>
 
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                                        {draftPackageType === "MONTHLY"
-                                            ? (language === "vi" ? "THỜI HẠN (THÁNG)" : "TERM (MONTHS)")
-                                            : t.labelDuration
-                                        } <span className="text-rose-500">*</span>
-                                    </label>
-                                    <div className="relative">
-                                        <Clock size={14} className="absolute left-3.5 top-3.5 text-slate-400" />
-                                        <input
-                                            type="number"
-                                            required
-                                            placeholder={draftPackageType === "MONTHLY" ? "1" : "4"}
-                                            className="w-full pl-9 pr-4 py-2.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium placeholder-slate-400 text-sm focus:outline-none focus:border-orange-500 transition-all"
-                                            onChange={(e) => setDuration(e.target.value)}
-                                            value={duration}
-                                        />
+                                {draftPackageType === "MONTHLY" ? (
+                                    <div className="space-y-3">
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                                                {language === "vi" ? "CAM KẾT (THÁNG)" : "COMMITMENT (MONTHS)"} <span className="text-rose-500">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <Clock size={14} className="absolute left-3.5 top-3.5 text-slate-400" />
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    required
+                                                    placeholder="1"
+                                                    className="w-full pl-9 pr-4 py-2.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium placeholder-slate-400 text-sm focus:outline-none focus:border-orange-500 transition-all"
+                                                    onChange={(e) => setCommitmentMonths(e.target.value)}
+                                                    value={commitmentMonths}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                                                {language === "vi" ? "BUỔI / THÁNG" : "SESSIONS / MONTH"} <span className="text-rose-500">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <Clock size={14} className="absolute left-3.5 top-3.5 text-slate-400" />
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    required
+                                                    placeholder="2"
+                                                    className="w-full pl-9 pr-4 py-2.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium placeholder-slate-400 text-sm focus:outline-none focus:border-orange-500 transition-all"
+                                                    onChange={(e) => setSessionsPerMonth(e.target.value)}
+                                                    value={sessionsPerMonth}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                                                {language === "vi" ? "SỐ KHÁCH TỐI ĐA" : "MAX CUSTOMERS"}
+                                            </label>
+                                            <div className="relative">
+                                                <Clock size={14} className="absolute left-3.5 top-3.5 text-slate-400" />
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    placeholder="0"
+                                                    className="w-full pl-9 pr-4 py-2.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium placeholder-slate-400 text-sm focus:outline-none focus:border-orange-500 transition-all"
+                                                    onChange={(e) => setMaxCustomers(e.target.value)}
+                                                    value={maxCustomers}
+                                                />
+                                            </div>
+                                            <p className="text-[11px] leading-5 text-slate-400 dark:text-slate-500">
+                                                {language === "vi"
+                                                    ? "Để 0 nếu không muốn giới hạn số khách có thể mua gói này."
+                                                    : "Set to 0 to keep this plan unlimited."}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
+                                ) : (
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                                            {t.labelDuration} <span className="text-rose-500">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <Clock size={14} className="absolute left-3.5 top-3.5 text-slate-400" />
+                                            <input
+                                                type="number"
+                                                required
+                                                placeholder="4"
+                                                className="w-full pl-9 pr-4 py-2.5 bg-[#f8fafc] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-medium placeholder-slate-400 text-sm focus:outline-none focus:border-orange-500 transition-all"
+                                                onChange={(e) => setDuration(e.target.value)}
+                                                value={duration}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-1.5">

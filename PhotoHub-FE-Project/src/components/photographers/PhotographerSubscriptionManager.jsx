@@ -301,8 +301,8 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
 
                         <div className="mt-3 flex flex-wrap gap-2">
                           <div className={`rounded-full border px-3 py-1.5 text-xs ${isDark ? "border-white/10 bg-white/5 text-slate-200" : "border-slate-200 bg-slate-50 text-slate-700"}`}>
-                            <span className="mr-2 text-[10px] uppercase tracking-[0.14em] text-slate-400">{t.amount}</span>
-                            <span className="font-black text-orange-500">{money(item.amountPaid || item.package?.monthlyPrice || 0)} VNĐ</span>
+                          <span className="mr-2 text-[10px] uppercase tracking-[0.14em] text-slate-400">{t.amount}</span>
+                            <span className="font-black text-orange-500">{money(item.lastPaymentAmount || item.package?.monthlyPrice || item.amountPaid || 0)} VNĐ</span>
                           </div>
                           <div className={`rounded-full border px-3 py-1.5 text-xs ${isDark ? "border-white/10 bg-white/5 text-slate-200" : "border-slate-200 bg-slate-50 text-slate-700"}`}>
                             <span className="mr-2 text-[10px] uppercase tracking-[0.14em] text-slate-400">{t.timeline}</span>

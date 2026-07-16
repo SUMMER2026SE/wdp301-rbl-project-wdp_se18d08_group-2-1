@@ -1,22 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Select from "react-select";
 import Swal from "sweetalert2";
 import {
   Calendar,
+  Camera,
   MapPin,
-  DollarSign,
   FileText,
   Gift,
   Info,
   ChevronLeft,
   ChevronRight,
-  User,
   Star,
   Award,
   Clock,
   Sparkles,
-  ShieldCheck,
   AlertCircle,
   HelpCircle,
 } from "lucide-react";
@@ -62,7 +60,6 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
   const isDark = theme === "dark";
   const { photographerId } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
 
   // Photographers listing (for dropdown)
   const [photographers, setPhotographers] = useState([]);
@@ -80,8 +77,12 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
 
   // Booking Form States
   const [packages, setPackages] = useState([]);
+  const [monthlyPackages, setMonthlyPackages] = useState([]);
   const [packagesLoading, setPackagesLoading] = useState(false);
+  const [monthlyPackagesLoading, setMonthlyPackagesLoading] = useState(false);
+  const [bookingMode, setBookingMode] = useState("SHOOTING");
   const [selectedPackageId, setSelectedPackageId] = useState("");
+  const [selectedMonthlyPackageId, setSelectedMonthlyPackageId] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     note: "",
@@ -302,27 +303,50 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
     const activeId = selectedPhotographerOption?.value;
     if (!activeId) {
       setPackages([]);
+      setMonthlyPackages([]);
       setCalendarBookings([]);
       return;
     }
 
     const loadPackages = async () => {
       setPackagesLoading(true);
+      setMonthlyPackagesLoading(true);
+      setSelectedPackageId("");
+      setSelectedMonthlyPackageId("");
       try {
-        const res = await bookingService.getPhotographerPackages(activeId, { packageType: "SHOOTING" });
-        if (res.success) {
-          const actualPackages = Array.isArray(res.data) ? res.data : (res.data?.data || []);
-          setPackages(actualPackages);
-        }
+        const [shootingRes, monthlyRes] = await Promise.all([
+          bookingService.getPhotographerPackages(activeId, { packageType: "SHOOTING" }),
+          bookingService.getPhotographerPackages(activeId, { packageType: "MONTHLY" }),
+        ]);
+
+        const actualPackages = shootingRes?.success
+          ? (Array.isArray(shootingRes.data) ? shootingRes.data : (shootingRes.data?.data || []))
+          : [];
+        const actualMonthlyPackages = monthlyRes?.success
+          ? (Array.isArray(monthlyRes.data) ? monthlyRes.data : (monthlyRes.data?.data || []))
+          : [];
+
+        setPackages(actualPackages);
+        setMonthlyPackages(actualMonthlyPackages);
       } catch (err) {
         console.error("Error loading packages:", err);
       } finally {
         setPackagesLoading(false);
+        setMonthlyPackagesLoading(false);
       }
     };
 
     loadPackages();
   }, [selectedPhotographerOption]);
+
+  useEffect(() => {
+    if (bookingMode === "SHOOTING" && !selectedPackageId && packages.length > 0) {
+      setSelectedPackageId(packages[0]._id);
+    }
+    if (bookingMode === "MONTHLY" && !selectedMonthlyPackageId && monthlyPackages.length > 0) {
+      setSelectedMonthlyPackageId(monthlyPackages[0]._id);
+    }
+  }, [bookingMode, packages, monthlyPackages, selectedPackageId, selectedMonthlyPackageId]);
 
   // 4. Fetch Calendar bookings for active photographer
   useEffect(() => {
@@ -353,6 +377,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
 
   // 5. Package selection changes -> Recalculate price & end date
   useEffect(() => {
+    if (bookingMode !== "SHOOTING") return;
     if (!selectedPackageId) {
       setFormData(prev => ({
         ...prev,
@@ -378,7 +403,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPackageId, packages]);
+  }, [bookingMode, selectedPackageId, packages]);
 
   const calculateCustomPrice = (start, end) => {
     if (!start || !end || !photographer?.hourlyRate) return;
@@ -421,6 +446,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
   };
 
   const handleDateChange = (field, value) => {
+    if (bookingMode !== "SHOOTING") return;
     const updatedData = { ...formData, [field]: value };
     if (selectedPackageId && field === "start" && value) {
       const pkg = packages.find(p => p._id === selectedPackageId);
@@ -575,6 +601,23 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!photographer) return;
+
+    if (bookingMode === "MONTHLY") {
+      const activeMonthlyId = selectedMonthlyPackageId || monthlyPackages[0]?._id;
+      if (!activeMonthlyId) {
+        Swal.fire({
+          icon: "warning",
+          title: t.error,
+          text: language === "vi" ? "Vui lòng chọn gói tháng để tiếp tục." : "Please choose a monthly plan to continue.",
+          background: isDark ? "#0f172a" : "#fff",
+          color: isDark ? "#fff" : "#000",
+        });
+        return;
+      }
+
+      navigate(`/subscriptions?photographerId=${selectedPhotographerOption?.value}&planId=${activeMonthlyId}`);
+      return;
+    }
 
     const { title, start, end, location, price } = formData;
     const authPayload = getAuthPayload();
@@ -753,6 +796,10 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
 
   const inputBgClass = isDark ? "bg-slate-900 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900";
   const labelClass = `text-xs font-bold tracking-wider uppercase mb-1.5 block ${isDark ? "text-slate-400" : "text-slate-600"}`;
+  const activeModeButtonClass = "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/20";
+  const inactiveModeButtonClass = isDark
+    ? "bg-white/5 text-slate-300 border-white/10 hover:border-orange-400 hover:text-white"
+    : "bg-white text-slate-600 border-slate-200 hover:border-orange-300 hover:text-orange-600";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 text-slate-900 dark:text-zinc-100 min-h-screen">
@@ -1111,9 +1158,27 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
           <div className="lg:col-span-5">
             <div className="p-6 rounded-3xl border bg-white dark:bg-zinc-950 border-slate-200/60 dark:border-zinc-800/80 shadow-sm">
               <form onSubmit={handleSubmit} className="space-y-4">
-                
+                <div className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-200/70 bg-slate-50 p-1 dark:border-zinc-800 dark:bg-zinc-900/70">
+                  <button
+                    type="button"
+                    onClick={() => setBookingMode("SHOOTING")}
+                    className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition-all ${bookingMode === "SHOOTING" ? activeModeButtonClass : inactiveModeButtonClass}`}
+                  >
+                    <Camera size={16} />
+                    {language === "vi" ? "Đặt theo buổi" : "Session booking"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBookingMode("MONTHLY")}
+                    className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition-all ${bookingMode === "MONTHLY" ? activeModeButtonClass : inactiveModeButtonClass}`}
+                  >
+                    <Sparkles size={16} />
+                    {language === "vi" ? "Hợp đồng tháng" : "Monthly contract"}
+                  </button>
+                </div>
+
                 {/* Visual date selected prompt */}
-                {selectedDate ? (
+                {bookingMode === "SHOOTING" ? (selectedDate ? (
                   <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-2xl text-xs font-semibold flex items-center gap-2">
                     <CheckCircle size={14} className="text-emerald-500" />
                     <span>
@@ -1125,8 +1190,15 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                     <Info size={14} className="text-amber-500" />
                     <span>{t.selectDatePrompt}</span>
                   </div>
+                )) : (
+                  <div className="p-3 bg-orange-500/10 border border-orange-500/20 text-orange-700 dark:text-orange-300 rounded-2xl text-xs font-semibold flex items-center gap-2">
+                    <Sparkles size={14} className="text-orange-500" />
+                    <span>{language === "vi" ? "Chọn hợp đồng tháng của photographer rồi bấm tiếp tục để sang trang ký hợp đồng/thanh toán." : "Choose a monthly contract and continue to the contract checkout."}</span>
+                  </div>
                 )}
 
+                {bookingMode === "SHOOTING" ? (
+                <>
                 {/* Package selection — Dropdown */}
                 <div>
                   <label className={labelClass}>{t.packagesLabel}</label>
@@ -1407,6 +1479,100 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                     {submitLoading ? t.submitting : t.submitBtn}
                   </button>
                 </div>
+                </>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="rounded-3xl border border-orange-200/70 bg-orange-50/60 p-4 dark:border-orange-500/20 dark:bg-orange-500/10">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500">
+                            {language === "vi" ? "Hợp đồng tháng" : "Monthly contract"}
+                          </p>
+                          <h3 className="mt-1 text-lg font-black text-slate-900 dark:text-white">
+                            {language === "vi" ? "Chọn hợp đồng tháng của photographer" : "Pick this photographer's monthly contract"}
+                          </h3>
+                        </div>
+                        {monthlyPackagesLoading && <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 animate-pulse">{language === "vi" ? "Đang tải..." : "Loading..."}</span>}
+                      </div>
+
+                      <div className="mt-4 space-y-3">
+                        {monthlyPackages.length === 0 ? (
+                          <div className="rounded-2xl border border-dashed border-orange-200 bg-white px-4 py-5 text-sm text-slate-500 dark:border-orange-500/20 dark:bg-zinc-950/40 dark:text-slate-400">
+                            {language === "vi" ? "Photographer này chưa có gói tháng công khai." : "This photographer does not have a public monthly plan yet."}
+                          </div>
+                        ) : (
+                          monthlyPackages.map((pkg) => {
+                            const isSelected = String(pkg._id) === String(selectedMonthlyPackageId);
+                            return (
+                              <button
+                                key={pkg._id}
+                                type="button"
+                                onClick={() => setSelectedMonthlyPackageId(pkg._id)}
+                                className={`w-full rounded-3xl border p-4 text-left transition-all hover:-translate-y-0.5 ${
+                                  isSelected
+                                    ? "border-orange-400 bg-white shadow-lg shadow-orange-500/10 dark:bg-orange-500/10"
+                                    : "border-orange-100 bg-white/90 dark:border-white/10 dark:bg-white/5"
+                                }`}
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-orange-600 dark:border-white/10 dark:bg-white/5">
+                                      <Sparkles size={12} />
+                                      {language === "vi" ? "Hợp đồng" : "Contract"}
+                                    </div>
+                                    <h4 className="mt-3 text-base font-black text-slate-900 dark:text-white">{pkg.title}</h4>
+                                    <p className="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">{pkg.description || (language === "vi" ? "Gói tháng riêng của photographer này." : "This photographer's recurring plan.")}</p>
+                                  </div>
+                                  <div className="shrink-0 text-right">
+                                    <p className="text-lg font-black text-orange-600 dark:text-orange-300">{Number(pkg.price || 0).toLocaleString("vi-VN")} VNĐ</p>
+                                    <p className="mt-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                                      {Number(pkg.commitmentMonths || 1)} {language === "vi" ? "tháng" : "months"} · {Number(pkg.sessionsPerMonth || 1)} {language === "vi" ? "buổi/tháng" : "sessions/mo"}
+                                    </p>
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+
+                      {selectedMonthlyPackageId && (() => {
+                        const pkg = monthlyPackages.find((item) => String(item._id) === String(selectedMonthlyPackageId));
+                        if (!pkg) return null;
+                        return (
+                          <div className="mt-4 rounded-3xl border border-orange-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{language === "vi" ? "Đang chọn" : "Selected"}</p>
+                                <h4 className="mt-1 text-lg font-black">{pkg.title}</h4>
+                              </div>
+                              <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-300">
+                                {language === "vi" ? "Sẵn sàng" : "Ready"}
+                              </span>
+                            </div>
+                            <div className="mt-4 grid grid-cols-2 gap-3">
+                              <div className="rounded-2xl bg-slate-50 px-4 py-3 dark:bg-white/5">
+                                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-400">{language === "vi" ? "Giá" : "Price"}</div>
+                                <div className="mt-1 font-black text-orange-600 dark:text-orange-300">{Number(pkg.price || 0).toLocaleString("vi-VN")} VNĐ</div>
+                              </div>
+                              <div className="rounded-2xl bg-slate-50 px-4 py-3 dark:bg-white/5">
+                                <div className="text-[10px] uppercase tracking-[0.18em] text-slate-400">{language === "vi" ? "Cam kết" : "Commitment"}</div>
+                                <div className="mt-1 font-black">{Number(pkg.commitmentMonths || 1)} {language === "vi" ? "tháng" : "months"}</div>
+                              </div>
+                            </div>
+                            <button
+                              type="submit"
+                              disabled={submitLoading || !photographer?.isAvailable}
+                              className="mt-4 w-full rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-4 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {submitLoading ? t.submitting : (language === "vi" ? "Ký hợp đồng tháng này" : "Sign this monthly contract")}
+                            </button>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
 
               </form>
             </div>

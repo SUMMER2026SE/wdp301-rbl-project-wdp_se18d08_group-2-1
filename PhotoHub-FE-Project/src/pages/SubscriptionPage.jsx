@@ -42,6 +42,7 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const photographerId = searchParams.get("photographerId") || "";
+  const planIdFromQuery = searchParams.get("planId") || "";
 
   const [selectedPhotographer, setSelectedPhotographer] = useState(null);
   const [monthlyPackages, setMonthlyPackages] = useState([]);
@@ -61,42 +62,42 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
       ({
         vi: {
           eyebrow: "Hội viên PhotoHub",
-          title: "Gói tháng theo từng photographer",
+          title: "Hợp đồng tháng theo từng photographer",
           subtitle:
-            "Mỗi photographer có gói tháng riêng. Trang này đóng vai trò giới thiệu và dẫn người dùng tới đúng photographer để xem gói phù hợp.",
+            "Mỗi photographer có hợp đồng tháng riêng. Trang này đóng vai trò giới thiệu và dẫn người dùng tới đúng photographer để xem gói phù hợp.",
           stepsTitle: "Luồng hợp lý",
           step1: "Chọn photographer",
-          step2: "Xem gói tháng riêng",
-          step3: "Mở hồ sơ hoặc đặt lịch",
+          step2: "Xem hợp đồng tháng riêng",
+          step3: "Mở hồ sơ hoặc tiếp tục ký hợp đồng",
           selected: "Photographer đang xem",
-          monthlyPlans: "Gói tháng công khai",
+          monthlyPlans: "Hợp đồng tháng công khai",
           featured: "Photographer nổi bật",
           openProfile: "Mở hồ sơ",
-          viewPlans: "Xem gói tháng",
+          viewPlans: "Xem hợp đồng tháng",
           explore: "Khám phá photographer",
           loginHint: "Nếu gói tháng chưa hiện ra, hãy đăng nhập để xem dữ liệu công khai của photographer.",
-          emptyPlans: "Photographer này chưa có gói tháng công khai.",
+          emptyPlans: "Photographer này chưa có hợp đồng tháng công khai.",
           noPhotographer:
             "Chưa chọn photographer nào. Hãy vào danh sách nhiếp ảnh gia để chọn người phù hợp rồi xem gói tháng của họ.",
           backToList: "Xem danh sách nhiếp ảnh gia",
         },
         en: {
           eyebrow: "PhotoHub Membership",
-          title: "Monthly plans are tied to each photographer",
+          title: "Monthly contracts are tied to each photographer",
           subtitle:
-            "This page is an entry point, not a global package catalog. Pick a photographer to see their recurring plan and continue from there.",
+            "This page is an entry point, not a global package catalog. Pick a photographer to see their recurring contract and continue from there.",
           stepsTitle: "Recommended flow",
           step1: "Choose a photographer",
-          step2: "View their monthly plan",
-          step3: "Open the profile or book",
+          step2: "View their monthly contract",
+          step3: "Open the profile or continue the contract",
           selected: "Current photographer",
-          monthlyPlans: "Public monthly plans",
+          monthlyPlans: "Public monthly contracts",
           featured: "Featured photographers",
           openProfile: "Open profile",
-          viewPlans: "View monthly plan",
+          viewPlans: "View monthly contract",
           explore: "Explore photographers",
           loginHint: "If plans are missing, sign in to view the photographer's public data.",
-          emptyPlans: "This photographer does not have a public monthly plan yet.",
+          emptyPlans: "This photographer does not have a public monthly contract yet.",
           noPhotographer: "No photographer selected yet. Open the photographer list and choose one to continue.",
           backToList: "Browse photographers",
         },
@@ -148,7 +149,11 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
           });
 
           setMonthlyPackages(enriched);
-          setSelectedPlanId((current) => current || enriched[0]?._id || "");
+          setSelectedPlanId(
+            planIdFromQuery && enriched.some((plan) => String(plan._id) === String(planIdFromQuery))
+              ? planIdFromQuery
+              : (enriched[0]?._id || "")
+          );
         } else {
           const topRes = await photographerService.getTopPhotographers(4);
           if (!mounted) return;
@@ -170,7 +175,7 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
     return () => {
       mounted = false;
     };
-  }, [photographerId]);
+  }, [photographerId, planIdFromQuery]);
 
   const selectedPlan = selectedPlanDetail || monthlyPackages.find((item) => String(item._id) === String(selectedPlanId)) || monthlyPackages[0] || null;
   const selectedPlanImages = Array.isArray(selectedPlan?.images) && selectedPlan.images.length > 0

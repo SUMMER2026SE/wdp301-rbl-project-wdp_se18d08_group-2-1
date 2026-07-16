@@ -103,6 +103,10 @@ const subscriptionSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    lastPaymentAmount: {
+      type: Number,
+      default: 0,
+    },
     penaltyPaid: {
       type: Number,
       default: 0,

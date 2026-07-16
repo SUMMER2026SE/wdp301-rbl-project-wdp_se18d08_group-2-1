@@ -100,6 +100,7 @@ export default function PhotographerDashboard({
         totalReviews: 0,
         totalEarnings: 0,
         hourlyRate: 0,
+        monthlySubscriptionCapacity: 0,
         verificationStatus: "UNVERIFIED",
         isFeatured: false,
         isAvailable: true,
@@ -141,6 +142,7 @@ export default function PhotographerDashboard({
             location: "Khu vực / Thành phố hoạt động",
             experienceYears: "Số năm kinh nghiệm thực chiến",
             hourlyRate: "Mức chi phí theo giờ (đ/h)",
+            monthlySubscriptionCapacity: "Giới hạn khách/tháng",
             equipment: "Hệ thống thiết bị sử dụng chính",
             equipmentPlaceholder: "Ví dụ: Sony A7IV, Lens 24-70mm f2.8 GM II",
             stylesPlaceholder: "Wedding, Portrait, Streetlife, Concept, Dark Fantasy...",
@@ -203,6 +205,7 @@ export default function PhotographerDashboard({
             location: "Active Location / City",
             experienceYears: "Years of Active Experience",
             hourlyRate: "Hourly Rate Base (đ/h)",
+            monthlySubscriptionCapacity: "Monthly customer capacity",
             equipment: "Primary Gear & Equipment Set",
             equipmentPlaceholder: "e.g., Sony A7IV, Lens 24-70mm f2.8 GM II",
             stylesPlaceholder: "Wedding, Portrait, Streetlife, Concept, Dark Fantasy...",
@@ -1131,6 +1134,26 @@ export default function PhotographerDashboard({
                                              <span className={`${iconClass} font-bold text-sm`} style={{ left: '16px' }}>đ</span>
                                             <input type="number" name="hourlyRate" value={photographerData.hourlyRate || 0} onChange={handleChange} className={inputClass} />
                                         </div>
+                                    </div>
+
+                                    <div className="group">
+                                        <label className={labelClass}>{t.monthlySubscriptionCapacity || (language === "vi" ? "Giới hạn khách/tháng" : "Monthly customer capacity")}</label>
+                                        <div className="relative mt-1.5">
+                                            <Users className={iconClass} size={18} />
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                name="monthlySubscriptionCapacity"
+                                                value={photographerData.monthlySubscriptionCapacity ?? 0}
+                                                onChange={handleChange}
+                                                className={inputClass}
+                                            />
+                                        </div>
+                                        <p className="mt-2 text-[11px] leading-5 text-slate-400 dark:text-slate-500">
+                                            {language === "vi"
+                                                ? "Để 0 nếu bạn muốn không giới hạn số khách mua gói tháng trong tháng."
+                                                : "Set 0 for unlimited monthly subscriptions."}
+                                        </p>
                                     </div>
 
                                     <div className="md:col-span-2 group">

@@ -7,6 +7,7 @@ const {
   validateIdParam,
   validatePauseSubscription,
   validateRenewSubscription,
+  validatePreferredSchedule,
 } = require("./subscription.validation");
 
 const router = express.Router();
@@ -18,6 +19,7 @@ router.get("/payment/status", authenticate, controller.paymentStatus);
 router.post("/purchase", authenticate, authorize(["customer"]), validatePurchaseSubscription, controller.purchase);
 router.get("/my", authenticate, controller.getMy);
 router.get("/:id", authenticate, validateIdParam("id"), controller.getById);
+router.post("/:id/preferred-schedule", authenticate, authorize(["customer", "admin"]), validateIdParam("id"), validatePreferredSchedule, controller.updatePreferredSchedule);
 router.post("/:id/pause", authenticate, authorize(["customer", "admin"]), validateIdParam("id"), validatePauseSubscription, controller.pause);
 router.post("/:id/resume", authenticate, authorize(["customer", "admin"]), validateIdParam("id"), controller.resume);
 router.post("/:id/cancel", authenticate, authorize(["customer", "admin"]), validateIdParam("id"), controller.cancel);

@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const dayjs = require("dayjs");
 const { Booking } = require("../bookings/models/booking.model");
 const Photographer = require("../photographers/models/photographer");
@@ -30,7 +31,20 @@ const ACTIVE_BOOKING_STATUSES = [
   "NEED_RESCHEDULE",
 ];
 
-const normalizeBookingStatus = (status) => String(status || "").toUpperCase();
+const normalizeBookingStatus = (status) => String(status || "").toLowerCase();
+const normalizeSubscriptionBookingStatus = (status) => String(status || "").toUpperCase();
+
+const resolveObjectId = (value) => {
+  if (!value) return value;
+  if (value instanceof mongoose.Types.ObjectId) return value;
+  if (typeof value === "string") {
+    return mongoose.Types.ObjectId.isValid(value) ? new mongoose.Types.ObjectId(value) : value;
+  }
+  if (typeof value === "object") {
+    return resolveObjectId(value._id || value.id || value.valueOf?.());
+  }
+  return value;
+};
 
 const buildBookingTitle = (subscription, sessionNumber) => {
   const packageName = subscription.package?.name || subscription.package?.title || "Subscription";
@@ -38,6 +52,38 @@ const buildBookingTitle = (subscription, sessionNumber) => {
 };
 
 class SubscriptionScheduleService {
+  async rebuildSessions(subscription, { cycleIndex = 0, session = null } = {}) {
+    const scheduleQuery = SubscriptionSchedule.findOne({
+      subscription: subscription._id,
+      cycleIndex,
+    });
+    if (session) scheduleQuery.session(session);
+    const existingSchedule = await scheduleQuery;
+
+    if (existingSchedule) {
+      const bookingIds = (existingSchedule.sessions || []).map((item) => item.booking).filter(Boolean);
+      const subscriptionBookingIds = (existingSchedule.sessions || []).map((item) => item.subscriptionBooking).filter(Boolean);
+
+      if (bookingIds.length > 0) {
+        const bookingDelete = Booking.deleteMany({ _id: { $in: bookingIds } });
+        if (session) bookingDelete.session(session);
+        await bookingDelete;
+      }
+
+      if (subscriptionBookingIds.length > 0) {
+        const subBookingDelete = SubscriptionBooking.deleteMany({ _id: { $in: subscriptionBookingIds } });
+        if (session) subBookingDelete.session(session);
+        await subBookingDelete;
+      }
+
+      const deleteQuery = SubscriptionSchedule.deleteOne({ _id: existingSchedule._id });
+      if (session) deleteQuery.session(session);
+      await deleteQuery;
+    }
+
+    return await this.generateSessions(subscription, { cycleIndex, force: true, session });
+  }
+
   async generateSessions(subscription, { cycleIndex = 0, force = false, session = null } = {}) {
     const cycle = buildCycleWindow(subscription.startDate, cycleIndex);
     const scheduleQuery = SubscriptionSchedule.findOne({
@@ -51,7 +97,9 @@ class SubscriptionScheduleService {
       return existingSchedule;
     }
 
-    const photographerIdentity = await getPhotographerIdentity(subscription.photographer.user || subscription.photographer);
+    const photographerIdentity = await getPhotographerIdentity(
+      resolveObjectId(subscription.photographer?.user?._id || subscription.photographer?.user || subscription.photographer?._id || subscription.photographer)
+    );
     const preferredSchedule = sanitizePreferredSchedule(subscription.preferredSchedule, [
       { dayOfWeek: 5, startTime: "09:00", endTime: "12:00" },
       { dayOfWeek: 6, startTime: "13:00", endTime: "16:00" },
@@ -93,8 +141,8 @@ class SubscriptionScheduleService {
       const nextCandidate = candidateSlots.find((slot) => !usedCandidateIndexes.has(new Date(slot.start).getTime()));
 
       let bookingPayload = {
-        customer: subscription.customer,
-        photographer: subscription.photographer._id || subscription.photographer,
+        customer: resolveObjectId(subscription.customer?._id || subscription.customer),
+        photographer: resolveObjectId(subscription.photographer?._id || subscription.photographer),
         title: buildBookingTitle(subscription, sessionNumber),
         start: nextCandidate?.start || cycle.cycleStart,
         end: nextCandidate?.end || dayjs(cycle.cycleStart).add(3, "hour").toDate(),
@@ -140,7 +188,9 @@ class SubscriptionScheduleService {
           booking: booking._id,
           cycleIndex,
           sessionNumber,
-          status: isConflict ? BookingStatus.NEED_RESCHEDULE : BookingStatus.DRAFT,
+          status: isConflict
+            ? normalizeSubscriptionBookingStatus(BookingStatus.NEED_RESCHEDULE)
+            : normalizeSubscriptionBookingStatus(BookingStatus.DRAFT),
           scheduledStart: bookingPayload.start,
           scheduledEnd: bookingPayload.end,
           conflictReason: isConflict ? "Conflicting booking exists in the selected time range" : "",
@@ -164,7 +214,9 @@ class SubscriptionScheduleService {
         conflictReason: isConflict ? "Conflicting booking exists in the selected time range" : "",
         rescheduleRequired: isConflict,
         suggestedSlots,
-        status: isConflict ? BookingStatus.NEED_RESCHEDULE : BookingStatus.DRAFT,
+        status: isConflict
+          ? normalizeSubscriptionBookingStatus(BookingStatus.NEED_RESCHEDULE)
+          : normalizeSubscriptionBookingStatus(BookingStatus.DRAFT),
       });
 
       if (isConflict) {
