@@ -20,7 +20,7 @@ class LoyaltyService {
         userId,
         points: 0,
         totalPointsAccumulatedYear: 0,
-        membershipTier: "Silver",
+        membershipTier: null,
         referralCode: code,
       });
     }
@@ -49,8 +49,10 @@ class LoyaltyService {
       account.membershipTier = "Platinum";
     } else if (account.totalPointsAccumulatedYear >= 1000) {
       account.membershipTier = "Gold";
-    } else {
+    } else if (account.totalPointsAccumulatedYear > 0) {
       account.membershipTier = "Silver";
+    } else {
+      account.membershipTier = null;
     }
 
     await account.save();

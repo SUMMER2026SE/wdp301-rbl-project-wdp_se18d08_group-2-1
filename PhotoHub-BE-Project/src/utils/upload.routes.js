@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const upload = require("../middlewares/upload.middleware");
-const { uploadBufferToCloudinary, saveBufferToLocalUploads } = require("./cloudinaryUpload");
+const { uploadBufferToCloudinary } = require("./cloudinaryUpload");
 
 const MAX_FILES = 100;
 
@@ -43,24 +43,19 @@ router.post("/images", (req, res) => {
       console.log(`[Upload] Uploading ${req.files.length} package image(s)...`);
 
       const uploadPromises = req.files.map(async (file, index) => {
-        let result = await uploadBufferToCloudinary(file.buffer, file.mimetype, {
+        const result = await uploadBufferToCloudinary(file.buffer, file.mimetype, {
           folder: "photohub/packages",
           localFolder: "packages",
           originalName: file.originalname,
         });
 
-        let url = result?.secure_url || result?.url;
+        const url = result?.secure_url || result?.url;
         if (!url) {
-          console.warn(`[Upload] Image ${index + 1} returned no URL. Saving locally as final fallback.`);
-          result = saveBufferToLocalUploads(file.buffer, file.mimetype, {
-            localFolder: "packages",
-            originalName: file.originalname,
-          });
-          url = result?.secure_url || result?.url;
+          throw new Error(`Image ${index + 1} could not be uploaded to Cloudinary`);
         }
 
-        if (!url) {
-          throw new Error(`Image ${index + 1} could not be stored`);
+        if (result?.storage === "local" || String(url).includes("/uploads/")) {
+          throw new Error(`Image ${index + 1} was stored locally instead of Cloudinary`);
         }
         console.log(`[Upload] Image ${index + 1}/${req.files.length} ok (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
         return url;

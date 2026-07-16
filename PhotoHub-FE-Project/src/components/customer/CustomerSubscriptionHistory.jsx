@@ -58,13 +58,14 @@ const dayOptions = [
 
 const normalizePreferredSchedule = (schedule = []) => {
   if (!Array.isArray(schedule) || schedule.length === 0) {
-    return [{ dayOfWeek: 5, startTime: "09:00", endTime: "12:00" }];
+    return [{ dayOfWeek: 5, startTime: "09:00", endTime: "12:00", note: "" }];
   }
 
   return schedule.map((item) => ({
     dayOfWeek: Number(item?.dayOfWeek ?? 5),
     startTime: String(item?.startTime || "09:00"),
     endTime: String(item?.endTime || "12:00"),
+    note: String(item?.note || ""),
   }));
 };
 
@@ -112,6 +113,8 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
       contractHint: "Xem draft lịch chụp và chọn khung giờ ưu tiên cho chu kỳ hiện tại.",
       draftSessions: "Buổi chụp nháp",
       preferredSchedule: "Khung giờ ưu tiên",
+      note: "Ghi chú",
+      notePlaceholder: "Ví dụ: muốn chụp chậm hơn, chú ý góc sáng, nhắc trước khi chụp...",
       addSlot: "Thêm khung",
       saveSchedule: "Lưu lịch ưu tiên",
       openContract: "Mở hợp đồng",
@@ -137,6 +140,8 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
       contractHint: "Review draft shoots and choose preferred slots for the current cycle.",
       draftSessions: "Draft sessions",
       preferredSchedule: "Preferred slots",
+      note: "Note",
+      notePlaceholder: "For example: slower pace, focus on lighting, remind me before the shoot...",
       addSlot: "Add slot",
       saveSchedule: "Save preferred schedule",
       openContract: "Open contract",
@@ -191,7 +196,7 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
   }, []);
 
   const addSlot = useCallback(() => {
-    setPreferredSchedule((prev) => [...prev, { dayOfWeek: 5, startTime: "09:00", endTime: "12:00" }]);
+    setPreferredSchedule((prev) => [...prev, { dayOfWeek: 5, startTime: "09:00", endTime: "12:00", note: "" }]);
   }, []);
 
   const removeSlot = useCallback((index) => {
@@ -526,6 +531,12 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
                                     {session.conflictReason && (
                                       <p className={`mt-2 text-xs ${isDark ? "text-amber-300" : "text-amber-700"}`}>{session.conflictReason}</p>
                                     )}
+                                    {session.note && (
+                                      <div className={`mt-2 rounded-xl border px-3 py-2 text-xs leading-relaxed ${isDark ? "border-white/10 bg-white/[0.02] text-slate-300" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                                        <span className="mr-1 font-black uppercase tracking-[0.14em] text-orange-500">{t.note}:</span>
+                                        {session.note}
+                                      </div>
+                                    )}
                                     {Array.isArray(session.suggestedSlots) && session.suggestedSlots.length > 0 && (
                                       <div className="mt-2 flex flex-wrap gap-2">
                                         {session.suggestedSlots.map((slot, index) => (
@@ -598,6 +609,16 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
                             />
                           </label>
                         </div>
+                        <label className="mt-2 block">
+                          <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{t.note}</span>
+                          <textarea
+                            rows={2}
+                            value={slot.note || ""}
+                            onChange={(e) => updateSlot(index, "note", e.target.value)}
+                            placeholder={t.notePlaceholder}
+                            className={`w-full rounded-xl border px-3 py-2 text-sm outline-none ${isDark ? "border-white/10 bg-[#09111f] text-white placeholder:text-slate-500" : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"}`}
+                          />
+                        </label>
                         <div className="mt-2 flex justify-end">
                           <button
                             type="button"

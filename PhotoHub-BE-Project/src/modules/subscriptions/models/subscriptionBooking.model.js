@@ -43,6 +43,10 @@ const subscriptionBookingSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
+    note: {
+      type: String,
+      default: "",
+    },
     conflictReason: {
       type: String,
       default: "",

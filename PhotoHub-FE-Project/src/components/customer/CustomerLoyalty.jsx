@@ -194,7 +194,7 @@ export default function CustomerLoyalty({ language = "vi", theme = "dark" }) {
             <div className="flex items-center gap-3">
               <Award className="h-10 w-10 text-yellow-300 animate-pulse" />
               <h1 className="text-3xl font-extrabold tracking-wide uppercase text-yellow-100">
-                {account?.membershipTier || "Silver"}
+                {account?.membershipTier || "Customer"}
               </h1>
             </div>
             <p className="text-xs text-white/80">
@@ -202,7 +202,7 @@ export default function CustomerLoyalty({ language = "vi", theme = "dark" }) {
                 ? (language === "vi" ? "Hệ số điểm: 1.5x | Giảm giá: 10% phí hệ thống" : "Multiplier: 1.5x | Discount: 10% system fee")
                 : account?.membershipTier === "Gold"
                 ? (language === "vi" ? "Hệ số điểm: 1.2x | Giảm giá: 5% phí hệ thống" : "Multiplier: 1.2x | Discount: 5% system fee")
-                : (language === "vi" ? "Hệ số điểm: 1.0x | Silver member" : "Multiplier: 1.0x | Silver member")
+                : (language === "vi" ? "Hệ số điểm: 1.0x | Khách hàng" : "Multiplier: 1.0x | Customer")
               }
             </p>
           </div>

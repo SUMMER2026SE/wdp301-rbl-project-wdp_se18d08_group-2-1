@@ -23,6 +23,8 @@ const communityRoutes = require("./modules/community/community.routes");
 const bookingRoutes = require("./modules/bookings/routes/booking.routes");
 const reviewRoutes = require("./modules/review/routes/review.routes");
 const customerJobRoutes = require("./modules/customers/customer.job.routes");
+const subscriptionRoutes = require("./modules/subscriptions/subscription.routes");
+const loyaltyRoutes = require("./modules/loyalty/routes/loyalty.routes");
 // Middlewares
 app.use(express.json({ limit: "300mb" }));
 app.use(express.urlencoded({ limit: "300mb", extended: true }));
@@ -61,6 +63,8 @@ app.use("/api/style-tags", styleTagRoutes);
 app.use("/api/packages", packageRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/loyalty", loyaltyRoutes);
 app.use("/api", reviewRoutes);
 app.use("/api/upload", require("./utils/upload.routes"));
 app.use("/api/customer/jobs", customerJobRoutes);

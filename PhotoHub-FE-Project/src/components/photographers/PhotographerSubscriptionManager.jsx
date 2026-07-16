@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
-import { CircleDollarSign, PauseCircle, PlayCircle, RotateCcw, Shield, User, ArrowRight } from "lucide-react";
+import { ArrowRight, CalendarDays, CircleDollarSign, PauseCircle, PlayCircle, RotateCcw, Shield, User, X } from "lucide-react";
 import { subscriptionService } from "../../services/subscriptionService";
 
 const statusTone = {
@@ -40,6 +41,10 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
   const [subscriptions, setSubscriptions] = useState([]);
   const [busyId, setBusyId] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState("");
+  const [selectedSubscription, setSelectedSubscription] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   const t = useMemo(() => {
     const vi = {
@@ -59,11 +64,16 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
       remaining: "Buổi còn lại",
       payment: "Thanh toán",
       openPlan: "Mở trang gói",
+      viewDraft: "Xem draft",
       pause: "Tạm dừng",
       resume: "Khôi phục",
       confirmPause: "Tạm dừng gói này 30 ngày?",
       confirmResume: "Khôi phục gói này?",
       actionError: "Không thể xử lý gói tháng",
+      draftTitle: "Draft lịch của khách",
+      draftHint: "Xem lịch nháp và note của khách để trao đổi khung giờ phù hợp.",
+      draftEmpty: "Chưa có draft nào cho gói này.",
+      customerNote: "Ghi chú của khách",
     };
     const en = {
       title: "Monthly plan manager",
@@ -82,11 +92,16 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
       remaining: "Remaining",
       payment: "Payment",
       openPlan: "Open plan page",
+      viewDraft: "View draft",
       pause: "Pause",
       resume: "Resume",
       confirmPause: "Pause this plan for 30 days?",
       confirmResume: "Resume this plan?",
       actionError: "Could not manage the monthly plan",
+      draftTitle: "Customer draft schedule",
+      draftHint: "Review the draft sessions and customer notes before confirming the best fit.",
+      draftEmpty: "No draft has been generated for this plan yet.",
+      customerNote: "Customer note",
     };
     return language === "vi" ? vi : en;
   }, [language]);
@@ -101,6 +116,28 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
       setSubscriptions([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const closeDetailModal = () => {
+    setShowDetailModal(false);
+    setSelectedSubscription(null);
+    setDetailError("");
+  };
+
+  const openSubscriptionDetail = async (item) => {
+    setShowDetailModal(true);
+    setDetailLoading(true);
+    setDetailError("");
+    setSelectedSubscription(item);
+    try {
+      const res = await subscriptionService.getSubscriptionById(item._id);
+      const detail = res?.data || res;
+      setSelectedSubscription(detail?.subscription || detail || item);
+    } catch (error) {
+      setDetailError(error?.response?.data?.message || error.message || "Failed to load subscription detail");
+    } finally {
+      setDetailLoading(false);
     }
   };
 
@@ -334,6 +371,18 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
                         {t.openPlan}
                         <ArrowRight size={16} />
                       </Link>
+                      <button
+                        type="button"
+                        onClick={() => openSubscriptionDetail(item)}
+                        className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-bold transition ${
+                          isDark
+                            ? "border-white/10 bg-white/5 text-white hover:bg-white/10"
+                            : "border-slate-200 bg-slate-50 text-slate-700 hover:border-orange-300 hover:text-orange-600"
+                        }`}
+                      >
+                        <CalendarDays size={15} />
+                        {t.viewDraft}
+                      </button>
                       {status === "ACTIVE" && (
                         <button
                           disabled={busyId === item._id}
@@ -362,6 +411,124 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
           </div>
         )}
       </div>
+
+      {showDetailModal && createPortal(
+        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-950/70 px-4 py-4 backdrop-blur-sm">
+          <div className={`w-full max-w-4xl overflow-hidden rounded-[28px] border shadow-2xl ${isDark ? "border-white/10 bg-[#09111f] text-white" : "border-slate-200 bg-white text-slate-900"}`}>
+            <div className={`flex items-start justify-between gap-4 border-b px-5 py-4 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-50 bg-slate-50"}`}>
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-orange-500">{t.draftTitle}</p>
+                <h3 className="mt-1 text-2xl font-black">
+                  {selectedSubscription?.package?.name || selectedSubscription?.package?.title || "Monthly plan"}
+                </h3>
+                <p className={`mt-1 text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>{t.draftHint}</p>
+              </div>
+              <button
+                type="button"
+                onClick={closeDetailModal}
+                className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${isDark ? "border-white/10 bg-white/5 text-white hover:bg-white/10" : "border-slate-200 bg-white text-slate-600 hover:border-orange-300"}`}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="max-h-[78vh] overflow-y-auto p-5">
+              {detailLoading ? (
+                <div className="py-10 text-center text-sm text-slate-500">Loading...</div>
+              ) : detailError ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                  {detailError}
+                </div>
+              ) : (
+                <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+                  <div className={`rounded-[22px] border p-4 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-slate-50"}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-orange-500">Sessions</p>
+                        <h4 className="mt-1 text-lg font-black">{language === "vi" ? "Lịch nháp hiện tại" : "Current draft schedule"}</h4>
+                      </div>
+                      <CalendarDays size={18} className="text-orange-500" />
+                    </div>
+
+                    <div className="mt-4 grid gap-3">
+                      {Array.isArray(selectedSubscription?.bookingSchedule) && selectedSubscription.bookingSchedule.length > 0 ? (
+                        selectedSubscription.bookingSchedule.map((cycle) => (
+                          <div key={cycle._id || cycle.cycleIndex} className={`rounded-2xl border p-4 ${isDark ? "border-white/10 bg-black/20" : "border-slate-200 bg-white"}`}>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-black">Cycle {cycle.cycleIndex + 1}</p>
+                                <p className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                                  {cycle.cycleStart ? new Date(cycle.cycleStart).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US") : "-"} → {cycle.cycleEnd ? new Date(cycle.cycleEnd).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US") : "-"}
+                                </p>
+                              </div>
+                              <span className="rounded-full bg-orange-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-orange-500">
+                                {cycle.generatedSessions || 0}/{cycle.totalSessions || 0}
+                              </span>
+                            </div>
+
+                            <div className="mt-3 grid gap-2">
+                              {(cycle.sessions || []).length > 0 ? (
+                                cycle.sessions.map((session) => (
+                                  <div key={session._id || `${cycle.cycleIndex}-${session.sessionNumber}`} className={`rounded-2xl border px-3 py-2 ${isDark ? "border-white/10 bg-white/[0.02]" : "border-slate-200 bg-slate-50"}`}>
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                      <div>
+                                        <p className="text-sm font-bold">Buổi {session.sessionNumber}</p>
+                                        <p className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                                          {session.scheduledStart ? new Date(session.scheduledStart).toLocaleString(language === "vi" ? "vi-VN" : "en-US") : "-"} → {session.scheduledEnd ? new Date(session.scheduledEnd).toLocaleString(language === "vi" ? "vi-VN" : "en-US") : "-"}
+                                        </p>
+                                      </div>
+                                      <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${toneClass(String(session.status || "").toUpperCase() === "NEED_RESCHEDULE" ? "rose" : String(session.status || "").toUpperCase() === "DRAFT" ? "amber" : "emerald", isDark)}`}>
+                                        {String(session.status || "DRAFT")}
+                                      </span>
+                                    </div>
+                                    {session.note && (
+                                      <div className={`mt-2 rounded-xl border px-3 py-2 text-xs leading-relaxed ${isDark ? "border-white/10 bg-white/[0.02] text-slate-300" : "border-slate-200 bg-white text-slate-600"}`}>
+                                        <span className="mr-1 font-black uppercase tracking-[0.14em] text-orange-500">{t.customerNote}:</span>
+                                        {session.note}
+                                      </div>
+                                    )}
+                                    {session.conflictReason && (
+                                      <p className={`mt-2 text-xs ${isDark ? "text-amber-300" : "text-amber-700"}`}>{session.conflictReason}</p>
+                                    )}
+                                  </div>
+                                ))
+                              ) : (
+                                <div className={`rounded-2xl border border-dashed px-4 py-5 text-sm ${isDark ? "border-white/10 text-slate-400" : "border-slate-200 text-slate-500"}`}>
+                                  {t.draftEmpty}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className={`rounded-2xl border border-dashed px-4 py-5 text-sm ${isDark ? "border-white/10 text-slate-400" : "border-slate-200 text-slate-500"}`}>
+                          {t.draftEmpty}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className={`rounded-[22px] border p-4 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-slate-50"}`}>
+                    <p className="text-[11px] font-black uppercase tracking-[0.24em] text-orange-500">{t.customerNote}</p>
+                    <p className={`mt-2 text-sm leading-relaxed ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+                      {language === "vi"
+                        ? "Khách có thể ghi chú ngắn ngay trong từng khung giờ ưu tiên. Note này sẽ đi theo draft lịch để photographer hiểu mong muốn trước khi chốt."
+                        : "Customers can leave a short note on each preferred slot. That note travels with the draft schedule so the photographer understands the request before confirming."}
+                    </p>
+
+                    <div className={`mt-4 rounded-2xl border px-4 py-3 text-xs leading-relaxed ${isDark ? "border-white/10 bg-black/20 text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>
+                      {language === "vi"
+                        ? "Luồng mới: mua gói → hệ thống sinh draft lịch tự động → khách chỉnh khung giờ/note → photographer xem & trao đổi → chốt lịch."
+                        : "New flow: buy plan → system generates draft sessions automatically → customer adjusts slot/note → photographer reviews and aligns → schedule is confirmed."}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </section>
   );
 }
