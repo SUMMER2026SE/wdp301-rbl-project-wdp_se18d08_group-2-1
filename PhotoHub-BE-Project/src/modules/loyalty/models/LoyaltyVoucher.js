@@ -15,17 +15,48 @@ const loyaltyVoucherSchema = new mongoose.Schema(
     pointsCost: {
       type: Number,
       required: true,
+      default: 0,
+    },
+    scope: {
+      type: String,
+      enum: ["PERSONAL", "GLOBAL"],
+      default: "PERSONAL",
+      index: true,
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: function () { return this.scope === "PERSONAL"; },
+      default: null,
       index: true,
+    },
+    sourceVoucherId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "LoyaltyVoucher",
+      default: null,
     },
     isUsed: {
       type: Boolean,
       default: false,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    usageLimit: {
+      type: Number,
+      default: null,
+      min: 1,
+    },
+    usedCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    usedBy: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    }],
     expiryDate: {
       type: Date,
       required: true,

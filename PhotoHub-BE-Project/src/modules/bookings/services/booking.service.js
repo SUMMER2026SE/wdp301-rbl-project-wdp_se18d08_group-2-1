@@ -13,6 +13,20 @@ const COMMISSION_RATE = Number(process.env.PHOTOGRAPHER_COMMISSION_RATE || 0.1);
 const PAYOUT_HOLD_DAYS = Number(process.env.PAYOUT_HOLD_DAYS || 0);
 const DEFAULT_FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:4200";
 
+const voucherAccessQuery = (code, userId) => ({
+  code,
+  userId,
+  scope: { $ne: "GLOBAL" },
+});
+
+const availableVoucherQuery = (code, userId) => ({
+  code,
+  expiryDate: { $gt: new Date() },
+  userId,
+  scope: { $ne: "GLOBAL" },
+  isUsed: false,
+});
+
 const payos = new PayOS({
   clientId: process.env.PAYOS_CLIENT_ID,
   apiKey: process.env.PAYOS_API_KEY,
@@ -86,10 +100,9 @@ class BookingService {
     obj.discountAmount = 0;
     if (obj.appliedVoucherCode) {
       const LoyaltyVoucher = require("../../loyalty/models/LoyaltyVoucher");
-      const voucher = await LoyaltyVoucher.findOne({
-        code: obj.appliedVoucherCode,
-        userId: obj.customer?._id || obj.customer,
-      });
+      const voucher = await LoyaltyVoucher.findOne(voucherAccessQuery(
+        obj.appliedVoucherCode, obj.customer?._id || obj.customer
+      ));
       if (voucher) {
         obj.discountAmount = voucher.discountAmount;
       }
@@ -173,12 +186,9 @@ class BookingService {
     // Validate loyalty voucher or addon rewards if provided
     if (dto.appliedVoucherCode) {
       const LoyaltyVoucher = require("../../loyalty/models/LoyaltyVoucher");
-      const voucher = await LoyaltyVoucher.findOne({
-        code: dto.appliedVoucherCode,
-        userId: customerUserId,
-        isUsed: false,
-        expiryDate: { $gt: new Date() }
-      });
+      const voucher = await LoyaltyVoucher.findOne(
+        availableVoucherQuery(dto.appliedVoucherCode, customerUserId)
+      );
       if (!voucher) {
         throw new Error("Mã giảm giá không hợp lệ hoặc đã hết hạn");
       }
@@ -311,10 +321,18 @@ class BookingService {
 
     if (booking.appliedVoucherCode) {
       const LoyaltyVoucher = require("../../loyalty/models/LoyaltyVoucher");
-      await LoyaltyVoucher.findOneAndUpdate(
-        { code: booking.appliedVoucherCode, userId: booking.customer },
-        { $set: { isUsed: false } }
+      const voucher = await LoyaltyVoucher.findOne(
+        voucherAccessQuery(booking.appliedVoucherCode, booking.customer)
       );
+      if (voucher?.scope === "GLOBAL") {
+        await LoyaltyVoucher.updateOne(
+          { _id: voucher._id, usedBy: booking.customer },
+          { $pull: { usedBy: booking.customer }, $inc: { usedCount: -1 } }
+        );
+      } else if (voucher) {
+        voucher.isUsed = false;
+        await voucher.save();
+      }
     }
 
     const photographerUserId = await resolvePhotographerUserId(booking.photographer);
@@ -360,11 +378,9 @@ class BookingService {
 
     let discountAmount = 0;
     if (booking.appliedVoucherCode) {
-      const voucher = await LoyaltyVoucher.findOne({
-        code: booking.appliedVoucherCode,
-        userId: customerUserId,
-        isUsed: false
-      });
+      const voucher = await LoyaltyVoucher.findOne(
+        availableVoucherQuery(booking.appliedVoucherCode, customerUserId)
+      );
       if (voucher) {
         discountAmount += voucher.discountAmount;
       }
@@ -441,10 +457,18 @@ class BookingService {
     // 1. Mark voucher as used if applied
     if (booking.appliedVoucherCode) {
       const LoyaltyVoucher = require("../../loyalty/models/LoyaltyVoucher");
-      await LoyaltyVoucher.findOneAndUpdate(
-        { code: booking.appliedVoucherCode, userId: booking.customer },
-        { $set: { isUsed: true } }
+      const voucher = await LoyaltyVoucher.findOne(
+        voucherAccessQuery(booking.appliedVoucherCode, booking.customer)
       );
+      if (voucher?.scope === "GLOBAL") {
+        await LoyaltyVoucher.updateOne(
+          { _id: voucher._id, usedBy: { $ne: booking.customer } },
+          { $addToSet: { usedBy: booking.customer }, $inc: { usedCount: 1 } }
+        );
+      } else if (voucher) {
+        voucher.isUsed = true;
+        await voucher.save();
+      }
     }
 
     // 2. Mark addon reward as used if applied

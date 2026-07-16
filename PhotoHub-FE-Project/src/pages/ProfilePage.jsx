@@ -19,7 +19,6 @@ import Swal from "sweetalert2";
 import { profileService } from "../services/profileService";
 import CustomerBookingList from "../booking/CustomerBookingList";
 import PhotographerChat from "../components/photographers/PhotographerChat";
-import CustomerJobPostsManager from "../components/customer/CustomerJobPostsManager";
 import CustomerLoyalty from "../components/customer/CustomerLoyalty";
 
 export default function ProfilePage({
@@ -558,19 +557,6 @@ export default function ProfilePage({
                         </div>
                     )}
 
-                    {(() => {
-                        const apiRole = user?.role;
-                        const localUser = JSON.parse(localStorage.getItem("user") || "{}");
-                        const localRole = localUser?.role;
-                        const effectiveRole = apiRole || localRole;
-                        return effectiveRole === "customer" ? (
-                            <div className={`border rounded-3xl p-8 transition-all ${
-                                isDark ? "bg-white/5 border-white/10" : "bg-slate-50/50 border-slate-200/80 shadow-sm"
-                            }`}>
-                                <CustomerJobPostsManager theme={theme} language={language} />
-                            </div>
-                        ) : null;
-                    })()}
                 </div>
             </div>
         </div>

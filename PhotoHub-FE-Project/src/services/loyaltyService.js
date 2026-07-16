@@ -73,4 +73,49 @@ export const loyaltyService = {
     });
     return response.json();
   },
+
+  getRewardCatalog: async () => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${BASE_URL}/catalog`, {
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    });
+    return response.json();
+  },
+
+  adminGetVouchers: async (page = 1, limit = 10, status = "all") => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${BASE_URL}/admin/vouchers?page=${page}&limit=${limit}&status=${status}`, {
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    });
+    return response.json();
+  },
+
+  adminCreateVoucher: async (payload) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${BASE_URL}/admin/vouchers`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    });
+    return response.json();
+  },
+
+  adminUpdateVoucher: async (id, payload) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${BASE_URL}/admin/vouchers/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    });
+    return response.json();
+  },
+
+  adminDeleteVoucher: async (id) => {
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${BASE_URL}/admin/vouchers/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.json();
+  },
 };

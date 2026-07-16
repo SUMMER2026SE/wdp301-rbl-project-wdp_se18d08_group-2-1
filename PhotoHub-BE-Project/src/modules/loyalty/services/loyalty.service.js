@@ -91,8 +91,23 @@ class LoyaltyService {
     let cost = 0;
     let value = 0;
     let name = "";
+    let template = null;
 
-    if (voucherType === "VOUCHER_50") {
+    if (voucherType.startsWith("VOUCHER_TEMPLATE_")) {
+      const templateId = voucherType.replace("VOUCHER_TEMPLATE_", "");
+      template = await LoyaltyVoucher.findOneAndUpdate(
+        {
+          _id: templateId, scope: "GLOBAL", isActive: true, expiryDate: { $gt: new Date() },
+          $expr: { $or: [{ $eq: ["$usageLimit", null] }, { $lt: ["$usedCount", "$usageLimit"] }] },
+        },
+        { $inc: { usedCount: 1 } },
+        { new: true }
+      );
+      if (!template) throw new Error("Voucher đổi điểm không còn khả dụng");
+      cost = template.pointsCost;
+      value = template.discountAmount;
+      name = `Voucher ${template.code}`;
+    } else if (voucherType === "VOUCHER_50") {
       cost = 500;
       value = 50000;
       name = "Voucher giảm giá 50k";
@@ -105,19 +120,27 @@ class LoyaltyService {
     }
 
     // Deduct points
-    await this.deductPoints(userId, cost, "Redeem_Voucher", `Đổi điểm lấy ${name}`);
+    try {
+      await this.deductPoints(userId, cost, "Redeem_Voucher", `Đổi điểm lấy ${name}`);
+    } catch (error) {
+      if (template) await LoyaltyVoucher.updateOne({ _id: template._id }, { $inc: { usedCount: -1 } });
+      throw error;
+    }
 
     // Generate unique code
     const randCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const code = `PH-REWARD-${randCode}`;
+    const code = `${template ? template.code : "PH-REWARD"}-${randCode}`;
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + 30); // 30 days validity
+    if (template && template.expiryDate < expiryDate) expiryDate.setTime(template.expiryDate.getTime());
 
     const voucher = await LoyaltyVoucher.create({
       code,
       discountAmount: value,
       pointsCost: cost,
       userId,
+      scope: "PERSONAL",
+      sourceVoucherId: template?._id || null,
       isUsed: false,
       expiryDate,
     });
