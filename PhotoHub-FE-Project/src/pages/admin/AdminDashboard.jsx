@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { adminService } from "../../services/adminService";
-import { 
-  Users, 
-  Camera, 
-  ShoppingBag, 
-  DollarSign, 
-  Percent, 
+import {
+  Users,
+  Camera,
+  ShoppingBag,
+  DollarSign,
+  Percent,
   Clock,
   TrendingUp,
   Award,
@@ -16,6 +16,7 @@ import Swal from "sweetalert2";
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [hoveredPoint, setHoveredPoint] = useState(null);
 
   useEffect(() => {
     fetchStats();
@@ -84,8 +85,63 @@ export default function AdminDashboard() {
     }
   ];
 
-  // Tính chiều cao lớn nhất cho biểu đồ doanh thu tháng
-  const maxRevenue = Math.max(...(stats.monthlyRevenueChart?.map(d => d.revenue) || [1000000]));
+  // Cấu hình SVG Line/Area Chart cho doanh thu hàng tháng theo dòng tiền (phóng to dòng tiền dù ít tiền)
+  const rawChartData = stats.monthlyRevenueChart || [];
+  
+  // Tạo bản sao hoặc bổ sung dữ liệu
+  const chartData = [...rawChartData];
+
+  // Nếu dữ liệu rỗng hoặc ít hơn 6 tháng, tự động bù đắp các tháng trước đó để vẽ được đường dòng tiền liên tục
+  if (chartData.length < 6) {
+    const monthsToShow = 6;
+    let baseDate = new Date();
+    if (chartData.length > 0) {
+      const lastMonthStr = chartData[chartData.length - 1].month; // YYYY-MM
+      const [year, month] = lastMonthStr.split("-");
+      baseDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+    }
+    
+    const filledChartData = [];
+    for (let i = monthsToShow - 1; i >= 0; i--) {
+      const d = new Date(baseDate.getFullYear(), baseDate.getMonth() - i, 1);
+      const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const realData = rawChartData.find(x => x.month === monthKey);
+      filledChartData.push({
+        month: monthKey,
+        revenue: realData ? realData.revenue : 0
+      });
+    }
+    chartData.splice(0, chartData.length, ...filledChartData);
+  }
+
+  const maxRevenueVal = Math.max(...chartData.map(d => d.revenue), 0) || 10;
+
+  const svgWidth = 550;
+  const svgHeight = 220;
+  const paddingLeft = 75;
+  const paddingRight = 20;
+  const paddingTop = 25;
+  const paddingBottom = 50; // Tăng thêm để có không gian cho chữ xoay nghiêng
+
+  const points = chartData.map((data, idx) => {
+    const x = paddingLeft + (idx / Math.max(1, chartData.length - 1)) * (svgWidth - paddingLeft - paddingRight);
+    const y = svgHeight - paddingBottom - (data.revenue / maxRevenueVal) * (svgHeight - paddingTop - paddingBottom);
+    return { x, y, revenue: data.revenue, month: data.month, index: idx };
+  });
+
+  const linePath = points.length > 0
+    ? `M ${points[0].x} ${points[0].y} ` + points.slice(1).map(p => `L ${p.x} ${p.y}`).join(" ")
+    : "";
+
+  const areaPath = points.length > 0
+    ? `${linePath} L ${points[points.length - 1].x} ${svgHeight - paddingBottom} L ${points[0].x} ${svgHeight - paddingBottom} Z`
+    : "";
+
+  const formatAbbreviated = (num) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)} Tr`;
+    if (num >= 1000) return `${(num / 1000).toFixed(0)}k`;
+    return `${num.toFixed(0)} đ`;
+  };
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -127,44 +183,117 @@ export default function AdminDashboard() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Doanh thu hàng tháng (SVG bar chart) */}
-        <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-md">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-orange-400" />
-              Doanh thu hàng tháng
-            </h2>
-            <span className="text-xs text-slate-400">Giao dịch thành công (VNĐ)</span>
-          </div>
+        {/* Doanh thu hàng tháng (SVG Area/Line Chart đại diện cho dòng tiền) */}
+        <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-md flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-emerald-400" />
+                Sơ đồ biến động dòng tiền doanh thu
+              </h2>
+              <span className="text-xs text-slate-400 font-semibold">Đơn vị: VNĐ</span>
+            </div>
 
-          <div className="h-64 flex items-end justify-between gap-4 pt-4 border-b border-slate-800">
-            {stats.monthlyRevenueChart?.length > 0 ? (
-              stats.monthlyRevenueChart.map((data, idx) => {
-                const heightPercentage = (data.revenue / maxRevenue) * 85 + 5; // Min 5% to make bar visible
-                return (
-                  <div key={idx} className="flex-1 flex flex-col items-center group relative">
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full mb-2 hidden group-hover:block z-10 bg-slate-950 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 text-white text-center shadow-xl">
-                      <p className="font-semibold text-orange-400">{formatCurrency(data.revenue)}</p>
-                      <p className="text-slate-400 font-normal">{data.month}</p>
-                    </div>
+            {chartData.length > 0 ? (
+              <div className="relative w-full pt-2">
+                <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-auto overflow-visible select-none">
+                  <defs>
+                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.45" />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
 
-                    {/* Bar */}
-                    <div 
-                      style={{ height: `${heightPercentage}%` }} 
-                      className="w-full bg-gradient-to-t from-orange-600 to-orange-400 rounded-t-lg transition-all duration-500 hover:from-orange-400 hover:to-orange-300 shadow-lg shadow-orange-500/10 cursor-pointer"
-                    ></div>
-                    
-                    {/* Label */}
-                    <span className="text-slate-500 text-[10px] mt-2 select-none truncate max-w-full">
-                      {data.month.split("-")[1]}/{data.month.split("-")[0].slice(2)}
-                    </span>
+                  {/* Grid Lines & Y-Axis Labels */}
+                  {[0, 0.33, 0.66, 1].map((ratio, idx) => {
+                    const y = paddingTop + (svgHeight - paddingTop - paddingBottom) * (1 - ratio);
+                    const labelVal = maxRevenueVal * ratio;
+                    return (
+                      <g key={idx} className="opacity-40">
+                        <line 
+                          x1={paddingLeft} 
+                          y1={y} 
+                          x2={svgWidth - paddingRight} 
+                          y2={y} 
+                          stroke="#334155" 
+                          strokeDasharray="4 4" 
+                          strokeWidth="1"
+                        />
+                        <text 
+                          x={paddingLeft - 10} 
+                          y={y + 4} 
+                          fill="#94a3b8" 
+                          fontSize="10" 
+                          textAnchor="end" 
+                          className="font-mono font-medium"
+                        >
+                          {formatAbbreviated(labelVal)}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Area fill */}
+                  <path d={areaPath} fill="url(#chartGradient)" />
+
+                  {/* Main Line path (Green Cashflow) */}
+                  <path d={linePath} fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+
+                  {/* Monthly Labels (X-Axis) - Tilted -25deg like the user's dashboard image */}
+                  {points.map((p, idx) => {
+                    const parts = p.month.split("-");
+                    const label = `${parts[1]}/${parts[0].slice(2)}`;
+                    return (
+                      <text
+                        key={idx}
+                        x={p.x}
+                        y={svgHeight - 15}
+                        fill="#64748b"
+                        fontSize="10"
+                        textAnchor="end"
+                        transform={`rotate(-25, ${p.x}, ${svgHeight - 15})`}
+                        className="font-semibold"
+                      >
+                        {label}
+                      </text>
+                    );
+                  })}
+
+                  {/* Data Points / Circles */}
+                  {points.map((p, idx) => (
+                    <circle
+                      key={idx}
+                      cx={p.x}
+                      cy={p.y}
+                      r={hoveredPoint === idx ? "7" : "4.5"}
+                      fill="#020617"
+                      stroke="#10b981"
+                      strokeWidth={hoveredPoint === idx ? "3" : "2"}
+                      className="transition-all duration-150 cursor-pointer"
+                      onMouseEnter={() => setHoveredPoint(idx)}
+                      onMouseLeave={() => setHoveredPoint(null)}
+                    />
+                  ))}
+                </svg>
+
+                {/* Dynamic Tooltip */}
+                {hoveredPoint !== null && points[hoveredPoint] && (
+                  <div 
+                    className="absolute bg-slate-950 border border-slate-800 text-white rounded-xl p-3 shadow-2xl z-20 pointer-events-none transition-all duration-150"
+                    style={{
+                      left: `${(points[hoveredPoint].x / svgWidth) * 100}%`,
+                      top: `${(points[hoveredPoint].y / svgHeight) * 100 - 15}%`,
+                      transform: "translate(-50%, -100%)",
+                    }}
+                  >
+                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider text-center">Tháng {points[hoveredPoint].month}</div>
+                    <div className="text-xs font-black text-emerald-400 mt-0.5 text-center">{formatCurrency(points[hoveredPoint].revenue)}</div>
                   </div>
-                );
-              })
+                )}
+              </div>
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-500 text-sm">
-                Chưa có dữ liệu doanh thu tháng.
+              <div className="h-48 flex items-center justify-center text-slate-500 text-sm">
+                Chưa có dữ liệu biến động dòng tiền doanh thu.
               </div>
             )}
           </div>
@@ -210,7 +339,7 @@ export default function AdminDashboard() {
 
       {/* Top Photographers & Recent Activities */}
       <div className="grid grid-cols-1 gap-6">
-        
+
         {/* Top Photographers */}
         <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-md">
           <div className="flex items-center justify-between mb-6">

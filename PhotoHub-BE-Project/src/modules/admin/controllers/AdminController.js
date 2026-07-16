@@ -485,12 +485,25 @@ class AdminController {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const skip = (page - 1) * limit;
-      const { status, customerId, photographerId } = req.query;
+      const { status, customerId, photographerId, promotionType } = req.query;
 
       const query = {};
-      if (status) query.status = status;
+      if (status) {
+        query.status = { $regex: new RegExp(`^${status}$`, "i") };
+      }
       if (customerId) query.customer = customerId;
       if (photographerId) query.photographer = photographerId;
+
+      if (promotionType) {
+        if (promotionType === "voucher") {
+          query.appliedVoucherCode = { $ne: null, $exists: true };
+        } else if (promotionType === "addon") {
+          query.appliedAddonReward = { $ne: null, $exists: true };
+        } else if (promotionType === "none") {
+          query.appliedVoucherCode = null;
+          query.appliedAddonReward = null;
+        }
+      }
 
       const bookings = await Booking.find(query)
         .populate("customer", "fullName email avatar phoneNumber")
@@ -523,7 +536,8 @@ class AdminController {
         .populate({
           path: "photographer",
           populate: { path: "user", select: "fullName email avatar" }
-        });
+        })
+        .populate("appliedAddonReward");
 
       if (!booking) {
         return ApiResponse.error(res, "Không tìm thấy lịch đặt", 404);

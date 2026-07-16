@@ -7,13 +7,14 @@ export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
+  const [promotionType, setPromotionType] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedBooking, setSelectedBooking] = useState(null);
 
   useEffect(() => {
     fetchBookings();
-  }, [status, page]);
+  }, [status, promotionType, page]);
 
   const fetchBookings = async () => {
     try {
@@ -21,7 +22,8 @@ export default function AdminBookings() {
       const res = await adminService.getBookings({
         status,
         page,
-        limit: 10
+        limit: 10,
+        promotionType
       });
       if (res.success) {
         setBookings(res.data.bookings);
@@ -114,22 +116,40 @@ export default function AdminBookings() {
       </div>
 
       {/* Filter options */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-slate-800 bg-slate-900/40 backdrop-blur-md">
-        <span className="text-sm text-slate-400 font-medium">Lọc theo trạng thái hợp đồng:</span>
-        <select 
-          value={status} 
-          onChange={(e) => { setStatus(e.target.value); setPage(1); setSelectedBooking(null); }}
-          className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-orange-500"
-        >
-          <option value="">Tất cả trạng thái</option>
-          <option value="PENDING">Chờ nhiếp ảnh gia đồng ý (PENDING)</option>
-          <option value="ACCEPTED">Đã đồng ý - Chờ đặt cọc (ACCEPTED)</option>
-          <option value="DEPOSIT_PAID">Đã cọc - Chờ chụp (DEPOSIT_PAID)</option>
-          <option value="IN_PROGRESS">Đang tiến hành chụp (IN_PROGRESS)</option>
-          <option value="COMPLETED">Đã hoàn thành chụp (COMPLETED)</option>
-          <option value="CANCELLED">Đã hủy lịch (CANCELLED)</option>
-          <option value="DISPUTED">Đang có tranh chấp (DISPUTED)</option>
-        </select>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl border border-slate-800 bg-slate-900/40 backdrop-blur-md">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400 font-medium">Trạng thái:</span>
+            <select 
+              value={status} 
+              onChange={(e) => { setStatus(e.target.value); setPage(1); setSelectedBooking(null); }}
+              className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-orange-500"
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="PENDING">Chờ đồng ý (PENDING)</option>
+              <option value="ACCEPTED">Chờ đặt cọc (ACCEPTED)</option>
+              <option value="DEPOSIT_PAID">Đã cọc - Chờ chụp (DEPOSIT_PAID)</option>
+              <option value="IN_PROGRESS">Đang chụp (IN_PROGRESS)</option>
+              <option value="COMPLETED">Hoàn thành (COMPLETED)</option>
+              <option value="CANCELLED">Đã hủy (CANCELLED)</option>
+              <option value="DISPUTED">Tranh chấp (DISPUTED)</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400 font-medium">Phân loại voucher:</span>
+            <select 
+              value={promotionType} 
+              onChange={(e) => { setPromotionType(e.target.value); setPage(1); setSelectedBooking(null); }}
+              className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-orange-500"
+            >
+              <option value="">Tất cả đơn đặt</option>
+              <option value="voucher">Đơn dùng Voucher</option>
+              <option value="addon">Đơn dùng Quà tặng tích điểm</option>
+              <option value="none">Đơn thường (Không KM)</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Content grid */}
@@ -143,6 +163,7 @@ export default function AdminBookings() {
                 <th className="py-3 px-3 rounded-l-xl">Khách hàng</th>
                 <th className="py-3 px-3">Nhiếp ảnh gia</th>
                 <th className="py-3 px-3">Tổng tiền</th>
+                <th className="py-3 px-3">Khuyến mãi</th>
                 <th className="py-3 px-3">Trạng thái</th>
                 <th className="py-3 px-3 text-center rounded-r-xl">Thao tác</th>
               </tr>
@@ -150,7 +171,7 @@ export default function AdminBookings() {
             <tbody className="divide-y divide-slate-800/60">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-12">
+                  <td colSpan="6" className="text-center py-12">
                     <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-orange-500 mx-auto"></div>
                   </td>
                 </tr>
@@ -161,6 +182,13 @@ export default function AdminBookings() {
                   if (b.status === "CANCELLED") statusColor = "text-red-400 bg-red-500/10";
                   if (b.status === "DISPUTED") statusColor = "text-orange-400 bg-orange-500/10 animate-pulse";
                   if (b.status === "DEPOSIT_PAID") statusColor = "text-blue-400 bg-blue-500/10";
+
+                  let promoBadge = <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-500">Không dùng</span>;
+                  if (b.appliedVoucherCode) {
+                    promoBadge = <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Voucher: {b.appliedVoucherCode}</span>;
+                  } else if (b.appliedAddonReward) {
+                    promoBadge = <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">Quà tặng</span>;
+                  }
 
                   return (
                     <tr key={b._id} className="hover:bg-slate-800/10 transition">
@@ -173,6 +201,7 @@ export default function AdminBookings() {
                         <div className="text-[11px] text-slate-500">{b.photographer?.user?.email}</div>
                       </td>
                       <td className="py-3 px-3 text-orange-400 font-bold">{formatCurrency(b.price)}</td>
+                      <td className="py-3 px-3">{promoBadge}</td>
                       <td className="py-3 px-3">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusColor}`}>
                           {b.status}
@@ -202,7 +231,7 @@ export default function AdminBookings() {
                 })
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center py-8 text-slate-500">Không tìm thấy lịch đặt nào.</td>
+                  <td colSpan="6" className="text-center py-8 text-slate-500">Không tìm thấy lịch đặt nào.</td>
                 </tr>
               )}
             </tbody>
@@ -273,6 +302,26 @@ export default function AdminBookings() {
                   <span className="text-slate-400">Photographer thực nhận (Payout):</span>
                   <span className="text-emerald-400 font-bold">{formatCurrency(selectedBooking.booking.photographerPayout)}</span>
                 </div>
+              </div>
+
+              {/* Voucher / Promotion Information */}
+              <div className="pt-2 border-t border-slate-800/80 text-xs space-y-1.5">
+                <span className="text-slate-400 text-xs uppercase font-bold tracking-wide">Thông tin Ưu đãi áp dụng</span>
+                {selectedBooking.booking.appliedVoucherCode ? (
+                  <div className="p-2.5 bg-emerald-950/20 border border-emerald-800/30 rounded-lg space-y-1">
+                    <p className="text-emerald-400 font-bold">Mã Voucher: {selectedBooking.booking.appliedVoucherCode}</p>
+                    <p className="text-slate-300 text-[11px]">Giảm trừ trực tiếp vào doanh thu Platform Commission của Admin.</p>
+                  </div>
+                ) : selectedBooking.booking.appliedAddonReward ? (
+                  <div className="p-2.5 bg-indigo-950/20 border border-indigo-800/30 rounded-lg space-y-1">
+                    <p className="text-indigo-400 font-bold">Quà tặng đi kèm: {selectedBooking.booking.appliedAddonReward?.title || "Tiện ích thêm tích điểm"}</p>
+                    {selectedBooking.booking.appliedAddonReward?.description && (
+                      <p className="text-slate-300 text-[11px] italic">"{selectedBooking.booking.appliedAddonReward.description}"</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-slate-500 italic">Không sử dụng Voucher hoặc Quà tặng tích điểm cho lịch đặt này.</p>
+                )}
               </div>
 
               {/* Transactions log */}

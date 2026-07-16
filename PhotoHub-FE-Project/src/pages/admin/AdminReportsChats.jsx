@@ -339,7 +339,7 @@ export default function AdminReportsChats() {
                       Giải quyết
                     </button>
                     <button
-                      // onClick={() => handleRejectReport(selectedVerification._id)}
+                      onClick={() => handleRejectReport(selectedReport._id)}
                       className="flex items-center justify-center gap-1.5 bg-red-600 hover:bg-red-500 text-white rounded-xl py-2.5 font-bold transition text-xs"
                     >
                       <X className="h-4 w-4" />
