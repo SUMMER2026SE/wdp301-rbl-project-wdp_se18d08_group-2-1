@@ -204,9 +204,13 @@ class GroupBookingController {
    */
   async discoverGroups(req, res) {
     try {
-      const { conceptId, page, limit } = req.query;
+      const { conceptId, search, shootDate, status, availableOnly, page, limit } = req.query;
       const result = await groupBookingService.discoverGroups({
         conceptId,
+        search,
+        shootDate,
+        status,
+        availableOnly,
         page,
         limit,
       });

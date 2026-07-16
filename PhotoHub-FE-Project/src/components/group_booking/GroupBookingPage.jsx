@@ -9,7 +9,7 @@
  * Route: /group-booking
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Users,
@@ -26,6 +26,13 @@ import {
   Loader2,
   Crown,
   UserCheck,
+  CalendarDays,
+  X,
+  SlidersHorizontal,
+  Filter,
+  Camera,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { groupBookingService } from "../../services/groupBookingService";
@@ -65,10 +72,17 @@ export default function GroupBookingPage({ theme = "dark", language = "vi" }) {
   const [discoverPage, setDiscoverPage] = useState(1);
   const [discoverTotal, setDiscoverTotal] = useState(0);
   const [searchCode, setSearchCode] = useState("");
+  const [groupSearch, setGroupSearch] = useState("");
+  const [shootDate, setShootDate] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [availableOnly, setAvailableOnly] = useState(false);
+  const [conceptId, setConceptId] = useState("");
+  const [conceptFacets, setConceptFacets] = useState([]);
 
   // My Groups state
   const [myGroups, setMyGroups] = useState([]);
   const [myGroupsLoading, setMyGroupsLoading] = useState(false);
+  const handledInviteCodeRef = useRef(null);
 
   const isLoggedIn = !!getToken();
   const user = getUser();
@@ -76,10 +90,11 @@ export default function GroupBookingPage({ theme = "dark", language = "vi" }) {
   // ── Xử lý link mời: /group-booking?code=XYZ123 ───────────────────────────
   useEffect(() => {
     const code = searchParams.get("code");
-    if (code && isLoggedIn) {
-      setSearchCode(code);
-      handleJoinByCode(code);
-    }
+    if (!code || !isLoggedIn || handledInviteCodeRef.current === code) return;
+
+    handledInviteCodeRef.current = code;
+    setSearchCode(code);
+    handleJoinByCode(code);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -87,10 +102,18 @@ export default function GroupBookingPage({ theme = "dark", language = "vi" }) {
   const fetchDiscover = useCallback(async (page = 1) => {
     setDiscoverLoading(true);
     try {
-      const res = await groupBookingService.discoverGroups({ page, limit: 9 });
+      const res = await groupBookingService.discoverGroups({
+        page,
+        limit: 9,
+        ...(groupSearch.trim() && { search: groupSearch.trim() }),
+        ...(shootDate && { shootDate }),
+        ...(availableOnly && { availableOnly: true }),
+        ...(conceptId && { conceptId }),
+      });
       if (res.success) {
         setDiscoverGroups(res.data.groups || []);
         setDiscoverTotal(res.data.pagination?.total || 0);
+        setConceptFacets(res.data.conceptFacets || []);
         setDiscoverPage(page);
       }
     } catch (err) {
@@ -98,7 +121,7 @@ export default function GroupBookingPage({ theme = "dark", language = "vi" }) {
     } finally {
       setDiscoverLoading(false);
     }
-  }, []);
+  }, [groupSearch, shootDate, availableOnly, conceptId]);
 
   // ── Fetch My Groups ───────────────────────────────────────────────────────
   const fetchMyGroups = useCallback(async () => {
@@ -117,7 +140,8 @@ export default function GroupBookingPage({ theme = "dark", language = "vi" }) {
   }, [isLoggedIn]);
 
   useEffect(() => {
-    fetchDiscover(1);
+    const timer = setTimeout(() => fetchDiscover(1), 350);
+    return () => clearTimeout(timer);
   }, [fetchDiscover]);
 
   useEffect(() => {
@@ -140,6 +164,11 @@ export default function GroupBookingPage({ theme = "dark", language = "vi" }) {
     try {
       const res = await groupBookingService.joinGroupByCode(code.toUpperCase());
       if (res.success) {
+        const targetGroupId = res.data.member?.group || res.data.group?._id;
+        if (res.data.alreadyJoined) {
+          navigate(`/group-booking/${targetGroupId}`);
+          return;
+        }
         Swal.fire({
           icon: "success",
           title: "Tham gia thành công!",
@@ -148,7 +177,7 @@ export default function GroupBookingPage({ theme = "dark", language = "vi" }) {
           color: isDark ? "#fff" : "#000",
           confirmButtonColor: "#f97316",
         });
-        navigate(`/group-booking/${res.data.member?.group || res.data.group?._id}`);
+        navigate(`/group-booking/${targetGroupId}`);
       }
     } catch (err) {
       Swal.fire({
@@ -299,6 +328,73 @@ export default function GroupBookingPage({ theme = "dark", language = "vi" }) {
           </button>
         ))}
       </div>
+
+      {activeTab === "discover" && (
+        <div className="mb-8 space-y-3">
+          <button
+            type="button"
+            onClick={() => setFilterOpen((open) => !open)}
+            aria-expanded={filterOpen}
+            className={`flex w-full items-center gap-3 rounded-2xl border px-6 py-4 text-left font-bold transition ${
+              isDark ? "bg-[#0d1018] border-orange-500/30 text-slate-200 hover:border-orange-500/60" : "bg-white border-orange-200 text-slate-700 hover:border-orange-400"
+            }`}
+          >
+            <SlidersHorizontal size={18} className="text-orange-400" />
+            <span className="flex-1">Tìm kiếm &amp; Lọc nhóm...</span>
+            {filterOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
+
+          {filterOpen && (
+            <div className={`rounded-3xl border p-6 shadow-2xl sm:p-7 ${
+              isDark ? "bg-[#10172b] border-white/10" : "bg-white border-slate-200"
+            }`}>
+              <div className="mb-6 flex items-center gap-3">
+                <Filter size={20} className="text-orange-400" />
+                <h2 className={`flex-1 font-black ${isDark ? "text-white" : "text-slate-900"}`}>Bộ lọc tìm kiếm</h2>
+                <button type="button" onClick={() => setFilterOpen(false)} aria-label="Đóng bộ lọc" className="text-slate-400 hover:text-orange-400">
+                  <X size={19} />
+                </button>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <label className="space-y-2 text-sm font-bold text-slate-400">
+                  <span className="flex items-center gap-2"><Search size={15} /> Tên concept / Mã nhóm</span>
+                  <input type="search" value={groupSearch} onChange={(e) => setGroupSearch(e.target.value)} placeholder="VD: Áo dài, thiên nhiên..." className={`w-full rounded-xl border px-4 py-3.5 font-normal outline-none focus:border-orange-500 ${isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900"}`} />
+                </label>
+                <label className="space-y-2 text-sm font-bold text-slate-400">
+                  <span className="flex items-center gap-2"><CalendarDays size={15} /> Ngày chụp</span>
+                  <input type="date" value={shootDate} onChange={(e) => setShootDate(e.target.value)} className={`w-full rounded-xl border px-4 py-3.5 font-normal outline-none focus:border-orange-500 ${isDark ? "bg-slate-800 border-slate-700 text-white [color-scheme:dark]" : "bg-slate-50 border-slate-200 text-slate-900"}`} />
+                </label>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-bold text-slate-400">Tình trạng chỗ</p>
+                  <label className={`inline-flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-2.5 text-sm font-semibold ${isDark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                    <input type="checkbox" checked={availableOnly} onChange={(e) => setAvailableOnly(e.target.checked)} className="h-4 w-4 accent-orange-500" />
+                    Chỉ nhóm còn chỗ trống
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-3">
+                <p className="flex items-center gap-2 text-sm font-bold text-slate-400"><Camera size={15} /> Gói chụp đang có ({conceptFacets.length})</p>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => setConceptId("")} className={`rounded-xl border px-4 py-2 text-sm font-bold ${!conceptId ? "border-orange-500/50 bg-orange-500/20 text-orange-300" : isDark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600"}`}>Tất cả</button>
+                  {conceptFacets.map((concept) => (
+                    <button key={concept._id} type="button" onClick={() => setConceptId(String(concept._id))} className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold ${conceptId === String(concept._id) ? "border-orange-500/50 bg-orange-500/20 text-orange-300" : isDark ? "border-slate-700 bg-slate-800 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                      <Camera size={14} /> {concept.title} <span className="rounded-full bg-slate-500/20 px-2 py-0.5 text-xs">{concept.count}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
+                <p className="text-sm text-slate-500">Tìm thấy: <strong className="text-orange-400">{discoverTotal} nhóm</strong></p>
+                {(groupSearch || shootDate || availableOnly || conceptId) && <button type="button" onClick={() => { setGroupSearch(""); setShootDate(""); setAvailableOnly(false); setConceptId(""); }} className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-orange-400"><X size={15} /> Xóa bộ lọc</button>}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Tab Content ── */}
       {activeTab === "discover" && (
