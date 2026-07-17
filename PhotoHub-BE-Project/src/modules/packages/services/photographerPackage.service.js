@@ -195,7 +195,8 @@ class PhotographerPackageService {
 
     const matchStage = {
       photographerId: new mongoose.Types.ObjectId(photographerId),
-      isDeleted: { $ne: true }
+      isDeleted: { $ne: true },
+      status: { $ne: "DELETED" }
     };
 
     // Filter isGroupPackage nếu được truyền vào (true hoặc false)
@@ -335,6 +336,7 @@ class PhotographerPackageService {
       isGroupPackage: true,
       status: "ACTIVE",
       isDeleted: { $ne: true },
+      status: { $ne: "DELETED" }
     };
     if (photographerId) {
       match.photographerId = new mongoose.Types.ObjectId(photographerId);

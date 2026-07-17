@@ -347,10 +347,10 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
                 setPagination(prev => ({ ...prev, page: 1 }));
               }}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 ${activeStatus === tab.id
-                  ? "bg-orange-500 text-white shadow-md shadow-orange-500/20"
-                  : isDark
-                    ? "hover:bg-white/[0.04] text-slate-400 hover:text-white border border-white/5"
-                    : "hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200"
+                ? "bg-orange-500 text-white shadow-md shadow-orange-500/20"
+                : isDark
+                  ? "hover:bg-white/[0.04] text-slate-400 hover:text-white border border-white/5"
+                  : "hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200"
                 }`}
             >
               {tab.label}
@@ -440,83 +440,90 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
                   </div>
                 </div>
 
-                {/* Pricing and Actions */}
-                <div className="mt-6 pt-4 border-t border-slate-200/50 dark:border-white/[0.06] flex items-center justify-between gap-4">
+                {/* Footer */}
+                <div className="mt-auto pt-5 border-t border-slate-200/50 dark:border-white/[0.06]">
+
+                  {/* Price */}
                   <div>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">{t.price}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-bold">
+                      {t.price}
+                    </span>
+
                     {booking.discountAmount > 0 ? (
-                      <div className="mt-0.5">
-                        <p className="text-xs text-slate-500 line-through">
+                      <div className="mt-1">
+                        <p className="text-xs text-slate-400 line-through">
                           {booking.price.toLocaleString()} VNĐ
                         </p>
-                        <p className="text-xl font-black text-rose-500 flex items-center mt-0.5">
-                          {booking.finalPrice.toLocaleString()} <span className="text-xs font-bold ml-0.5">VNĐ</span>
-                          <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-lg ml-2">
+
+                        <div className="flex items-center flex-wrap gap-2 mt-1">
+                          <p className="text-2xl font-black text-rose-500">
+                            {booking.finalPrice.toLocaleString()} VNĐ
+                          </p>
+
+                          <span className="px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                             -{Number(booking.discountAmount).toLocaleString()}đ
                           </span>
-                        </p>
+                        </div>
                       </div>
                     ) : (
-                      <p className="text-xl font-black text-rose-500 flex items-center mt-0.5">
-                        {booking.price.toLocaleString()} <span className="text-xs font-bold ml-0.5">VNĐ</span>
+                      <p className="text-2xl font-black text-rose-500 mt-1">
+                        {booking.price.toLocaleString()} VNĐ
                       </p>
                     )}
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    {/* Hủy (Chỉ hiện khi pending/accepted) */}
+                  <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                    {/* Hủy */}
                     {["pending", "accepted"].includes(booking.status) && (
                       <button
                         onClick={() => handleCancel(booking._id)}
-                        className="p-3 rounded-2xl border border-red-500/20 bg-red-500/5 text-red-500 hover:bg-red-500/10 hover:border-red-500/30 transition-all flex items-center gap-1.5 text-xs font-bold"
-                        title={t.cancelBtn}
+                        className="w-full h-11 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 hover:bg-red-500/10 hover:border-red-500/30 transition-all flex items-center justify-center gap-2 font-semibold text-sm"
                       >
-                        <Ban size={15} />
-                        <span className="hidden sm:inline">{t.cancelBtn}</span>
+                        <Ban size={16} />
+                        {t.cancelBtn}
                       </button>
                     )}
 
-                    {/* Thanh toán (Chỉ hiện khi accepted) */}
+                    {/* Thanh toán */}
                     {booking.status === "accepted" && (
                       <button
                         onClick={() => handlePayment(booking._id)}
-                        className="px-4 py-3 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white rounded-2xl shadow-md shadow-orange-500/10 font-bold text-xs flex items-center gap-1.5 transition-all"
+                        className="w-full h-11 rounded-xl bg-orange-500 hover:bg-orange-600 text-white transition-all shadow-md shadow-orange-500/10 flex items-center justify-center gap-2 font-semibold text-sm"
                       >
-                        <CreditCard size={15} />
+                        <CreditCard size={16} />
                         {t.payBtn}
                       </button>
                     )}
 
-                    {/* Xem album (Chỉ hiện khi completed và có finalAlbum) */}
+                    {/* Xem album */}
                     {booking.status === "completed" && booking.finalAlbum && (
                       <button
                         onClick={() => handleViewAlbum(booking)}
                         disabled={albumLoading}
-                        className="px-4 py-3 bg-gradient-to-r from-orange-500 to-amber-600 hover:brightness-110 active:scale-95 text-white rounded-2xl shadow-md font-bold text-xs flex items-center gap-1.5 transition-all"
+                        className="w-full h-11 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:brightness-110 text-white transition-all shadow-md flex items-center justify-center gap-2 font-semibold text-sm disabled:opacity-50"
                       >
-                        <FolderHeart size={15} />
                         {t.viewAlbumBtn}
                       </button>
                     )}
 
-                    {/* Đánh giá photographer (Chỉ hiện khi completed) */}
-                    {booking.status === "completed" && (
-                      booking.isReviewed ? (
-                        <span className="px-4 py-3 bg-slate-500/10 text-slate-400 border border-slate-500/20 rounded-2xl font-bold text-xs flex items-center gap-1.5 cursor-default">
-                          <CheckCircle size={15} className="text-emerald-500" />
+                    {/* Đánh giá */}
+                    {booking.status === "completed" &&
+                      (booking.isReviewed ? (
+                        <div className="w-full h-11 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center gap-2 font-semibold text-sm">
+                          <CheckCircle size={16} className="text-emerald-500" />
                           {t.reviewedBtn}
-                        </span>
+                        </div>
                       ) : (
                         <button
                           onClick={() => handleReview(booking._id)}
-                          className="px-4 py-3 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white rounded-2xl shadow-md font-bold text-xs flex items-center gap-1.5 transition-all"
+                          className="w-full h-11 rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition-all shadow-md flex items-center justify-center gap-2 font-semibold text-sm"
                         >
-                          <Star size={15} className="fill-white text-white" />
+                          <Star size={16} className="fill-white" />
                           {t.reviewBtn}
                         </button>
-                      )
-                    )}
+                      ))}
                   </div>
                 </div>
               </div>
@@ -530,10 +537,10 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
                 onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
                 disabled={pagination.page === 1}
                 className={`p-3 rounded-2xl border transition-all ${pagination.page === 1
-                    ? "opacity-40 cursor-not-allowed"
-                    : isDark
-                      ? "border-white/5 hover:bg-white/5"
-                      : "border-slate-200 hover:bg-slate-50"
+                  ? "opacity-40 cursor-not-allowed"
+                  : isDark
+                    ? "border-white/5 hover:bg-white/5"
+                    : "border-slate-200 hover:bg-slate-50"
                   }`}
               >
                 <ChevronLeft size={16} />
@@ -545,10 +552,10 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
                 onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
                 disabled={pagination.page === pagination.totalPages}
                 className={`p-3 rounded-2xl border transition-all ${pagination.page === pagination.totalPages
-                    ? "opacity-40 cursor-not-allowed"
-                    : isDark
-                      ? "border-white/5 hover:bg-white/5"
-                      : "border-slate-200 hover:bg-slate-50"
+                  ? "opacity-40 cursor-not-allowed"
+                  : isDark
+                    ? "border-white/5 hover:bg-white/5"
+                    : "border-slate-200 hover:bg-slate-50"
                   }`}
               >
                 <ChevronRight size={16} />

@@ -23,6 +23,9 @@ const communityRoutes = require("./modules/community/community.routes");
 const bookingRoutes = require("./modules/bookings/routes/booking.routes");
 const reviewRoutes = require("./modules/review/routes/review.routes");
 const customerJobRoutes = require("./modules/customers/customer.job.routes");
+const subscriptionRoutes = require("./modules/subscriptions/subscription.routes");
+const loyaltyRoutes = require("./modules/loyalty/routes/loyalty.routes");
+const groupBookingRoutes = require("./modules/group_booking/routes/groupBooking.routes");
 // Middlewares
 app.use(express.json({ limit: "300mb" }));
 app.use(express.urlencoded({ limit: "300mb", extended: true }));
@@ -64,11 +67,14 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api", reviewRoutes);
 app.use("/api/upload", require("./utils/upload.routes"));
 app.use("/api/customer/jobs", customerJobRoutes);
-
+app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/loyalty", loyaltyRoutes);
 // Potonow additional features
 app.use("/api/blogs", require("./modules/blog/routes/blog.routes"));
 app.use("/api/marketing-events", require("./modules/events/routes/event.routes"));
 app.use("/api/booking-addons", require("./modules/bookings/routes/addon.routes"));
+
+app.use("/api/group-bookings", groupBookingRoutes);
 
 // Health check
 app.get("/", (_req, res) => {
