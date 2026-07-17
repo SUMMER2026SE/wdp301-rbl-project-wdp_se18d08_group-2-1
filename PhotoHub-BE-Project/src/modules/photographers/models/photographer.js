@@ -64,6 +64,12 @@ const photographerSchema = new mongoose.Schema(
       default: 0,
     },
 
+    monthlySubscriptionCapacity: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     verificationStatus: {
       type: String,
       enum: ["PENDING", "VERIFIED", "REJECTED"],

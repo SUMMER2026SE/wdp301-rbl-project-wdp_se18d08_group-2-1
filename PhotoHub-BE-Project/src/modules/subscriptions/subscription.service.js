@@ -38,6 +38,13 @@ const { getPhotographerIdentity } = require("../photographers/utils/photographer
 
 const DEFAULT_COMMITMENT = 1;
 const DEFAULT_SESSIONS = 1;
+const CAPACITY_COUNT_STATUSES = [
+  SubscriptionStatus.PENDING_PAYMENT,
+  SubscriptionStatus.ACTIVE,
+  SubscriptionStatus.PAUSED,
+  SubscriptionStatus.RENEWING,
+  SubscriptionStatus.PENDING_CANCEL,
+];
 
 const safeEmit = (userId, event, payload) => {
   try {
@@ -57,6 +64,46 @@ const ensureWallet = async (userId, session = null) =>
     { $setOnInsert: { user: userId, balance: 0, holdBalance: 0, currency: "VND" } },
     { new: true, upsert: true, ...(session ? { session } : {}) }
   );
+
+const applyOptionalSession = (query, session) => (session ? query.session(session) : query);
+
+const countActiveSubscriptionsByPackage = async (packageId, session = null) =>
+  await applyOptionalSession(Subscription.countDocuments({
+    package: packageId,
+    status: { $in: CAPACITY_COUNT_STATUSES },
+  }), session);
+
+const countActiveSubscriptionsByPhotographer = async (photographerId, session = null) =>
+  await applyOptionalSession(Subscription.countDocuments({
+    photographer: photographerId,
+    status: { $in: CAPACITY_COUNT_STATUSES },
+  }), session);
+
+const ensureCurrentCycleSchedule = async (subscription, session = null) => {
+  if (!subscription || !subscription._id) return null;
+
+  const activeLikeStatuses = new Set([
+    SubscriptionStatus.ACTIVE,
+    SubscriptionStatus.PAUSED,
+    SubscriptionStatus.RENEWING,
+    SubscriptionStatus.PENDING_CANCEL,
+  ]);
+  if (!activeLikeStatuses.has(String(subscription.status || "").toUpperCase())) {
+    return null;
+  }
+
+  const cycleIndex = Number(subscription.renewalCount || 0);
+  let existingQuery = SubscriptionSchedule.findOne({
+    subscription: subscription._id,
+    cycleIndex,
+  });
+  existingQuery = applyOptionalSession(existingQuery, session);
+  const existingSchedule = await existingQuery;
+
+  if (existingSchedule) return existingSchedule;
+
+  return await scheduleService.generateSessions(subscription, { cycleIndex, force: true, session });
+};
 
 const withOptionalTransaction = async (handler) => {
   const session = await mongoose.startSession();
@@ -245,6 +292,7 @@ class SubscriptionService {
       throw new Error("You are not authorized to view this subscription");
     }
 
+    await ensureCurrentCycleSchedule(subscription);
     const schedules = await SubscriptionSchedule.find({ subscription: subscription._id }).sort({ cycleIndex: 1 });
     const payments = await SubscriptionPayment.find({ subscription: subscription._id }).sort({ createdAt: -1 });
     const remaining = await this.getRemainingSessionsBySubscription(subscription);
@@ -284,6 +332,22 @@ class SubscriptionService {
       }
       if (!photographer.isAvailable) {
         throw new Error("Photographer is currently unavailable");
+      }
+
+      const packageCustomerLimit = Number(subscriptionPackage.maxCustomers ?? subscriptionPackage.metadata?.maxCustomers ?? 0);
+      if (packageCustomerLimit > 0) {
+        const reservedCustomers = await countActiveSubscriptionsByPackage(subscriptionPackage._id, session);
+        if (reservedCustomers >= packageCustomerLimit) {
+          throw new Error("This package has reached its maximum number of customers");
+        }
+      }
+
+      const photographerMonthlyCapacity = Number(photographer.monthlySubscriptionCapacity || 0);
+      if (photographerMonthlyCapacity > 0) {
+        const activeSubscriptions = await countActiveSubscriptionsByPhotographer(photographer._id, session);
+        if (activeSubscriptions >= photographerMonthlyCapacity) {
+          throw new Error("Photographer monthly capacity has been reached");
+        }
       }
 
       const startDate = new Date(dto.startDate);
@@ -326,7 +390,7 @@ class SubscriptionService {
 
       const monthlyAmount = subscriptionPackage.billingType === BillingType.PER_SESSION
         ? Number(subscriptionPackage.perSessionPrice || 0) * sessionsPerMonth
-        : Number(subscriptionPackage.monthlyPrice || 0) * commitmentMonths;
+        : Number(subscriptionPackage.monthlyPrice || 0);
 
       const paymentRecord = await paymentService.createPaymentRecord({
         subscription,
@@ -391,20 +455,21 @@ class SubscriptionService {
     updated.lastPaymentAt = new Date();
     if (paymentRecordId) {
       const paymentRecord = await SubscriptionPayment.findById(paymentRecordId);
-      if (paymentRecord) {
-        if (paymentRecord.status !== SubscriptionPaymentStatus.SUCCESS) {
-          paymentRecord.status = SubscriptionPaymentStatus.SUCCESS;
-          paymentRecord.paidAt = paymentRecord.paidAt || new Date();
-          await paymentRecord.save(session ? { session } : {});
-        }
-        if (!paymentRecord.metadata?.walletCreditedAt) {
-          const creditResult = await creditSubscriptionRevenue({ subscription: updated, paymentRecord, session });
-          if (creditResult?.credited) {
-            updated.amountPaid += Number(paymentRecord.amount || 0);
+        if (paymentRecord) {
+          if (paymentRecord.status !== SubscriptionPaymentStatus.SUCCESS) {
+            paymentRecord.status = SubscriptionPaymentStatus.SUCCESS;
+            paymentRecord.paidAt = paymentRecord.paidAt || new Date();
+            await paymentRecord.save(session ? { session } : {});
           }
+          if (!paymentRecord.metadata?.walletCreditedAt) {
+            const creditResult = await creditSubscriptionRevenue({ subscription: updated, paymentRecord, session });
+            if (creditResult?.credited) {
+              updated.amountPaid += Number(paymentRecord.amount || 0);
+            }
+          }
+          updated.lastPaymentAmount = Number(paymentRecord.amount || 0);
+          updated.lastPaymentOrderCode = paymentRecord.orderCode;
         }
-        updated.lastPaymentOrderCode = paymentRecord.orderCode;
-      }
     }
 
     await updated.save(session ? { session } : {});
@@ -505,6 +570,43 @@ class SubscriptionService {
     });
   }
 
+  async updatePreferredSchedule(id, user, { preferredSchedule = [] } = {}) {
+    return await withOptionalTransaction(async (session) => {
+      const subscription = await Subscription.findById(id)
+        .populate("customer", "fullName email avatar role")
+        .populate({ path: "photographer", populate: { path: "user", select: "fullName email avatar role" } })
+        .populate("package")
+        .populate("paymentMethod")
+        .session(session);
+
+      if (!subscription) throw new Error("Subscription not found");
+      if (!(await isOwnerOrAdmin(subscription, user))) throw new Error("You are not authorized to update this subscription");
+      if ([SubscriptionStatus.CANCELLED, SubscriptionStatus.EXPIRED].includes(subscription.status)) {
+        throw new Error("Cannot update schedule for an inactive subscription");
+      }
+
+      subscription.preferredSchedule = sanitizePreferredSchedule(preferredSchedule, []);
+      await subscription.save({ session });
+
+      const cycleIndex = Number(subscription.renewalCount || 0);
+      let schedule = null;
+      if ([SubscriptionStatus.ACTIVE, SubscriptionStatus.PAUSED, SubscriptionStatus.PENDING_PAYMENT, SubscriptionStatus.RENEWING].includes(subscription.status)) {
+        schedule = await scheduleService.rebuildSessions(subscription, { cycleIndex, session });
+      }
+
+      const refreshed = await populateSubscription(await Subscription.findById(subscription._id).session(session));
+      const bookingSchedule = schedule
+        ? [schedule]
+        : await SubscriptionSchedule.find({ subscription: subscription._id }).sort({ cycleIndex: 1 }).session(session);
+
+      return {
+        subscription: refreshed,
+        bookingSchedule,
+        remainingSessions: await this.getRemainingSessionsBySubscription(subscription),
+      };
+    });
+  }
+
   async resumeSubscription(id, user) {
     return await withOptionalTransaction(async (session) => {
       const subscription = await Subscription.findById(id).session(session);
@@ -548,7 +650,7 @@ class SubscriptionService {
       if (subscription.status === SubscriptionStatus.EXPIRED) throw new Error("Expired subscription must be repurchased");
 
       const months = Number(subscription.commitmentMonths || subscription.package?.commitmentMonths || 1);
-      const amount = Number(subscription.package?.monthlyPrice || 0) * months;
+      const amount = Number(subscription.package?.monthlyPrice || 0);
 
       subscription.status = SubscriptionStatus.RENEWING;
       await subscription.save({ session });
@@ -576,6 +678,7 @@ class SubscriptionService {
 
         await creditSubscriptionRevenue({ subscription, paymentRecord, session });
         subscription.amountPaid += amount;
+        subscription.lastPaymentAmount = amount;
         subscription.renewalCount += 1;
         subscription.status = SubscriptionStatus.ACTIVE;
         subscription.endDate = addMonths(subscription.endDate, months);
@@ -673,6 +776,7 @@ class SubscriptionService {
       subscription.status = SubscriptionStatus.CANCELLED;
       subscription.cancelPenaltyAmount = penalty;
       subscription.lastPaymentStatus = penalty > 0 ? SubscriptionPaymentStatus.SUCCESS : subscription.lastPaymentStatus;
+      subscription.lastPaymentAmount = penalty > 0 ? penalty : Number(subscription.lastPaymentAmount || 0);
       subscription.lastPaymentAt = new Date();
       await subscription.save({ session });
 
@@ -810,6 +914,7 @@ class SubscriptionService {
           if (creditResult?.credited) {
             subscription.amountPaid += Number(payment.amount || 0);
           }
+          subscription.lastPaymentAmount = Number(payment.amount || 0);
           subscription.status = SubscriptionStatus.ACTIVE;
           subscription.lastPaymentStatus = SubscriptionPaymentStatus.SUCCESS;
           subscription.lastPaymentAt = new Date();
@@ -824,6 +929,8 @@ class SubscriptionService {
           } else if (payment.paymentKind === SubscriptionPaymentKind.RENEWAL) {
             await scheduleService.generateSessions(subscription, { cycleIndex: subscription.renewalCount, force: true });
           }
+        } else if (payment.paymentKind === SubscriptionPaymentKind.PURCHASE || payment.paymentKind === SubscriptionPaymentKind.RENEWAL) {
+          await ensureCurrentCycleSchedule(subscription);
         }
       } else if (payosStatus === "CANCELLED" || payosStatus === "CANCELED" || payosStatus === "EXPIRED") {
         if (payment.status !== SubscriptionPaymentStatus.FAILED) {

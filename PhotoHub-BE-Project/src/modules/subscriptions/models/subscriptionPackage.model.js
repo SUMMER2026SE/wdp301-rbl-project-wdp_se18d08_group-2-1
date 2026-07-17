@@ -54,6 +54,11 @@ const subscriptionPackageSchema = new mongoose.Schema(
       min: 1,
       default: 1,
     },
+    maxCustomers: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     maxPauseDays: {
       type: Number,
       default: 30,

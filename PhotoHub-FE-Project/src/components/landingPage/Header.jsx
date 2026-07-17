@@ -111,7 +111,7 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [user, setUser] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [membershipTier, setMembershipTier] = useState("Silver");
+  const [membershipTier, setMembershipTier] = useState("Customer");
   const [membershipCelebration, setMembershipCelebration] = useState(false);
   const userId = user?._id || user?.id || "";
   const userRole = user?.role || "";
@@ -157,6 +157,20 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
         }
 
         const effect = JSON.parse(raw);
+        if (!effect?.source || effect.source !== "subscription_purchase") {
+          localStorage.removeItem("photohub-membership-effect");
+          setMembershipCelebration(false);
+          return;
+        }
+        if (effect?.userId && !userId) {
+          setMembershipCelebration(false);
+          return;
+        }
+        if (effect?.userId && userId && String(effect.userId) !== String(userId)) {
+          localStorage.removeItem("photohub-membership-effect");
+          setMembershipCelebration(false);
+          return;
+        }
         if (effect?.expiresAt && Date.now() > effect.expiresAt) {
           localStorage.removeItem("photohub-membership-effect");
           setMembershipCelebration(false);
@@ -179,7 +193,7 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
       window.removeEventListener("storage", syncMembershipFx);
       window.removeEventListener("membership_effect_changed", syncMembershipFx);
     };
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     if (!userId || userRole !== "customer") return;
@@ -189,7 +203,7 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
       try {
         const res = await loyaltyService.getLoyaltyAccount();
         const account = res?.data || res;
-        const tier = account?.membershipTier || "Silver";
+        const tier = account?.membershipTier || "Customer";
         if (!mounted) return;
         setMembershipTier(tier);
       } catch (_error) {
@@ -464,7 +478,7 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
   const avatarUrl = user?.avatar
     ? `${user.avatar}`
     : null;
-  const resolvedMembershipTier = user?.membershipTier || membershipTier || "Silver";
+  const resolvedMembershipTier = user?.membershipTier || membershipTier || "Customer";
 
   return (
     <header className="fixed inset-x-0 top-0 z-[100] px-4 py-4 sm:px-6 lg:px-8">

@@ -60,9 +60,18 @@ const validateRenewSubscription = (req, res, next) => {
   next();
 };
 
+const validatePreferredSchedule = (req, res, next) => {
+  const { preferredSchedule } = req.body || {};
+  if (preferredSchedule !== undefined && !Array.isArray(preferredSchedule)) {
+    return res.status(400).json({ success: false, message: "preferredSchedule must be an array" });
+  }
+  next();
+};
+
 module.exports = {
   validatePurchaseSubscription,
   validateIdParam,
   validatePauseSubscription,
   validateRenewSubscription,
+  validatePreferredSchedule,
 };

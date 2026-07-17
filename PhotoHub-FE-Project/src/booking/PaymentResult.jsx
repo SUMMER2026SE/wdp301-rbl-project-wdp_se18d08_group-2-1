@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle2, XCircle, Home, Calendar, Loader2 } from "lucide-react";
 import { bookingService } from "../services/bookingService";
@@ -9,6 +9,15 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
   const location = useLocation();
   const navigate = useNavigate();
   const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const currentUser = useMemo(() => {
+    try {
+      const raw = localStorage.getItem("user");
+      return raw ? JSON.parse(raw) : null;
+    } catch (_error) {
+      return null;
+    }
+  }, []);
+  const currentUserId = currentUser?._id || currentUser?.id || "";
   const bookingId = queryParams.get("bookingId");
   const orderCode = queryParams.get("orderCode");
   const explicitSource = queryParams.get("source");
@@ -18,11 +27,15 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
   const [checking, setChecking] = useState(Boolean((bookingId || orderCode) && !isCanceled));
   const [paid, setPaid] = useState(false);
   const [message, setMessage] = useState("");
-  const triggerMembershipCelebration = (tier = "Silver") => {
+  const [redirectCountdown, setRedirectCountdown] = useState(0);
+  const triggerMembershipCelebration = useCallback((tier = "Silver") => {
+    if (!currentUserId) return;
     try {
       const payload = {
         active: true,
         tier,
+        userId: currentUserId,
+        source: "subscription_purchase",
         expiresAt: Date.now() + 1000 * 60 * 60 * 12,
       };
       localStorage.setItem("photohub-membership-effect", JSON.stringify(payload));
@@ -32,7 +45,7 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
     } catch (_error) {
       // best effort only
     }
-  };
+  }, [currentUserId]);
 
   const t = {
     vi: {
@@ -45,7 +58,7 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
       failTitle: "Thanh toán bị hủy",
       failSub: "Giao dịch đã bị hủy. Booking vẫn ở trạng thái chờ thanh toán nếu photographer đã chấp nhận.",
       orderCodeLabel: "Mã đơn hàng:",
-      goBookingsBtn: "Quản lý lịch đặt của tôi",
+      goBookingsBtn: "Xem hợp đồng tháng",
       goHomeBtn: "Về trang chủ",
     },
     en: {
@@ -64,7 +77,7 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
         ? "The subscription payment was cancelled. You can subscribe again later."
         : "The transaction was cancelled. Your booking remains awaiting payment if the photographer accepted it.",
       orderCodeLabel: "Order code:",
-      goBookingsBtn: source === "subscription" ? "Manage Subscriptions" : "Manage My Bookings",
+      goBookingsBtn: source === "subscription" ? "View monthly contract" : "Manage My Bookings",
       goHomeBtn: "Back to Home",
     },
   }[language];
@@ -87,13 +100,14 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
         );
         const res = source === "subscription" ? await loadSubscriptionStatus() : await loadBookingStatus();
         const isPaid = Boolean(res.data?.paid || res.data?.booking?.paymentStatus === "paid");
+        const resolvedPaymentKind = String(res.data?.payment?.paymentKind || res.data?.paymentKind || paymentKind || "").toUpperCase();
         if (!mounted) return;
         setPaid(isPaid);
         setMessage(res.data?.payosStatus || res.data?.paymentStatus || "");
         if (source === "subscription") {
           window.dispatchEvent(new Event("subscription_history_changed"));
         }
-        if (source === "subscription" && isPaid) {
+        if (source === "subscription" && isPaid && resolvedPaymentKind === "PURCHASE") {
           triggerMembershipCelebration(res.data?.membershipTier || res.data?.tier || "Silver");
         }
       } catch (error) {
@@ -111,10 +125,11 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
             const res = await subscriptionService.getPaymentStatus(orderCode);
             if (!mounted) return;
             const isPaid = Boolean(res.data?.paid || res.data?.subscriptionStatus === "ACTIVE");
+            const resolvedPaymentKind = String(res.data?.payment?.paymentKind || res.data?.paymentKind || paymentKind || "").toUpperCase();
             setPaid(isPaid);
             setMessage(res.data?.payosStatus || res.data?.paymentStatus || "");
             window.dispatchEvent(new Event("subscription_history_changed"));
-            if (isPaid) {
+            if (isPaid && resolvedPaymentKind === "PURCHASE") {
               triggerMembershipCelebration(res.data?.membershipTier || res.data?.tier || "Silver");
             }
             setChecking(false);
@@ -139,7 +154,37 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
     };
     sync();
     return () => { mounted = false; };
-  }, [bookingId, orderCode, isCanceled, source]);
+  }, [bookingId, orderCode, isCanceled, source, paymentKind, triggerMembershipCelebration]);
+
+  useEffect(() => {
+    if (checking || !paid) {
+      setRedirectCountdown(0);
+      return undefined;
+    }
+
+    const targetPath = source === "subscription" ? "/profile" : "/profile";
+    const targetState = source === "subscription" ? { activeTab: "bookings" } : { activeTab: "bookings" };
+    setRedirectCountdown(3);
+
+    const timer = window.setTimeout(() => {
+      navigate(targetPath, { replace: true, state: targetState });
+    }, 1800);
+
+    const tick = window.setInterval(() => {
+      setRedirectCountdown((prev) => {
+        if (prev <= 1) {
+          window.clearInterval(tick);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 600);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.clearInterval(tick);
+    };
+  }, [checking, paid, navigate, source]);
 
   const state = checking ? "checking" : isCanceled ? "cancelled" : paid ? "success" : "pending";
   const isSuccess = state === "success";
@@ -159,6 +204,13 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
         <h1 className={`mb-4 text-2xl font-black tracking-tight sm:text-3xl ${titleColor}`}>{title}</h1>
         <p className={`mb-6 text-sm font-medium leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>{sub}</p>
         {message && !checking && <p className="mb-4 text-xs font-bold text-slate-500">{message}</p>}
+        {!checking && paid && redirectCountdown > 0 && (
+          <p className={`mb-4 text-xs font-semibold ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+            {language === "vi"
+              ? `Đang chuyển về lịch sử đặt lịch sau ${redirectCountdown}s...`
+              : `Returning to booking history in ${redirectCountdown}s...`}
+          </p>
+        )}
         {orderCode && (
           <div className={`mb-8 inline-flex items-center gap-2 rounded-2xl border px-4 py-3 text-xs font-semibold ${isDark ? "border-white/5 bg-white/[0.02] text-slate-400" : "border-slate-200 bg-slate-100 text-slate-600"}`}>
             <span>{t.orderCodeLabel}</span>
@@ -166,7 +218,10 @@ export default function PaymentResult({ language = "vi", theme = "dark" }) {
           </div>
         )}
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <button onClick={() => navigate(source === "subscription" ? "/subscriptions" : "/profile")} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg transition hover:brightness-110 active:scale-95 sm:w-auto">
+          <button
+            onClick={() => navigate(source === "subscription" ? "/profile" : "/profile", { state: source === "subscription" ? { activeTab: "bookings" } : undefined })}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg transition hover:brightness-110 active:scale-95 sm:w-auto"
+          >
             <Calendar size={16} />{t.goBookingsBtn}
           </button>
           <button onClick={() => navigate("/")} className={`flex w-full items-center justify-center gap-2 rounded-2xl border px-6 py-3.5 text-sm font-bold transition sm:w-auto ${isDark ? "border-white/10 bg-white/5 text-white hover:bg-white/10" : "border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50"}`}>

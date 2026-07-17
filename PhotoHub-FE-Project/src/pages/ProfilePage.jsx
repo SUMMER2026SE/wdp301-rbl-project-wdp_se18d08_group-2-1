@@ -72,7 +72,7 @@ export default function ProfilePage({
     const t = text[language];
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
-    const [membershipTier, setMembershipTier] = useState("Silver");
+    const [membershipTier, setMembershipTier] = useState("Customer");
     const [membershipCelebration, setMembershipCelebration] = useState(false);
     const userId = user?._id || user?.id || "";
     const userRole = user?.role || "";
@@ -120,6 +120,20 @@ export default function ProfilePage({
                 }
 
                 const effect = JSON.parse(raw);
+                if (!effect?.source || effect.source !== "subscription_purchase") {
+                    localStorage.removeItem("photohub-membership-effect");
+                    setMembershipCelebration(false);
+                    return;
+                }
+                if (effect?.userId && !userId) {
+                    setMembershipCelebration(false);
+                    return;
+                }
+                if (effect?.userId && userId && String(effect.userId) !== String(userId)) {
+                    localStorage.removeItem("photohub-membership-effect");
+                    setMembershipCelebration(false);
+                    return;
+                }
                 if (effect?.expiresAt && Date.now() > effect.expiresAt) {
                     localStorage.removeItem("photohub-membership-effect");
                     setMembershipCelebration(false);
@@ -140,7 +154,7 @@ export default function ProfilePage({
             window.removeEventListener("storage", syncMembershipFx);
             window.removeEventListener("membership_effect_changed", syncMembershipFx);
         };
-    }, []);
+    }, [userId]);
 
     useEffect(() => {
         if (!userId || userRole !== "customer") return;
@@ -150,7 +164,7 @@ export default function ProfilePage({
             try {
                 const res = await loyaltyService.getLoyaltyAccount();
                 const account = res?.data || res;
-                const tier = account?.membershipTier || "Silver";
+                const tier = account?.membershipTier || "Customer";
                 if (!mounted) return;
                 setMembershipTier(tier);
                 setUser((prev) => {

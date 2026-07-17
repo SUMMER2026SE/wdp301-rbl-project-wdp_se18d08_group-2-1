@@ -30,7 +30,6 @@ router.get(
 
 router.get(
   "/photographer/:photographerId",
-  authenticate,
   controller.getPhotographerPackages
 );
 
@@ -39,4 +38,4 @@ router.put("/:id", authenticate, attachPhotographer, controller.update);
 router.patch("/:id/toggle-status", authenticate, attachPhotographer, controller.toggleStatus);
 router.delete("/:id", authenticate, attachPhotographer, controller.softDelete);
 
-module.exports = router;
+module.exports = router;

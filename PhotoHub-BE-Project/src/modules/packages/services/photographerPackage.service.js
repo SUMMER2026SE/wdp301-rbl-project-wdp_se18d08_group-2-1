@@ -9,6 +9,27 @@ const SubscriptionPackage = require("../../subscriptions/models/subscriptionPack
 const ShootingCategory = require("../../common/models/shootingCategory");
 const StyleTag = require("../../common/models/styleTag");
 
+const assertMonthlyPackageFields = ({ packageType, sessionsPerMonth, commitmentMonths, maxCustomers }) => {
+  if (String(packageType || "SHOOTING").toUpperCase() !== "MONTHLY") return;
+
+  const sessions = Number(sessionsPerMonth);
+  const months = Number(commitmentMonths);
+
+  if (!Number.isInteger(sessions) || sessions <= 0) {
+    throw new Error("Monthly package requires sessionsPerMonth");
+  }
+
+  if (!Number.isInteger(months) || months <= 0) {
+    throw new Error("Monthly package requires commitmentMonths");
+  }
+
+  if (maxCustomers !== undefined && maxCustomers !== null) {
+    const customers = Number(maxCustomers);
+    if (!Number.isInteger(customers) || customers < 0) {
+      throw new Error("Monthly package maxCustomers must be a non-negative integer");
+    }
+  }
+};
 
 const normalizeImageUrls = (images = []) => {
   if (!Array.isArray(images)) return [];
@@ -48,8 +69,9 @@ const syncSubscriptionPackageFromPhotographerPackage = async ({ packageDoc, sess
     billingType: "MONTHLY",
     monthlyPrice: Number(packageDoc.price || 0),
     perSessionPrice: 0,
-    sessionsPerMonth: Math.max(1, Number(packageDoc.numberOfPhotos || 1)),
-    commitmentMonths: Math.max(1, Number(packageDoc.durationHours || 1)),
+    sessionsPerMonth: Math.max(1, Number(packageDoc.sessionsPerMonth || packageDoc.numberOfPhotos || 1)),
+    commitmentMonths: Math.max(1, Number(packageDoc.commitmentMonths || packageDoc.durationHours || 1)),
+    maxCustomers: Math.max(0, Number(packageDoc.maxCustomers || 0)),
     maxPauseDays: 30,
     autoRenewDefault: true,
     features: [
@@ -90,6 +112,8 @@ class PhotographerPackageService {
         packageType = "SHOOTING",
         price,
         durationHours,
+        sessionsPerMonth,
+        commitmentMonths,
         numberOfPhotos,
         editedPhotos,
         locationType,
@@ -100,6 +124,9 @@ class PhotographerPackageService {
         styleTagIds = [],
         images = []
       } = data;
+      const maxCustomers = data?.maxCustomers;
+
+      assertMonthlyPackageFields({ packageType, sessionsPerMonth, commitmentMonths, maxCustomers });
 
       // 1. Create package
       // ─── Rule: Gói MONTHLY không được phép dùng cho Group Booking ───
@@ -114,6 +141,9 @@ class PhotographerPackageService {
             packageType,
             price,
             durationHours,
+            sessionsPerMonth,
+            commitmentMonths,
+            maxCustomers,
             numberOfPhotos,
             editedPhotos,
             locationType,
@@ -376,6 +406,8 @@ class PhotographerPackageService {
         packageType,
         price,
         durationHours,
+        sessionsPerMonth,
+        commitmentMonths,
         numberOfPhotos,
         editedPhotos,
         locationType,
@@ -386,12 +418,24 @@ class PhotographerPackageService {
         styleTagIds,
         images
       } = data;
+      const maxCustomers = data?.maxCustomers;
+
+      const currentPkg = await PhotographerPackage.findById(packageId).session(session);
+      if (!currentPkg) throw new Error("Package không tồn tại");
+
+      assertMonthlyPackageFields({
+        packageType: packageType !== undefined ? packageType : currentPkg.packageType,
+        sessionsPerMonth: sessionsPerMonth !== undefined ? sessionsPerMonth : currentPkg.sessionsPerMonth,
+        commitmentMonths: commitmentMonths !== undefined ? commitmentMonths : currentPkg.commitmentMonths,
+      });
 
       const updateData = {
         title,
         description,
         price,
         durationHours,
+        sessionsPerMonth,
+        commitmentMonths,
         numberOfPhotos,
         editedPhotos,
         locationType,
@@ -401,6 +445,15 @@ class PhotographerPackageService {
 
       if (packageType !== undefined) {
         updateData.packageType = packageType;
+      }
+      if (sessionsPerMonth !== undefined) {
+        updateData.sessionsPerMonth = sessionsPerMonth;
+      }
+      if (commitmentMonths !== undefined) {
+        updateData.commitmentMonths = commitmentMonths;
+      }
+      if (maxCustomers !== undefined) {
+        updateData.maxCustomers = maxCustomers;
       }
 
       if (isGroupPackage !== undefined) {

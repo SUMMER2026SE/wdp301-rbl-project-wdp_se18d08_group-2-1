@@ -21,8 +21,8 @@ const loyaltyAccountSchema = new mongoose.Schema(
     },
     membershipTier: {
       type: String,
-      enum: ["Silver", "Gold", "Platinum"],
-      default: "Silver",
+      enum: [null, "Silver", "Gold", "Platinum"],
+      default: null,
     },
     referralCode: {
       type: String,

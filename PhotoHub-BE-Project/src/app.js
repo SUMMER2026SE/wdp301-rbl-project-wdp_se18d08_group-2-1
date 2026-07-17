@@ -64,6 +64,8 @@ app.use("/api/style-tags", styleTagRoutes);
 app.use("/api/packages", packageRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/loyalty", loyaltyRoutes);
 app.use("/api", reviewRoutes);
 app.use("/api/upload", require("./utils/upload.routes"));
 app.use("/api/customer/jobs", customerJobRoutes);

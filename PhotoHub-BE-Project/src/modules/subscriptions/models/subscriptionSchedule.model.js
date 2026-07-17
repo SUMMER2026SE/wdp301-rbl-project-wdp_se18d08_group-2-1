@@ -60,6 +60,10 @@ const subscriptionScheduleSchema = new mongoose.Schema(
           sessionNumber: Number,
           scheduledStart: Date,
           scheduledEnd: Date,
+          note: {
+            type: String,
+            default: "",
+          },
           conflictReason: String,
           rescheduleRequired: {
             type: Boolean,

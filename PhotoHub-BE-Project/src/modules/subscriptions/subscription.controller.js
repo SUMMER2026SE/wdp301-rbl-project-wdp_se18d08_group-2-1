@@ -53,6 +53,16 @@ class SubscriptionController {
     }
   }
 
+  async updatePreferredSchedule(req, res) {
+    try {
+      const result = await subscriptionService.updatePreferredSchedule(req.params.id, req.user, req.body);
+      return ApiResponse.success(res, result, "Preferred schedule updated successfully");
+    } catch (error) {
+      console.error("[Subscription] updatePreferredSchedule:", error.message);
+      return ApiResponse.error(res, error.message, 400);
+    }
+  }
+
   async resume(req, res) {
     try {
       const result = await subscriptionService.resumeSubscription(req.params.id, req.user);
