@@ -50,7 +50,7 @@ const PhotographerCard = ({ photographer, language, onViewClick, onRequireLogin,
     if (user.avatar.startsWith("http://") || user.avatar.startsWith("https://")) {
       return user.avatar;
     }
-    const BACKEND_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com";
+    const BACKEND_URL = "https://photo-hub-be-project.vercel.app";
     const cleanPath = user.avatar.startsWith("/") ? user.avatar : `/${user.avatar}`;
     return `${BACKEND_URL}${cleanPath}`;
   };
@@ -131,8 +131,8 @@ const PhotographerCard = ({ photographer, language, onViewClick, onRequireLogin,
             disabled={favLoading}
             aria-label={isFavorited ? t.removeFavorite : t.addFavorite}
             className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-sm backdrop-blur-md transition-all duration-200 ${isFavorited
-                ? "scale-105 border-rose-300 bg-rose-500 text-white shadow-rose-500/30"
-                : "border-white/70 bg-white/85 text-slate-400 hover:scale-105 hover:border-rose-200 hover:bg-rose-500 hover:text-white dark:border-white/10 dark:bg-slate-950/75 dark:text-white/70 dark:hover:border-rose-400 dark:hover:bg-rose-500 dark:hover:!text-white"
+              ? "scale-105 border-rose-300 bg-rose-500 text-white shadow-rose-500/30"
+              : "border-white/70 bg-white/85 text-slate-400 hover:scale-105 hover:border-rose-200 hover:bg-rose-500 hover:text-white dark:border-white/10 dark:bg-slate-950/75 dark:text-white/70 dark:hover:border-rose-400 dark:hover:bg-rose-500 dark:hover:!text-white"
               } ${favLoading ? "animate-pulse cursor-not-allowed" : "active:scale-95"}`}
           >
             <Heart

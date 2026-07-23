@@ -32,7 +32,7 @@ const money = (value) => new Intl.NumberFormat("vi-VN", { maximumFractionDigits:
 const avatarUrl = (avatar) => {
   if (!avatar) return "";
   if (/^https?:\/\//i.test(avatar)) return avatar;
-  return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
+  return `https://photo-hub-be-project.vercel.app${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
 };
 
 export default function PhotographerSubscriptionManager({ theme = "dark", language = "vi" }) {
@@ -278,10 +278,10 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
               type="button"
               onClick={() => setStatusFilter(option.value)}
               className={`rounded-full border px-3.5 py-2 text-xs font-bold uppercase tracking-[0.14em] transition ${active
-                  ? "border-orange-500 bg-orange-500 text-white shadow-sm shadow-orange-500/20"
-                  : isDark
-                    ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                    : "border-slate-200 bg-slate-50 text-slate-600 hover:border-orange-300 hover:text-orange-600"
+                ? "border-orange-500 bg-orange-500 text-white shadow-sm shadow-orange-500/20"
+                : isDark
+                  ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                  : "border-slate-200 bg-slate-50 text-slate-600 hover:border-orange-300 hover:text-orange-600"
                 }`}
             >
               {option.label}
@@ -374,8 +374,8 @@ export default function PhotographerSubscriptionManager({ theme = "dark", langua
                         type="button"
                         onClick={() => openSubscriptionDetail(item)}
                         className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-bold transition ${isDark
-                            ? "border-white/10 bg-white/5 text-white hover:bg-white/10"
-                            : "border-slate-200 bg-slate-50 text-slate-700 hover:border-orange-300 hover:text-orange-600"
+                          ? "border-white/10 bg-white/5 text-white hover:bg-white/10"
+                          : "border-slate-200 bg-slate-50 text-slate-700 hover:border-orange-300 hover:text-orange-600"
                           }`}
                       >
                         <CalendarDays size={15} />

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = process.env.REACT_APP_API_URL || "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api";
+const BASE_URL = process.env.REACT_APP_API_URL || "https://photo-hub-be-project.vercel.app/api";
 
 const getAuthConfig = (isMultipart = false) => {
   const token = localStorage.getItem("token");

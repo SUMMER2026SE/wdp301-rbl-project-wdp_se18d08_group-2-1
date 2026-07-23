@@ -48,7 +48,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
   const getFullUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${url}`;
+    return `https://photo-hub-be-project.vercel.app${url}`;
   };
 
   // ── Load initial data ─────────────────────────────────────────────────────

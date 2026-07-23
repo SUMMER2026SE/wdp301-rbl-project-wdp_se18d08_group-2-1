@@ -13,7 +13,7 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { groupBookingService } from "../../services/groupBookingService";
 
-const API_BASE = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api";
+const API_BASE = "https://photo-hub-be-project.vercel.app/api";
 
 // ── Preset expire options ─────────────────────────────────────────────────────
 const EXPIRE_PRESETS = [
@@ -123,8 +123,8 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
   };
 
   const inputCls = `w-full rounded-2xl px-4 py-3.5 outline-none border transition-all focus:border-orange-500 text-sm ${isDark
-      ? "bg-slate-900 border-slate-700 text-white"
-      : "bg-slate-50 border-slate-200 text-slate-900"
+    ? "bg-slate-900 border-slate-700 text-white"
+    : "bg-slate-50 border-slate-200 text-slate-900"
     }`;
   const labelCls = `text-xs font-bold tracking-wider uppercase mb-1.5 block ${isDark ? "text-slate-400" : "text-slate-600"
     }`;
@@ -135,9 +135,8 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        className={`relative w-full max-w-2xl rounded-3xl border shadow-2xl my-auto ${
-          isDark ? "bg-[#0b0f19] border-white/10" : "bg-white border-slate-200"
-        }`}
+        className={`relative w-full max-w-2xl rounded-3xl border shadow-2xl my-auto ${isDark ? "bg-[#0b0f19] border-white/10" : "bg-white border-slate-200"
+          }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -164,8 +163,8 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
           {[1, 2].map((s) => (
             <div key={s} className="flex-1 flex items-center gap-2">
               <div className={`h-2 flex-1 rounded-full transition-all ${s <= step
-                  ? "bg-gradient-to-r from-orange-500 to-amber-500"
-                  : isDark ? "bg-white/10" : "bg-slate-200"
+                ? "bg-gradient-to-r from-orange-500 to-amber-500"
+                : isDark ? "bg-white/10" : "bg-slate-200"
                 }`} />
             </div>
           ))}
@@ -197,8 +196,7 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
                     <div
                       key={pkg._id}
                       onClick={() => setSelectedPackage(pkg)}
-                      className={`w-full text-left p-4 rounded-2xl border transition-all cursor-pointer ${
-                        selectedPackage?._id === pkg._id
+                      className={`w-full text-left p-4 rounded-2xl border transition-all cursor-pointer ${selectedPackage?._id === pkg._id
                           ? "border-orange-500 bg-orange-500/10 shadow-md shadow-orange-500/10"
                           : isDark
                             ? "border-white/10 bg-white/[0.03] hover:border-orange-500/40"
@@ -383,10 +381,10 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
                       key={preset.hours}
                       onClick={() => setForm((p) => ({ ...p, expireHours: preset.hours }))}
                       className={`py-2.5 rounded-xl text-sm font-bold border transition-all ${form.expireHours === preset.hours
-                          ? "border-orange-500 bg-orange-500/15 text-orange-400"
-                          : isDark
-                            ? "border-white/10 bg-white/[0.04] text-slate-400 hover:border-orange-500/40"
-                            : "border-slate-200 bg-slate-50 text-slate-600 hover:border-orange-400/40"
+                        ? "border-orange-500 bg-orange-500/15 text-orange-400"
+                        : isDark
+                          ? "border-white/10 bg-white/[0.04] text-slate-400 hover:border-orange-500/40"
+                          : "border-slate-200 bg-slate-50 text-slate-600 hover:border-orange-400/40"
                         }`}
                     >
                       {preset.label}
@@ -450,8 +448,8 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
                 <button
                   onClick={() => setStep(1)}
                   className={`flex-1 py-3.5 rounded-2xl font-bold text-sm border transition-all ${isDark
-                      ? "border-white/10 text-slate-400 hover:bg-white/[0.05]"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                    ? "border-white/10 text-slate-400 hover:bg-white/[0.05]"
+                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
                     }`}
                 >
                   ← Quay lại
@@ -512,9 +510,8 @@ function PackageDetailModal({ isDark, pkg, onClose }) {
       onClick={onClose}
     >
       <div
-        className={`relative w-full max-w-lg rounded-3xl border shadow-2xl overflow-hidden max-h-[90vh] flex flex-col ${
-          isDark ? "bg-[#0b0f19] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900"
-        }`}
+        className={`relative w-full max-w-lg rounded-3xl border shadow-2xl overflow-hidden max-h-[90vh] flex flex-col ${isDark ? "bg-[#0b0f19] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900"
+          }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -530,9 +527,8 @@ function PackageDetailModal({ isDark, pkg, onClose }) {
           </div>
           <button
             onClick={onClose}
-            className={`p-2 rounded-xl border transition-all ${
-              isDark ? "border-white/[0.07] hover:bg-white/[0.06] text-slate-400 hover:text-white" : "border-slate-200 hover:bg-slate-50 text-slate-500"
-            }`}
+            className={`p-2 rounded-xl border transition-all ${isDark ? "border-white/[0.07] hover:bg-white/[0.06] text-slate-400 hover:text-white" : "border-slate-200 hover:bg-slate-50 text-slate-500"
+              }`}
           >
             <X size={18} />
           </button>
@@ -639,11 +635,10 @@ function PackageDetailModal({ isDark, pkg, onClose }) {
                 return (
                   <div
                     key={tier.members}
-                    className={`flex items-center justify-between p-3 rounded-2xl border ${
-                      tier.pct > 0
+                    className={`flex items-center justify-between p-3 rounded-2xl border ${tier.pct > 0
                         ? isDark ? "border-orange-500/20 bg-orange-500/5" : "border-orange-200 bg-orange-50"
                         : isDark ? "border-white/[0.06] bg-white/[0.02]" : "border-slate-100 bg-slate-50"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <span className="text-base">{tier.icon}</span>
@@ -680,9 +675,8 @@ function PackageDetailModal({ isDark, pkg, onClose }) {
         <div className={`p-4 border-t shrink-0 ${isDark ? "border-white/[0.07]" : "border-slate-100"}`}>
           <button
             onClick={onClose}
-            className={`w-full py-3 rounded-2xl font-bold text-sm transition-all ${
-              isDark ? "bg-white/[0.07] text-white hover:bg-white/[0.1]" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            }`}
+            className={`w-full py-3 rounded-2xl font-bold text-sm transition-all ${isDark ? "bg-white/[0.07] text-white hover:bg-white/[0.1]" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
           >
             Đóng
           </button>
@@ -746,9 +740,8 @@ function PackageImageGallery({ images = [], isDark }) {
         <button
           type="button"
           onClick={() => setShowAll(false)}
-          className={`w-full py-2 rounded-xl border text-xs font-bold transition-all ${
-            isDark ? "border-white/10 text-slate-400 hover:text-white hover:bg-white/5" : "border-slate-200 text-slate-600 hover:bg-slate-100"
-          }`}
+          className={`w-full py-2 rounded-xl border text-xs font-bold transition-all ${isDark ? "border-white/10 text-slate-400 hover:text-white hover:bg-white/5" : "border-slate-200 text-slate-600 hover:bg-slate-100"
+            }`}
         >
           Thu gọn ảnh
         </button>

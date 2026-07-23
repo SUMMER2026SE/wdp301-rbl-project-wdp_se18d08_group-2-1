@@ -17,7 +17,7 @@ const { getIO } = require("../../../socket");
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const DEFAULT_FRONTEND_URL =
-  process.env.FRONTEND_URL || "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com";
+  process.env.FRONTEND_URL || "https://photo-hub-be-project.vercel.app";
 
 const payos = new PayOS({
   clientId: process.env.PAYOS_CLIENT_ID,

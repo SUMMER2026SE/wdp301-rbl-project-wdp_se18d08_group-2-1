@@ -273,7 +273,7 @@ export default function PhotographerDashboard({
                             }
                     });
 
-                    const BACKEND_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com";
+                    const BACKEND_URL = "https://photo-hub-be-project.vercel.app";
 
                     if (data.verification?.documentFrontUrl) {
                         setFrontPreview(
@@ -347,7 +347,7 @@ export default function PhotographerDashboard({
 
         // Nếu là đường dẫn tương đối từ server, nối thêm BACKEND_URL
         // Đảm bảo xử lý chuẩn dấu gạch chéo đầu chuỗi
-        const BACKEND_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com"; // <--- Đổi thành URL backend thực tế của bạn
+        const BACKEND_URL = "https://photo-hub-be-project.vercel.app"; // <--- Đổi thành URL backend thực tế của bạn
         const cleanPath = rawAvatar.startsWith("/") ? rawAvatar : `/${rawAvatar}`;
 
         return `${BACKEND_URL}${cleanPath}`;

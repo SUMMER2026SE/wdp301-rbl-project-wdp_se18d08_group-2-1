@@ -1,8 +1,8 @@
 import axios from "axios";
 
-const BASE_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api/photographers";
-const MARKETPLACE_BASE_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api/photographer";
-const BOOKING_BASE_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api/bookings";
+const BASE_URL = "https://photo-hub-be-project.vercel.app/api/photographers";
+const MARKETPLACE_BASE_URL = "https://photo-hub-be-project.vercel.app/api/photographer";
+const BOOKING_BASE_URL = "https://photo-hub-be-project.vercel.app/api/bookings";
 
 export const photographerService = {
 

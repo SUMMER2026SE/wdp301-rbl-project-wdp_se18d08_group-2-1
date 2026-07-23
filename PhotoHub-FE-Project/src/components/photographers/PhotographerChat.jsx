@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import { Send, User, MessageSquare, AlertCircle, Paperclip, X } from "lucide-react";
 import { photographerMarketplaceService } from "../../services/photographerService";
 
-const API_ORIGIN = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com";
+const API_ORIGIN = "https://photo-hub-be-project.vercel.app";
 
 const normalizeId = (value) => String(value?._id || value?.id || value || "");
 
@@ -279,10 +279,10 @@ export default function PhotographerChat({ theme = "dark", language = "vi", init
                     key={conv._id}
                     onClick={() => handleSelectConversation(conv)}
                     className={`w-full p-2 rounded-xl flex items-center gap-2.5 cursor-pointer transition text-left ${isSelected
-                        ? "bg-orange-500 text-white border border-orange-500 shadow-sm shadow-orange-500/20"
-                        : isDark
-                          ? "bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] text-slate-100"
-                          : "bg-orange-50/60 border border-orange-100 hover:bg-orange-50 text-slate-900"
+                      ? "bg-orange-500 text-white border border-orange-500 shadow-sm shadow-orange-500/20"
+                      : isDark
+                        ? "bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] text-slate-100"
+                        : "bg-orange-50/60 border border-orange-100 hover:bg-orange-50 text-slate-900"
                       }`}
                   >
                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 p-[1.5px] shrink-0">
@@ -347,10 +347,10 @@ export default function PhotographerChat({ theme = "dark", language = "vi", init
                       <div key={m._id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
                         <div
                           className={`max-w-[75%] p-3 rounded-xl text-xs leading-relaxed font-semibold ${isOwn
-                              ? "bg-orange-500 text-white rounded-tr-none shadow-sm shadow-orange-500/20"
-                              : isDark
-                                ? "bg-white/[0.05] border border-white/8 text-slate-100 rounded-tl-none"
-                                : "bg-orange-50 border border-orange-100 text-slate-900 rounded-tl-none"
+                            ? "bg-orange-500 text-white rounded-tr-none shadow-sm shadow-orange-500/20"
+                            : isDark
+                              ? "bg-white/[0.05] border border-white/8 text-slate-100 rounded-tl-none"
+                              : "bg-orange-50 border border-orange-100 text-slate-900 rounded-tl-none"
                             }`}
                         >
                           {m.text && <p>{m.text}</p>}
@@ -400,8 +400,8 @@ export default function PhotographerChat({ theme = "dark", language = "vi", init
                   value={messageType}
                   onChange={(e) => setMessageType(e.target.value)}
                   className={`rounded-xl px-2 py-2 text-xs outline-none border font-bold transition-all ${isDark
-                      ? "bg-[#09090b] border-white/8 focus:border-orange-500 text-white"
-                      : "bg-orange-50/60 border-orange-100 focus:border-orange-500 text-slate-900"
+                    ? "bg-[#09090b] border-white/8 focus:border-orange-500 text-white"
+                    : "bg-orange-50/60 border-orange-100 focus:border-orange-500 text-slate-900"
                     }`}
                 >
                   <option value="text">Text</option>
@@ -417,8 +417,8 @@ export default function PhotographerChat({ theme = "dark", language = "vi", init
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder={t.inputPlaceholder}
                   className={`flex-1 rounded-xl px-3 py-2 text-xs outline-none border font-medium transition-all ${isDark
-                      ? "bg-[#09090b] border-white/8 focus:border-orange-500 text-white"
-                      : "bg-white border-orange-100 focus:border-orange-500 text-slate-900"
+                    ? "bg-[#09090b] border-white/8 focus:border-orange-500 text-white"
+                    : "bg-white border-orange-100 focus:border-orange-500 text-slate-900"
                     }`}
                 />
                 <button

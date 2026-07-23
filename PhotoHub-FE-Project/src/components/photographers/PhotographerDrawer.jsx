@@ -167,7 +167,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
   const getAvatarUrl = (avatar) => {
     if (!avatar) return null;
     if (avatar.startsWith("http://") || avatar.startsWith("https://")) return avatar;
-    return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
+    return `https://photo-hub-be-project.vercel.app${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
   };
 
   const handleStartChat = async () => {
@@ -591,7 +591,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                               <div key={img._id || idx} onClick={() => setLightboxImg(getAvatarUrl(img.image_url) || img.image_url)}
                                 className="group relative aspect-square overflow-hidden rounded-xl bg-slate-100 dark:bg-zinc-800 cursor-pointer">
                                 <img
-                                  src={img.image_url?.startsWith("http") ? img.image_url : `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${img.image_url}`}
+                                  src={img.image_url?.startsWith("http") ? img.image_url : `https://photo-hub-be-project.vercel.app${img.image_url}`}
                                   alt={img.caption || `Photo ${idx + 1}`}
                                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -619,7 +619,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                             <div className="relative aspect-square overflow-hidden bg-slate-200 dark:bg-zinc-800">
                               {album.coverImageUrl ? (
                                 <img
-                                  src={album.coverImageUrl?.startsWith("http") ? album.coverImageUrl : `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${album.coverImageUrl}`}
+                                  src={album.coverImageUrl?.startsWith("http") ? album.coverImageUrl : `https://photo-hub-be-project.vercel.app${album.coverImageUrl}`}
                                   alt={album.title}
                                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
                               ) : (

@@ -23,7 +23,7 @@ import {
 
 import { getAllCategories, getAllStyleTags } from "../../services/categoryAndStyleService";
 
-const BACKEND_ORIGIN = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com";
+const BACKEND_ORIGIN = "https://photo-hub-be-project.vercel.app";
 
 const resolveImageUrl = (image) => {
     if (!image) return "";
@@ -597,10 +597,10 @@ export default function PhotographerPackages({
                             type="button"
                             onClick={() => setPackageType(type)}
                             className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${active
-                                    ? type === "GROUP"
-                                        ? "bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20"
-                                        : "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20"
-                                    : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-orange-300"
+                                ? type === "GROUP"
+                                    ? "bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20"
+                                    : "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20"
+                                : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-orange-300"
                                 }`}
                         >
                             {meta.shortLabel}

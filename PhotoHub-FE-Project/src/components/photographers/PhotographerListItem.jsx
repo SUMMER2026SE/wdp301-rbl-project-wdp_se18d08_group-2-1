@@ -39,7 +39,7 @@ const PhotographerListItem = ({ photographer, language, onMessageClick }) => {
     if (!user?.avatar) return null;
     if (user.avatar.startsWith("http://") || user.avatar.startsWith("https://")) return user.avatar;
     const cleanPath = user.avatar.startsWith("/") ? user.avatar : `/${user.avatar}`;
-    return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${cleanPath}`;
+    return `https://photo-hub-be-project.vercel.app${cleanPath}`;
   };
 
   const getPhotographerUserId = () => {

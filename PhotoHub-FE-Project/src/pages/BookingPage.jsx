@@ -887,7 +887,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                 <div className="h-16 w-16 rounded-full overflow-hidden shrink-0 border-2 border-orange-500 bg-orange-100">
                   {photographer.user?.avatar ? (
                     <img
-                      src={photographer.user.avatar.startsWith("http") ? photographer.user.avatar : `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${photographer.user.avatar.startsWith("/") ? "" : "/"}${photographer.user.avatar}`}
+                      src={photographer.user.avatar.startsWith("http") ? photographer.user.avatar : `https://photo-hub-be-project.vercel.app${photographer.user.avatar.startsWith("/") ? "" : "/"}${photographer.user.avatar}`}
                       alt={photographer.displayName}
                       className="h-full w-full object-cover"
                     />
@@ -994,18 +994,18 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                           }
                           onClick={() => clickable && handleCalendarDayClick(cell.day)}
                           className={`aspect-square p-1 rounded-xl border transition-all flex flex-col justify-between select-none relative ${!cell.isCurrentMonth
-                              ? "bg-transparent border-transparent text-slate-300 dark:text-zinc-800 pointer-events-none"
-                              : cell.isPast
-                                ? "bg-slate-100 dark:bg-zinc-900/40 border-transparent text-slate-400 dark:text-zinc-600 cursor-not-allowed opacity-50"
-                                : cell.isBusy
-                                  ? "bg-rose-500/10 border-rose-300/30 text-rose-500 cursor-not-allowed"
-                                  : hasPartialBooking
-                                    ? isCellSelected
-                                      ? "bg-orange-500 border-orange-500 text-white font-black shadow-md shadow-orange-500/20"
-                                      : "bg-amber-500/10 border-amber-400/40 text-amber-600 dark:text-amber-400 hover:border-orange-500 cursor-pointer"
-                                    : isCellSelected
-                                      ? "bg-orange-500 border-orange-500 text-white font-black shadow-md shadow-orange-500/20"
-                                      : "bg-slate-50 dark:bg-zinc-900/60 border-slate-200/50 dark:border-zinc-800/80 hover:border-orange-500 hover:text-orange-500 cursor-pointer"
+                            ? "bg-transparent border-transparent text-slate-300 dark:text-zinc-800 pointer-events-none"
+                            : cell.isPast
+                              ? "bg-slate-100 dark:bg-zinc-900/40 border-transparent text-slate-400 dark:text-zinc-600 cursor-not-allowed opacity-50"
+                              : cell.isBusy
+                                ? "bg-rose-500/10 border-rose-300/30 text-rose-500 cursor-not-allowed"
+                                : hasPartialBooking
+                                  ? isCellSelected
+                                    ? "bg-orange-500 border-orange-500 text-white font-black shadow-md shadow-orange-500/20"
+                                    : "bg-amber-500/10 border-amber-400/40 text-amber-600 dark:text-amber-400 hover:border-orange-500 cursor-pointer"
+                                  : isCellSelected
+                                    ? "bg-orange-500 border-orange-500 text-white font-black shadow-md shadow-orange-500/20"
+                                    : "bg-slate-50 dark:bg-zinc-900/60 border-slate-200/50 dark:border-zinc-800/80 hover:border-orange-500 hover:text-orange-500 cursor-pointer"
                             }`}
                         >
                           <span className={`text-[11px] font-bold ${isToday(cell.day) && !isCellSelected ? "text-orange-500 underline decoration-2 decoration-orange-500/80" : ""}`}>
@@ -1112,8 +1112,8 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                             key={i}
                             title={seg.busy ? `🔴 ${fmt(seg.s)} – ${fmt(seg.e)}: ${t.slotBusy}` : `🟢 ${fmt(seg.s)} – ${fmt(seg.e)}: ${t.slotFree}`}
                             className={`h-full transition-all ${seg.busy
-                                ? 'bg-rose-500 opacity-80'
-                                : 'bg-emerald-500/40'
+                              ? 'bg-rose-500 opacity-80'
+                              : 'bg-emerald-500/40'
                               }`}
                             style={{ width: `${widthPct}%` }}
                           />
@@ -1227,7 +1227,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                       const urls = rawImages
                         .map(img => typeof img === "string" ? img : img?.imageUrl || "")
                         .filter(Boolean)
-                        .map(url => url.startsWith("http") ? url : `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${url.startsWith("/") ? "" : "/"}${url}`);
+                        .map(url => url.startsWith("http") ? url : `https://photo-hub-be-project.vercel.app${url.startsWith("/") ? "" : "/"}${url}`);
                       const MAX_VISIBLE = 6;
                       const visibleUrls = showAllImages ? urls : urls.slice(0, MAX_VISIBLE);
                       const remaining = urls.length - MAX_VISIBLE;
@@ -1504,8 +1504,8 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                                 type="button"
                                 onClick={() => setSelectedMonthlyPackageId(pkg._id)}
                                 className={`w-full rounded-3xl border p-4 text-left transition-all hover:-translate-y-0.5 ${isSelected
-                                    ? "border-orange-400 bg-white shadow-lg shadow-orange-500/10 dark:bg-orange-500/10"
-                                    : "border-orange-100 bg-white/90 dark:border-white/10 dark:bg-white/5"
+                                  ? "border-orange-400 bg-white shadow-lg shadow-orange-500/10 dark:bg-orange-500/10"
+                                  : "border-orange-100 bg-white/90 dark:border-white/10 dark:bg-white/5"
                                   }`}
                               >
                                 <div className="flex items-start justify-between gap-3">

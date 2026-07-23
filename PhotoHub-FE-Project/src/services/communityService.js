@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const COMMUNITY_BASE_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api/community";
-const PHOTOGRAPHER_CHAT_BASE_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api/photographer/chat";
+const COMMUNITY_BASE_URL = "https://photo-hub-be-project.vercel.app/api/community";
+const PHOTOGRAPHER_CHAT_BASE_URL = "https://photo-hub-be-project.vercel.app/api/photographer/chat";
 
 const getAuthConfig = () => {
   const token = localStorage.getItem("token") || localStorage.getItem("accessToken");

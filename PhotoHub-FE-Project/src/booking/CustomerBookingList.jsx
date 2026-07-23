@@ -208,7 +208,7 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
         albumTitle = finalAlbum.title || booking.title;
         // Wait, let's load album images from BE.
         // Let's look at user view:
-        const response = await fetch(`https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api/photographer/albums/${booking._id}`, {
+        const response = await fetch(`https://photo-hub-be-project.vercel.app/api/photographer/albums/${booking._id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           }
@@ -317,7 +317,7 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
   const getFullUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${url}`;
+    return `https://photo-hub-be-project.vercel.app${url}`;
   };
 
   const inputClass = isDark ? "bg-slate-900 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900";

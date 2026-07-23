@@ -76,7 +76,7 @@ export default function FavoritePhotographerList({ language = "vi", isDark = tru
     const avatar = photographer?.user?.avatar;
     if (!avatar) return null;
     if (avatar.startsWith("http://") || avatar.startsWith("https://")) return avatar;
-    return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
+    return `https://photo-hub-be-project.vercel.app${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
   };
 
   const cardBg = isDark

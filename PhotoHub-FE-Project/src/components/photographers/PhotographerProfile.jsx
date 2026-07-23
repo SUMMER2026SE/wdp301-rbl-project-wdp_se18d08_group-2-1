@@ -185,7 +185,7 @@ const PhotographerProfile = ({ language = "en" }) => {
   const getFullUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${url}`;
+    return `https://photo-hub-be-project.vercel.app${url}`;
   };
 
   useEffect(() => {
@@ -310,7 +310,7 @@ const PhotographerProfile = ({ language = "en" }) => {
     if (user.avatar.startsWith("http://") || user.avatar.startsWith("https://")) {
       return user.avatar;
     }
-    const BACKEND_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com";
+    const BACKEND_URL = "https://photo-hub-be-project.vercel.app";
     const cleanPath = user.avatar.startsWith("/") ? user.avatar : `/${user.avatar}`;
     return `${BACKEND_URL}${cleanPath}`;
   };

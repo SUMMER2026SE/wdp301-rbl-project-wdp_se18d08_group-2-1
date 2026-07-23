@@ -1,4 +1,4 @@
-const BASE_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api/favoritephotographers";
+const BASE_URL = "https://photo-hub-be-project.vercel.app/api/favoritephotographers";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");

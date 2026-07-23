@@ -246,7 +246,7 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
     const userId = user._id || user.id;
     if (!userId) return;
 
-    const socket = io("https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com");
+    const socket = io("https://photo-hub-be-project.vercel.app");
     socketRef.current = socket;
 
     socket.on("connect", () => {

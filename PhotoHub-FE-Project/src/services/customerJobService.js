@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api/customer/jobs";
+const BASE_URL = "https://photo-hub-be-project.vercel.app/api/customer/jobs";
 
 const getAuthConfig = (isMultipart = false) => {
   const token = localStorage.getItem("token");

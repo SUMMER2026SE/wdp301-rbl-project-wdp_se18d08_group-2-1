@@ -405,7 +405,7 @@ export default function ProfilePage({
                                     user?.avatar
                                         ? user.avatar.startsWith("http")
                                             ? user.avatar
-                                            : `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${user.avatar}`
+                                            : `https://photo-hub-be-project.vercel.app${user.avatar}`
                                         : "https://i.pravatar.cc/300"
                                 }
                                 name={user?.fullName}

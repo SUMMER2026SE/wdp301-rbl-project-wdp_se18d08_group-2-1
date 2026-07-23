@@ -222,7 +222,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
   const getFullUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${url}`;
+    return `https://photo-hub-be-project.vercel.app${url}`;
   };
 
   return (
@@ -440,8 +440,8 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
                     type="button"
                     onClick={() => setLimit(n)}
                     className={`px-3 py-2.5 text-xs font-black transition-all ${limit === n
-                        ? "bg-orange-500 text-white"
-                        : "text-slate-500 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800"
+                      ? "bg-orange-500 text-white"
+                      : "text-slate-500 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800"
                       }`}
                   >
                     {n}

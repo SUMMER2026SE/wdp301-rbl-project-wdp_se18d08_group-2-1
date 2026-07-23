@@ -266,8 +266,8 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
       const imagesHtml = (album.images || [])
         .slice(0, 8)
         .map((image) => {
-          const src = `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${image.previewUrl || image.url}`;
-          const download = image.downloadUrl ? `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${image.downloadUrl}` : "";
+          const src = `https://photo-hub-be-project.vercel.app${image.previewUrl || image.url}`;
+          const download = image.downloadUrl ? `https://photo-hub-be-project.vercel.app${image.downloadUrl}` : "";
           return `<div style="display:inline-block;margin:4px;text-align:center"><img src="${src}" style="width:90px;height:70px;object-fit:cover;border-radius:8px"/><br/>${download ? `<a href="${download}" target="_blank">Full HD</a>` : `<small>Watermark preview</small>`
             }</div>`;
         })
@@ -359,16 +359,16 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
                     key={idx}
                     onClick={() => cell.isCurrentMonth && handleDayClick(cell.day)}
                     className={`min-h-[70px] p-1.5 rounded-xl border transition-all cursor-pointer relative flex flex-col justify-between ${!cell.isCurrentMonth
-                        ? isDark
-                          ? "bg-transparent border-transparent text-slate-700 pointer-events-none"
-                          : "bg-transparent border-transparent text-slate-300 pointer-events-none"
-                        : hasConflict
-                          ? "border-red-500 bg-red-500/10"
-                          : isToday(cell.day)
-                            ? "border-orange-500 bg-orange-500/10"
-                            : isDark
-                              ? "border-white/5 bg-white/[0.02] hover:bg-white/5"
-                              : "border-slate-100 bg-slate-50/50 hover:bg-slate-100"
+                      ? isDark
+                        ? "bg-transparent border-transparent text-slate-700 pointer-events-none"
+                        : "bg-transparent border-transparent text-slate-300 pointer-events-none"
+                      : hasConflict
+                        ? "border-red-500 bg-red-500/10"
+                        : isToday(cell.day)
+                          ? "border-orange-500 bg-orange-500/10"
+                          : isDark
+                            ? "border-white/5 bg-white/[0.02] hover:bg-white/5"
+                            : "border-slate-100 bg-slate-50/50 hover:bg-slate-100"
                       }`}
                   >
                     <span className={`text-xs font-black ${isToday(cell.day) ? "text-orange-500" : ""}`}>
@@ -381,12 +381,12 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
                           <div
                             key={bIdx}
                             className={`text-[9px] px-1.5 py-0.5 rounded truncate font-bold ${b.status === "completed"
-                                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                                : b.status === "confirmed"
-                                  ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
-                                  : b.status === "group_pending"
-                                    ? "bg-amber-500/10 text-amber-500 border border-amber-500/30 border-dashed"
-                                    : "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20"
+                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                              : b.status === "confirmed"
+                                ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                                : b.status === "group_pending"
+                                  ? "bg-amber-500/10 text-amber-500 border border-amber-500/30 border-dashed"
+                                  : "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20"
                               }`}
                           >
                             {b.title}
@@ -465,14 +465,14 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
                           <strong>{t.status}</strong>
                           <span
                             className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${b.hasConflict
-                                ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                                : isCompletedStatus(b.status)
-                                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                                  : b.status === "confirmed"
-                                    ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
-                                    : b.status === "group_pending"
-                                      ? "bg-amber-500/10 text-amber-500 border border-amber-500/30 border-dashed"
-                                      : "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20"
+                              ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                              : isCompletedStatus(b.status)
+                                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                : b.status === "confirmed"
+                                  ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                                  : b.status === "group_pending"
+                                    ? "bg-amber-500/10 text-amber-500 border border-amber-500/30 border-dashed"
+                                    : "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20"
                               }`}
                           >
                             {b.status === "group_pending" ? "Nhóm chờ cọc" : b.status}

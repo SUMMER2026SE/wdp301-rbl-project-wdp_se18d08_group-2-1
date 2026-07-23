@@ -291,7 +291,7 @@ export default function GroupDetailPage({ theme = "dark", language = "vi" }) {
   useEffect(() => {
     if (!groupId) return;
 
-    const socket = io("https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com");
+    const socket = io("https://photo-hub-be-project.vercel.app");
 
     socket.on("connect", () => {
       console.log(`[Socket] Connected to group room: group:${groupId}`);
@@ -945,8 +945,8 @@ export default function GroupDetailPage({ theme = "dark", language = "vi" }) {
                 onClick={handleInvite}
                 disabled={actionLoading || paidCount >= maxMembers}
                 className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${isDark
-                    ? "border-white/10 text-white hover:bg-white/[0.06]"
-                    : "border-slate-200 text-slate-700 hover:bg-slate-50"
+                  ? "border-white/10 text-white hover:bg-white/[0.06]"
+                  : "border-slate-200 text-slate-700 hover:bg-slate-50"
                   }`}
               >
                 {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />}
@@ -959,8 +959,8 @@ export default function GroupDetailPage({ theme = "dark", language = "vi" }) {
                   onClick={handleToggleLock}
                   disabled={actionLoading}
                   className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl border text-sm font-bold transition-all disabled:opacity-50 ${group.isLocked
-                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
-                      : "border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                    : "border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
                     }`}
                 >
                   {group.isLocked ? <Unlock size={16} /> : <Lock size={16} />}
@@ -1257,11 +1257,10 @@ function MemberList({ members, maxMembers, isDark, isLeader, isGroupPending, onT
       {hasMore && (
         <button
           onClick={() => setExpanded((v) => !v)}
-          className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl border text-sm font-bold transition-all ${
-            isDark
+          className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl border text-sm font-bold transition-all ${isDark
               ? "border-white/10 text-slate-400 hover:border-orange-500/40 hover:text-orange-400 hover:bg-orange-500/5"
               : "border-slate-200 text-slate-500 hover:border-orange-400/50 hover:text-orange-500 hover:bg-orange-50"
-          }`}
+            }`}
         >
           {expanded ? (
             <><ChevronUp size={16} /> Thu gọn</>
@@ -1295,9 +1294,8 @@ function PackageDetailDrawer({ isDark, concept, photographer, basePrice, onClose
 
       {/* Drawer panel */}
       <div
-        className={`fixed right-0 top-0 z-[150] h-full w-full max-w-md shadow-2xl flex flex-col overflow-hidden ${
-          isDark ? "bg-[#0b0f1a] border-l border-white/10" : "bg-white border-l border-slate-200"
-        }`}
+        className={`fixed right-0 top-0 z-[150] h-full w-full max-w-md shadow-2xl flex flex-col overflow-hidden ${isDark ? "bg-[#0b0f1a] border-l border-white/10" : "bg-white border-l border-slate-200"
+          }`}
         style={{ animation: "slideInRight 0.28s cubic-bezier(.4,0,.2,1)" }}
       >
         {/* Header */}
@@ -1421,11 +1419,10 @@ function PackageDetailDrawer({ isDark, concept, photographer, basePrice, onClose
                 return (
                   <div
                     key={tier.members}
-                    className={`flex items-center justify-between p-3.5 rounded-2xl border ${
-                      tier.pct > 0
+                    className={`flex items-center justify-between p-3.5 rounded-2xl border ${tier.pct > 0
                         ? isDark ? "border-orange-500/20 bg-orange-500/5" : "border-orange-200 bg-orange-50"
                         : isDark ? "border-white/[0.06] bg-white/[0.02]" : "border-slate-100 bg-slate-50"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <span className="text-base">{tier.icon}</span>
@@ -1533,9 +1530,8 @@ function PackageImageGallery({ images = [], isDark }) {
         <button
           type="button"
           onClick={() => setShowAll(false)}
-          className={`w-full py-2 rounded-xl border text-xs font-bold transition-all ${
-            isDark ? "border-white/10 text-slate-400 hover:text-white hover:bg-white/5" : "border-slate-200 text-slate-600 hover:bg-slate-100"
-          }`}
+          className={`w-full py-2 rounded-xl border text-xs font-bold transition-all ${isDark ? "border-white/10 text-slate-400 hover:text-white hover:bg-white/5" : "border-slate-200 text-slate-600 hover:bg-slate-100"
+            }`}
         >
           Thu gọn ảnh
         </button>

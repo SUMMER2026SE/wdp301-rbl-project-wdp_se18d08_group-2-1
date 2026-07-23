@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api";
-const BACKEND_ORIGIN = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com";
+const API = "https://photo-hub-be-project.vercel.app/api";
+const BACKEND_ORIGIN = "https://photo-hub-be-project.vercel.app";
 
 const getHeaders = () => ({
   headers: {
