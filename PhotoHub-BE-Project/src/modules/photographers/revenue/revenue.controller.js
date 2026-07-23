@@ -4,7 +4,7 @@ const ApiResponse = require("../../../utils/ApiResponse");
 class RevenueController {
   async getRevenue(req, res) {
     try {
-      const stats = await revenueService.getRevenueData(req.user.id);
+      const stats = await revenueService.getRevenueData(req.user.id, req.query);
       return ApiResponse.success(res, stats, "Revenue dashboard statistics retrieved successfully");
     } catch (error) {
       console.error("Error retrieving revenue stats:", error);

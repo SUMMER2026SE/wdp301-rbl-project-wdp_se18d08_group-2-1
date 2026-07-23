@@ -27,6 +27,73 @@ const incrementMap = (map, key, amount = 1) => {
 
 const getBookingAmount = (booking) => Number(booking.price || booking.totalPrice || 0);
 
+function buildDateRange(query = {}) {
+  let startDate = null;
+  let endDate = null;
+
+  // Theo khoảng ngày
+  if (query.startDate && query.endDate) {
+    startDate = new Date(query.startDate);
+    startDate.setHours(0, 0, 0, 0);
+
+    endDate = new Date(query.endDate);
+    endDate.setHours(23, 59, 59, 999);
+
+    return { startDate, endDate };
+  }
+
+  // Theo khoảng tháng
+  if (query.startMonth && query.endMonth) {
+    const [sy, sm] = query.startMonth.split("-").map(Number);
+    const [ey, em] = query.endMonth.split("-").map(Number);
+
+    startDate = new Date(sy, sm - 1, 1);
+
+    endDate = new Date(ey, em, 0);
+    endDate.setHours(23, 59, 59, 999);
+
+    return { startDate, endDate };
+  }
+
+  // Theo khoảng năm
+  if (query.startYear && query.endYear) {
+    startDate = new Date(Number(query.startYear), 0, 1);
+
+    endDate = new Date(Number(query.endYear), 11, 31);
+    endDate.setHours(23, 59, 59, 999);
+
+    return { startDate, endDate };
+  }
+
+  // Theo khoảng quý
+  if (query.startQuarter && query.endQuarter) {
+    const parseQuarter = (value) => {
+      const match = value.match(/^(\d{4})-Q?([1-4])$/i);
+
+      if (!match) return null;
+
+      return {
+        year: Number(match[1]),
+        quarter: Number(match[2]),
+      };
+    };
+
+    const start = parseQuarter(query.startQuarter);
+    const end = parseQuarter(query.endQuarter);
+
+    if (start && end) {
+      startDate = new Date(start.year, (start.quarter - 1) * 3, 1);
+
+      endDate = new Date(end.year, end.quarter * 3, 0);
+      endDate.setHours(23, 59, 59, 999);
+
+      return { startDate, endDate };
+    }
+  }
+
+  return { startDate: null, endDate: null };
+}
+
 class RevenueService {
   async getPaidBookingIds(bookings) {
     const bookingIds = bookings.map((booking) => booking._id);
@@ -63,10 +130,24 @@ class RevenueService {
     return new Set(disputes.map((dispute) => String(dispute.booking)));
   }
 
-  async getRevenueData(photographerUserId) {
+  async getRevenueData(photographerUserId, query = {}) {
     const identity = await getPhotographerIdentity(photographerUserId);
-    const allBookings = await Booking.find({ photographer: { $in: identity.ids } }).sort({ createdAt: -1 });
-    const completedBookings = allBookings.filter(isCompletedBooking);
+
+    const { startDate, endDate } = buildDateRange(query);
+
+    const allBookings = await Booking.find({
+      photographer: { $in: identity.ids },
+    }).sort({ createdAt: -1 });
+
+    const filteredBookings =
+      startDate && endDate
+        ? allBookings.filter((booking) => {
+          const date = booking.completedAt || booking.createdAt;
+          return date >= startDate && date <= endDate;
+        })
+        : allBookings;
+
+    const completedBookings = filteredBookings.filter(isCompletedBooking);
     const now = new Date();
     const withdrawQuery = identity.photographerId
       ? { $or: [{ photographerId: photographerUserId }, { photographer: identity.photographerId }] }
@@ -77,15 +158,26 @@ class RevenueService {
       WithdrawRequest.find(withdrawQuery),
       Bid.find({ photographerId: { $in: identity.ids } }).select("status price createdAt"),
     ]);
+    const filteredBids =
+      startDate && endDate
+        ? bids.filter(
+          (bid) =>
+            bid.createdAt >= startDate &&
+            bid.createdAt <= endDate
+        )
+        : bids;
 
-    const successfulSubscriptionPayments = await SubscriptionPayment.find({
-      photographer: { $in: identity.ids },
-      status: "SUCCESS",
-      paymentKind: { $in: ["PURCHASE", "RENEWAL", "PENALTY"] },
-    }).select("amount paymentKind createdAt metadata");
+    const filteredSubscriptions =
+      startDate && endDate
+        ? successfulSubscriptionPayments.filter(
+          (payment) =>
+            payment.createdAt >= startDate &&
+            payment.createdAt <= endDate
+        )
+        : successfulSubscriptionPayments;
 
     const totalRevenue = completedBookings.reduce((sum, b) => sum + getBookingAmount(b), 0);
-    const totalSubscriptionRevenue = successfulSubscriptionPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    const totalSubscriptionRevenue = filteredSubscriptions.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
     const totalGrossRevenue = totalRevenue + totalSubscriptionRevenue;
     const completedBookingsCount = completedBookings.length;
 
@@ -170,7 +262,7 @@ class RevenueService {
       incrementMap(packageRevenueMap, b.packageName || "Standard", bookingAmount);
     });
 
-    successfulSubscriptionPayments.forEach((payment) => {
+    filteredSubscriptions.forEach((payment) => {
       const month = monthKey(payment.createdAt || new Date());
       const amount = Number(payment.amount || 0);
       monthlyRevenueMap[month] = (monthlyRevenueMap[month] || 0) + amount;
@@ -194,19 +286,23 @@ class RevenueService {
         .map(([name, revenue]) => ({ name, revenue }))
         .sort((a, b) => b.revenue - a.revenue);
 
-    const acceptedBids = bids.filter((bid) => bid.status === "accepted").length;
-    const bidWinRate = bids.length ? Math.round((acceptedBids / bids.length) * 100) : 0;
-    const activeOrFinishedBookings = allBookings.filter((booking) => !TERMINAL_CANCELLED_STATUSES.includes(booking.status));
+    const acceptedBids = filteredBids.filter((bid) => bid.status === "accepted").length;
+    const bidWinRate = filteredBids.length ? Math.round((acceptedBids / filteredBids.length) * 100) : 0;
+    const activeOrFinishedBookings = filteredBookings.filter((booking) => !TERMINAL_CANCELLED_STATUSES.includes(booking.status));
     const completionRate = activeOrFinishedBookings.length
       ? Math.round((completedBookingsCount / activeOrFinishedBookings.length) * 100)
       : 0;
 
     return {
+      filter: {
+        startDate,
+        endDate,
+      },
       totalRevenue,
       subscriptionRevenue: totalSubscriptionRevenue,
       grossRevenue: totalGrossRevenue,
       completedBookings: completedBookingsCount,
-      totalBookings: allBookings.length,
+      totalBookings: filteredBookings.length,
       totalWithdrawn,
       pendingWithdrawn,
       pendingPayout: withdrawableAmount,
