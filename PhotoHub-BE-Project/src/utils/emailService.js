@@ -7,18 +7,61 @@ function hasMailConfig() {
 let transporter = null;
 
 function getTransporter() {
-  if (!hasMailConfig()) return null;
+  if (!hasMailConfig()) {
+    console.log("[EMAIL] Thiếu MAIL_USER hoặc MAIL_PASSWORD");
+    return null;
+  }
+
   if (!transporter) {
+
+    console.log("[EMAIL CONFIG]", {
+      host: process.env.MAIL_HOST || "smtp.gmail.com",
+      port: process.env.MAIL_PORT || 587,
+      user: process.env.MAIL_USER,
+      hasPassword: !!process.env.MAIL_PASSWORD,
+    });
+
+
     transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST || "smtp.gmail.com",
+
       port: Number(process.env.MAIL_PORT) || 587,
-      secure: false,
+
+      // Gmail 587 = false, Gmail 465 = true
+      secure: Number(process.env.MAIL_PORT) === 465,
+
+      requireTLS: true,
+
+      // tránh Render timeout IPv6
+      family: 4,
+
+      connectionTimeout: 30000,
+      greetingTimeout: 30000,
+      socketTimeout: 30000,
+
       auth: {
         user: process.env.MAIL_USER,
         pass: String(process.env.MAIL_PASSWORD).replace(/\s+/g, ""),
       },
     });
+
+
+    transporter.verify((error) => {
+      if (error) {
+        console.error("[SMTP VERIFY ERROR]", {
+          message: error.message,
+          code: error.code,
+          command: error.command,
+          errno: error.errno,
+          syscall: error.syscall,
+        });
+      } else {
+        console.log("[SMTP] Gmail SMTP kết nối thành công");
+      }
+    });
+
   }
+
   return transporter;
 }
 
@@ -44,14 +87,31 @@ async function sendVerifyEmailOtp(to, otp, fullName) {
     </div>
   `;
 
-  await t.sendMail({
-    from: `"${process.env.MAIL_FROM_NAME || "PHOTOHUB"}" <${process.env.MAIL_USER}>`,
-    to,
-    subject: "Mã xác thực email - PHOTOHUB",
-    text: `Mã OTP của bạn: ${otp} (hiệu lực 15 phút)`,
-    html: htmlContent,
-  });
-  console.log(`[EMAIL] Đã gửi OTP tới ${to}`);
+  try {
+
+    await t.sendMail({
+      from: `"${process.env.MAIL_FROM_NAME || "PHOTOHUB"}" <${process.env.MAIL_USER}>`,
+      to,
+      subject: "Mã xác thực email - PHOTOHUB",
+      text: `Mã OTP của bạn: ${otp} (hiệu lực 15 phút)`,
+      html: htmlContent,
+    });
+
+    console.log(`[EMAIL] Đã gửi OTP tới ${to}`);
+
+  } catch (err) {
+
+    console.error("[EMAIL SEND ERROR]", {
+      message: err.message,
+      code: err.code,
+      command: err.command,
+      response: err.response,
+      errno: err.errno,
+      syscall: err.syscall,
+    });
+
+    throw err;
+  }
 }
 
 /**
