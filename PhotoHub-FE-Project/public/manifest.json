@@ -1,9 +1,0 @@
-{
-  "short_name": "PhotoHub",
-  "name": "PhotoHub Secure Photography Marketplace",
-  "icons": [],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#020617",
-  "background_color": "#000000"
-}
