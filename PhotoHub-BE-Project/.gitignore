@@ -63,3 +63,4 @@ setup_db.ts
 .model_cache/
 **/.model_cache/
 *.onnx
+.vercel
