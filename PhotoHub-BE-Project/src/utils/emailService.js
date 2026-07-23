@@ -13,26 +13,11 @@ function getTransporter() {
   }
 
   if (!transporter) {
-
-    console.log("[EMAIL CONFIG]", {
-      host: process.env.MAIL_HOST || "smtp.gmail.com",
-      port: process.env.MAIL_PORT || 587,
-      user: process.env.MAIL_USER,
-      hasPassword: !!process.env.MAIL_PASSWORD,
-    });
-
-
     transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST || "smtp.gmail.com",
-
       port: Number(process.env.MAIL_PORT) || 587,
-
-      // Gmail 587 = false, Gmail 465 = true
-      secure: Number(process.env.MAIL_PORT) === 465,
-
+      secure: false,
       requireTLS: true,
-
-      // tránh Render timeout IPv6
       family: 4,
 
       connectionTimeout: 30000,
@@ -45,21 +30,11 @@ function getTransporter() {
       },
     });
 
-
-    transporter.verify((error) => {
-      if (error) {
-        console.error("[SMTP VERIFY ERROR]", {
-          message: error.message,
-          code: error.code,
-          command: error.command,
-          errno: error.errno,
-          syscall: error.syscall,
-        });
-      } else {
-        console.log("[SMTP] Gmail SMTP kết nối thành công");
-      }
+    console.log("[EMAIL CONFIG]", {
+      host: process.env.MAIL_HOST,
+      port: process.env.MAIL_PORT,
+      user: process.env.MAIL_USER,
     });
-
   }
 
   return transporter;
