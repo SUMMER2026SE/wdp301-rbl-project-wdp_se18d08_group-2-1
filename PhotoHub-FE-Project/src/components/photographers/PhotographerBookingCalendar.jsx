@@ -266,7 +266,7 @@ export default function PhotographerBookingCalendar({ theme = "dark", language =
       const imagesHtml = (album.images || [])
         .slice(0, 8)
         .map((image) => {
-          const src = `https://photo-hub-be-project.vercel.app${image.previewUrl || image.url}`;
+          const src = `${image.previewUrl || image.url}`;
           const download = image.downloadUrl ? `https://photo-hub-be-project.vercel.app${image.downloadUrl}` : "";
           return `<div style="display:inline-block;margin:4px;text-align:center"><img src="${src}" style="width:90px;height:70px;object-fit:cover;border-radius:8px"/><br/>${download ? `<a href="${download}" target="_blank">Full HD</a>` : `<small>Watermark preview</small>`
             }</div>`;

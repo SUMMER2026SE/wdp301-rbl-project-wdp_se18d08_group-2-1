@@ -197,10 +197,10 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
                       key={pkg._id}
                       onClick={() => setSelectedPackage(pkg)}
                       className={`w-full text-left p-4 rounded-2xl border transition-all cursor-pointer ${selectedPackage?._id === pkg._id
-                          ? "border-orange-500 bg-orange-500/10 shadow-md shadow-orange-500/10"
-                          : isDark
-                            ? "border-white/10 bg-white/[0.03] hover:border-orange-500/40"
-                            : "border-slate-200 bg-slate-50 hover:border-orange-400/50"
+                        ? "border-orange-500 bg-orange-500/10 shadow-md shadow-orange-500/10"
+                        : isDark
+                          ? "border-white/10 bg-white/[0.03] hover:border-orange-500/40"
+                          : "border-slate-200 bg-slate-50 hover:border-orange-400/50"
                         }`}
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -636,8 +636,8 @@ function PackageDetailModal({ isDark, pkg, onClose }) {
                   <div
                     key={tier.members}
                     className={`flex items-center justify-between p-3 rounded-2xl border ${tier.pct > 0
-                        ? isDark ? "border-orange-500/20 bg-orange-500/5" : "border-orange-200 bg-orange-50"
-                        : isDark ? "border-white/[0.06] bg-white/[0.02]" : "border-slate-100 bg-slate-50"
+                      ? isDark ? "border-orange-500/20 bg-orange-500/5" : "border-orange-200 bg-orange-50"
+                      : isDark ? "border-white/[0.06] bg-white/[0.02]" : "border-slate-100 bg-slate-50"
                       }`}
                   >
                     <div className="flex items-center gap-2.5">

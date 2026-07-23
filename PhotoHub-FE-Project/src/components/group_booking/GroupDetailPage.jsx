@@ -1258,8 +1258,8 @@ function MemberList({ members, maxMembers, isDark, isLeader, isGroupPending, onT
         <button
           onClick={() => setExpanded((v) => !v)}
           className={`mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-2xl border text-sm font-bold transition-all ${isDark
-              ? "border-white/10 text-slate-400 hover:border-orange-500/40 hover:text-orange-400 hover:bg-orange-500/5"
-              : "border-slate-200 text-slate-500 hover:border-orange-400/50 hover:text-orange-500 hover:bg-orange-50"
+            ? "border-white/10 text-slate-400 hover:border-orange-500/40 hover:text-orange-400 hover:bg-orange-500/5"
+            : "border-slate-200 text-slate-500 hover:border-orange-400/50 hover:text-orange-500 hover:bg-orange-50"
             }`}
         >
           {expanded ? (
@@ -1420,8 +1420,8 @@ function PackageDetailDrawer({ isDark, concept, photographer, basePrice, onClose
                   <div
                     key={tier.members}
                     className={`flex items-center justify-between p-3.5 rounded-2xl border ${tier.pct > 0
-                        ? isDark ? "border-orange-500/20 bg-orange-500/5" : "border-orange-200 bg-orange-50"
-                        : isDark ? "border-white/[0.06] bg-white/[0.02]" : "border-slate-100 bg-slate-50"
+                      ? isDark ? "border-orange-500/20 bg-orange-500/5" : "border-orange-200 bg-orange-50"
+                      : isDark ? "border-white/[0.06] bg-white/[0.02]" : "border-slate-100 bg-slate-50"
                       }`}
                   >
                     <div className="flex items-center gap-2.5">
