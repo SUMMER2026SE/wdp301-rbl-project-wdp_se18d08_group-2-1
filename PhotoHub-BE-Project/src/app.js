@@ -13,7 +13,7 @@ const app = express();
 const authRoutes = require("./modules/auth/routes/authRoutes");
 const photographerRoutes = require("./modules/photographers/routes/photographerRoutes");
 const adminRoutes = require("./modules/admin/routes/adminRoutes");
-
+const assistantRoutes = require("./modules/assistant/assistant.routes");
 const favoritePhotographerRoutes = require("./modules/favorite_photographers/routes/favoritePhotographerRoutes");
 const airecommendRoutes = require("./modules/airecomment/routes/airecommendRoutes");
 const shootingCategoryRoutes = require("./modules/common/routes/shootingCategory.routes");
@@ -77,6 +77,7 @@ app.use("/api/loyalty", loyaltyRoutes);
 app.use("/api/blogs", require("./modules/blog/routes/blog.routes"));
 app.use("/api/marketing-events", require("./modules/events/routes/event.routes"));
 app.use("/api/group-bookings", groupBookingRoutes);
+app.use("/api/assistant", assistantRoutes);
 
 // Health check
 app.get("/", (_req, res) => {
