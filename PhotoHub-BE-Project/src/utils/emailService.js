@@ -1,38 +1,20 @@
-const nodemailer = require("nodemailer");
+const { sendGmail } = require("./gmail.service");
 
 function hasMailConfig() {
-  return Boolean(process.env.MAIL_USER && process.env.MAIL_PASSWORD);
+  return Boolean(
+    process.env.GMAIL_USER &&
+    process.env.GMAIL_CLIENT_ID &&
+    process.env.GMAIL_CLIENT_SECRET &&
+    process.env.GMAIL_REFRESH_TOKEN
+  );
 }
 
-let transporter = null;
-
-function getTransporter() {
-  if (!hasMailConfig()) return null;
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host: process.env.MAIL_HOST || "smtp.gmail.com",
-      port: Number(process.env.MAIL_PORT) || 587,
-      secure: false,
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: String(process.env.MAIL_PASSWORD).replace(/\s+/g, ""),
-      },
-    });
-  }
-  return transporter;
-}
 
 /**
  * Gửi OTP xác thực email. Nếu chưa cấu hình SMTP → chỉ log console.
  */
 async function sendVerifyEmailOtp(to, otp, fullName) {
   const name = fullName || "bạn";
-  const t = getTransporter();
-
-  if (!t) {
-    console.log(`[EMAIL chưa cấu hình] OTP cho ${to}: ${otp}`);
-    return;
-  }
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
@@ -44,12 +26,11 @@ async function sendVerifyEmailOtp(to, otp, fullName) {
     </div>
   `;
 
-  await t.sendMail({
-    from: `"${process.env.MAIL_FROM_NAME || "PHOTOHUB"}" <${process.env.MAIL_USER}>`,
+  await sendGmail({
     to,
     subject: "Mã xác thực email - PHOTOHUB",
-    text: `Mã OTP của bạn: ${otp} (hiệu lực 15 phút)`,
-    html: htmlContent,
+    text: `Mã OTP của bạn: ${otp}`,
+    html: htmlContent
   });
   console.log(`[EMAIL] Đã gửi OTP tới ${to}`);
 }
@@ -59,12 +40,6 @@ async function sendVerifyEmailOtp(to, otp, fullName) {
  */
 async function sendApprovalEmail(to, fullName, adminNote) {
   const name = fullName || "bạn";
-  const t = getTransporter();
-
-  if (!t) {
-    console.log(`[EMAIL chưa cấu hình] Thông báo duyệt cho ${to} | Ghi chú: ${adminNote}`);
-    return;
-  }
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background-color: #f9f9f9; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -83,12 +58,11 @@ async function sendApprovalEmail(to, fullName, adminNote) {
     </div>
   `;
 
-  await t.sendMail({
-    from: `"${process.env.MAIL_FROM_NAME || "PHOTOHUB"}" <${process.env.MAIL_USER}>`,
+  await sendGmail({
     to,
     subject: "Hồ sơ đối tác đã được phê duyệt - PHOTOHUB",
-    text: `Chúc mừng ${name}! Hồ sơ đăng ký hoạt động nhiếp ảnh gia của bạn đã được duyệt thành công. Ghi chú: ${adminNote || "Hồ sơ hợp lệ"}`,
-    html: htmlContent,
+    text: `Chúc mừng ${name}! Hồ sơ đã được duyệt.`,
+    html: htmlContent
   });
   console.log(`[EMAIL] Đã gửi email thông báo phê duyệt tới ${to}`);
 }
@@ -98,12 +72,6 @@ async function sendApprovalEmail(to, fullName, adminNote) {
  */
 async function sendRejectionEmail(to, fullName, adminNote) {
   const name = fullName || "bạn";
-  const t = getTransporter();
-
-  if (!t) {
-    console.log(`[EMAIL chưa cấu hình] Thông báo từ chối cho ${to} | Lý do: ${adminNote}`);
-    return;
-  }
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background-color: #f9f9f9; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -122,12 +90,11 @@ async function sendRejectionEmail(to, fullName, adminNote) {
     </div>
   `;
 
-  await t.sendMail({
-    from: `"${process.env.MAIL_FROM_NAME || "PHOTOHUB"}" <${process.env.MAIL_USER}>`,
+  await sendGmail({
     to,
     subject: "Yêu cầu xác minh nhiếp ảnh gia bị từ chối - PHOTOHUB",
-    text: `Rất tiếc! Hồ sơ đối tác của bạn chưa được phê duyệt. Lý do: ${adminNote || "Không cung cấp lý do cụ thể"}`,
-    html: htmlContent,
+    text: `Hồ sơ chưa được phê duyệt.`,
+    html: htmlContent
   });
   console.log(`[EMAIL] Đã gửi email thông báo từ chối tới ${to}`);
 }

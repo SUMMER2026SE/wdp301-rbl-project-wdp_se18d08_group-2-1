@@ -54,6 +54,22 @@ app.use(
   express.static(path.join(__dirname, "uploads"))
 );
 
+const {sendGmail}=require("./utils/gmail.service");
+
+app.get("/test-mail", async(req,res)=>{
+
+  await sendGmail({
+    to:"trunglcde180198@fpt.edu.vn",
+    subject:"Test PHOTOHUB",
+    text:"hello",
+    html:"<h1>Gmail API OK</h1>"
+  });
+
+  res.json({
+    success:true
+  });
+});
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/photographers", photographerRoutes);
