@@ -48,7 +48,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
   const getFullUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    return `http://localhost:3000${url}`;
+    return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${url}`;
   };
 
   // ── Load initial data ─────────────────────────────────────────────────────
@@ -577,7 +577,7 @@ export default function PhotographerPortfolioManager({ photographerId, language 
 
           {loadingDetail ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {[1,2,3,4,5,6].map(n => <div key={n} className="aspect-square rounded-xl bg-slate-100 dark:bg-zinc-900 animate-pulse" />)}
+              {[1, 2, 3, 4, 5, 6].map(n => <div key={n} className="aspect-square rounded-xl bg-slate-100 dark:bg-zinc-900 animate-pulse" />)}
             </div>
           ) : albumImages.length === 0 ? (
             <div className="text-center py-16 border border-dashed border-slate-200 dark:border-zinc-800 rounded-3xl">

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = "http://localhost:3000/api/assistant";
+const API_BASE = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api/assistant";
 
 export const aiAssistantService = {
   chat: async ({ messages, language = "vi", role = "guest", page = "home" }) => {

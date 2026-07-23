@@ -23,7 +23,7 @@ import {
 
 import { getAllCategories, getAllStyleTags } from "../../services/categoryAndStyleService";
 
-const BACKEND_ORIGIN = "http://localhost:3000";
+const BACKEND_ORIGIN = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com";
 
 const resolveImageUrl = (image) => {
     if (!image) return "";
@@ -422,20 +422,20 @@ export default function PhotographerPackages({
 
             const finalImages = [...imageUrls, ...newImageUrls];
 
-        const payload = {
-            title,
-            description,
-            packageType: draftPackageType,
-            price: Number(price),
-            durationHours: draftPackageType === "MONTHLY" ? Number(commitmentMonths) : Number(duration),
-            sessionsPerMonth: draftPackageType === "MONTHLY" ? Number(sessionsPerMonth) : 0,
-            commitmentMonths: draftPackageType === "MONTHLY" ? Number(commitmentMonths) : 0,
-            maxCustomers: draftPackageType === "MONTHLY" ? Number(maxCustomers || 0) : 0,
-            categoryIds: selectedCategories,
-            styleTagIds: selectedStyles,
-            images: finalImages,
-            isGroupPackage,
-        };
+            const payload = {
+                title,
+                description,
+                packageType: draftPackageType,
+                price: Number(price),
+                durationHours: draftPackageType === "MONTHLY" ? Number(commitmentMonths) : Number(duration),
+                sessionsPerMonth: draftPackageType === "MONTHLY" ? Number(sessionsPerMonth) : 0,
+                commitmentMonths: draftPackageType === "MONTHLY" ? Number(commitmentMonths) : 0,
+                maxCustomers: draftPackageType === "MONTHLY" ? Number(maxCustomers || 0) : 0,
+                categoryIds: selectedCategories,
+                styleTagIds: selectedStyles,
+                images: finalImages,
+                isGroupPackage,
+            };
 
             // 👉 phân biệt CREATE vs UPDATE
             if (isEditing) {
@@ -596,13 +596,12 @@ export default function PhotographerPackages({
                             key={type}
                             type="button"
                             onClick={() => setPackageType(type)}
-                            className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
-                                active
+                            className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${active
                                     ? type === "GROUP"
                                         ? "bg-purple-500 text-white border-purple-500 shadow-md shadow-purple-500/20"
                                         : "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20"
                                     : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-orange-300"
-                            }`}
+                                }`}
                         >
                             {meta.shortLabel}
                         </button>

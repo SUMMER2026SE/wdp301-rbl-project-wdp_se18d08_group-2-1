@@ -64,7 +64,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
   // Photographers listing (for dropdown)
   const [photographers, setPhotographers] = useState([]);
   const [selectedPhotographerOption, setSelectedPhotographerOption] = useState(null);
-  
+
   // Active selected photographer details
   const [photographer, setPhotographer] = useState(null);
   const [photographerLoading, setPhotographerLoading] = useState(false);
@@ -464,7 +464,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
 
     // Kiểm tra conflict sau khi cập nhật cả 2 field
     const checkStart = field === "start" ? value : updatedData.start;
-    const checkEnd   = field === "end"   ? value : updatedData.end;
+    const checkEnd = field === "end" ? value : updatedData.end;
     const conflict = hasTimeConflict(checkStart, checkEnd);
     setConflictWarning(conflict || null);
   };
@@ -492,10 +492,10 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
   const getBookingsForDay = (day) => {
     // Lấy tất cả bookings có thời gian chồng lên ngày này (không chỉ bắt đầu trong ngày)
     const dayStart = new Date(year, month, day, 0, 0, 0).getTime();
-    const dayEnd   = new Date(year, month, day, 23, 59, 59).getTime();
+    const dayEnd = new Date(year, month, day, 23, 59, 59).getTime();
     return calendarBookings.filter((b) => {
       const bStart = new Date(b.start).getTime();
-      const bEnd   = b.end ? new Date(b.end).getTime() : bStart + 60 * 60 * 1000;
+      const bEnd = b.end ? new Date(b.end).getTime() : bStart + 60 * 60 * 1000;
       // Có overlap với ngày này
       return bStart < dayEnd && bEnd > dayStart;
     });
@@ -507,9 +507,9 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
    */
   const getBusyMinutesInDay = (day, bookings) => {
     const WORK_START = 8;  // 08:00
-    const WORK_END   = 20; // 20:00
+    const WORK_END = 20; // 20:00
     const dayWorkStart = new Date(year, month, day, WORK_START, 0, 0).getTime();
-    const dayWorkEnd   = new Date(year, month, day, WORK_END,   0, 0).getTime();
+    const dayWorkEnd = new Date(year, month, day, WORK_END, 0, 0).getTime();
 
     // Chuyển mỗi booking thành interval clamp trong khung làm việc
     const intervals = bookings
@@ -701,14 +701,14 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
     if (conflictBooking) {
       const fmt = (iso) => {
         const d = new Date(iso);
-        return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
       };
       const conflictStart = fmt(conflictBooking.start);
-      const conflictEnd   = conflictBooking.end ? fmt(conflictBooking.end) : fmt(new Date(new Date(conflictBooking.start).getTime() + 3600000));
+      const conflictEnd = conflictBooking.end ? fmt(conflictBooking.end) : fmt(new Date(new Date(conflictBooking.start).getTime() + 3600000));
       Swal.fire({
         icon: "error",
         title: t.timeConflict,
-        html: `<p style="font-size:14px;color:${isDark?'#d1d5db':'#374151'}">
+        html: `<p style="font-size:14px;color:${isDark ? '#d1d5db' : '#374151'}">
           Khung giờ bạn chọn trùng với lịch đã đặt:<br/>
           <strong style="color:#ef4444">${conflictStart} – ${conflictEnd}</strong>
           ${conflictBooking.title ? `<br/><em>${conflictBooking.title}</em>` : ''}
@@ -803,7 +803,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 text-slate-900 dark:text-zinc-100 min-h-screen">
-      
+
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:via-zinc-200 dark:to-zinc-400">
@@ -848,10 +848,10 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
             }),
             option: (base, state) => ({
               ...base,
-              backgroundColor: state.isSelected 
-                ? "#f97316" 
-                : state.isFocused 
-                  ? (isDark ? "#27272a" : "#f1f5f9") 
+              backgroundColor: state.isSelected
+                ? "#f97316"
+                : state.isFocused
+                  ? (isDark ? "#27272a" : "#f1f5f9")
                   : "transparent",
               color: state.isSelected ? "#ffffff" : (isDark ? "#ffffff" : "#0f172a"),
               fontWeight: "600",
@@ -875,10 +875,10 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
       ) : (
         /* Main Booking View */
         <div className="grid lg:grid-cols-12 gap-8 items-start">
-          
+
           {/* LEFT SIDE: Photographer profile card + Availability calendar */}
           <div className="lg:col-span-7 space-y-6">
-            
+
             {/* Photographer summary card */}
             {photographerLoading ? (
               <div className="h-32 animate-pulse rounded-3xl bg-slate-100 dark:bg-zinc-900" />
@@ -886,10 +886,10 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
               <div className="flex flex-col sm:flex-row items-center gap-5 p-5 rounded-3xl border bg-white dark:bg-zinc-950 border-slate-200/60 dark:border-zinc-800/80 shadow-sm">
                 <div className="h-16 w-16 rounded-full overflow-hidden shrink-0 border-2 border-orange-500 bg-orange-100">
                   {photographer.user?.avatar ? (
-                    <img 
-                      src={photographer.user.avatar.startsWith("http") ? photographer.user.avatar : `http://localhost:3000${photographer.user.avatar.startsWith("/") ? "" : "/"}${photographer.user.avatar}`}
-                      alt={photographer.displayName} 
-                      className="h-full w-full object-cover" 
+                    <img
+                      src={photographer.user.avatar.startsWith("http") ? photographer.user.avatar : `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${photographer.user.avatar.startsWith("/") ? "" : "/"}${photographer.user.avatar}`}
+                      alt={photographer.displayName}
+                      className="h-full w-full object-cover"
                     />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center font-black text-white text-xl bg-gradient-to-br from-orange-400 to-amber-500">
@@ -897,7 +897,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="text-center sm:text-left flex-1 min-w-0">
                   <h3 className="text-lg font-black text-slate-900 dark:text-white truncate">
                     {photographer.displayName}
@@ -905,7 +905,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                   <p className="text-xs text-slate-500 dark:text-zinc-400 font-semibold truncate mt-0.5">
                     {photographer.user?.email}
                   </p>
-                  
+
                   <div className="mt-3 flex flex-wrap justify-center sm:justify-start gap-4 text-xs font-semibold text-slate-600 dark:text-zinc-400">
                     <span className="flex items-center gap-1.5">
                       <Star size={13} className="fill-amber-500 text-amber-500" />
@@ -936,7 +936,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                   <h3 className="text-lg font-black tracking-tight">{t.calendarHeader}</h3>
                   <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium mt-0.5">{t.calendarSub}</p>
                 </div>
-                
+
                 {/* Month navigation */}
                 <div className="flex items-center gap-3">
                   <button
@@ -989,12 +989,11 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                             hasPartialBooking
                               ? `Đã có ${cell.dayBookings.length} lịch đặt – còn khung giờ trống`
                               : cell.isBusy
-                              ? "Nhiếp ảnh gia đã kín lịch ngày này"
-                              : undefined
+                                ? "Nhiếp ảnh gia đã kín lịch ngày này"
+                                : undefined
                           }
                           onClick={() => clickable && handleCalendarDayClick(cell.day)}
-                          className={`aspect-square p-1 rounded-xl border transition-all flex flex-col justify-between select-none relative ${
-                            !cell.isCurrentMonth
+                          className={`aspect-square p-1 rounded-xl border transition-all flex flex-col justify-between select-none relative ${!cell.isCurrentMonth
                               ? "bg-transparent border-transparent text-slate-300 dark:text-zinc-800 pointer-events-none"
                               : cell.isPast
                                 ? "bg-slate-100 dark:bg-zinc-900/40 border-transparent text-slate-400 dark:text-zinc-600 cursor-not-allowed opacity-50"
@@ -1007,12 +1006,12 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                                     : isCellSelected
                                       ? "bg-orange-500 border-orange-500 text-white font-black shadow-md shadow-orange-500/20"
                                       : "bg-slate-50 dark:bg-zinc-900/60 border-slate-200/50 dark:border-zinc-800/80 hover:border-orange-500 hover:text-orange-500 cursor-pointer"
-                          }`}
+                            }`}
                         >
                           <span className={`text-[11px] font-bold ${isToday(cell.day) && !isCellSelected ? "text-orange-500 underline decoration-2 decoration-orange-500/80" : ""}`}>
                             {cell.day}
                           </span>
-                          
+
                           {cell.isCurrentMonth && (
                             <div className="text-[8px] font-black uppercase tracking-wide self-end">
                               {cell.isBusy ? (
@@ -1041,20 +1040,20 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                 const sd = selectedDate;
                 const dayBookingsForSelected = calendarBookings.filter((b) => {
                   const dayStart = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate(), 0, 0, 0).getTime();
-                  const dayEnd   = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate(), 23, 59, 59).getTime();
-                  const bStart   = new Date(b.start).getTime();
-                  const bEnd     = b.end ? new Date(b.end).getTime() : bStart + 3600000;
+                  const dayEnd = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate(), 23, 59, 59).getTime();
+                  const bStart = new Date(b.start).getTime();
+                  const bEnd = b.end ? new Date(b.end).getTime() : bStart + 3600000;
                   return bStart < dayEnd && bEnd > dayStart;
                 });
 
                 const WORK_START_H = 8;   // 08:00
-                const WORK_END_H   = 20;  // 20:00
-                const TOTAL_MINS   = (WORK_END_H - WORK_START_H) * 60;
+                const WORK_END_H = 20;  // 20:00
+                const TOTAL_MINS = (WORK_END_H - WORK_START_H) * 60;
 
                 // Build segments for the progress bar
                 const segments = [];
                 let cursorMs = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate(), WORK_START_H, 0, 0).getTime();
-                const endMs   = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate(), WORK_END_H,   0, 0).getTime();
+                const endMs = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate(), WORK_END_H, 0, 0).getTime();
 
                 // Merge & sort bookings clipped to work window
                 const clipped = dayBookingsForSelected
@@ -1071,8 +1070,8 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                 const merged = [];
                 for (const iv of clipped) {
                   if (iv.s > ptr) merged.push({ s: ptr, e: iv.s, busy: false });
-                  if (merged.length && merged[merged.length-1].busy && merged[merged.length-1].e >= iv.s) {
-                    merged[merged.length-1].e = Math.max(merged[merged.length-1].e, iv.e);
+                  if (merged.length && merged[merged.length - 1].busy && merged[merged.length - 1].e >= iv.s) {
+                    merged[merged.length - 1].e = Math.max(merged[merged.length - 1].e, iv.e);
                   } else {
                     merged.push({ s: iv.s, e: iv.e, busy: true, title: iv.title });
                   }
@@ -1082,7 +1081,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
 
                 const fmt = (ms) => {
                   const d = new Date(ms);
-                  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
                 };
 
                 return (
@@ -1100,7 +1099,7 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                     {/* Hour labels */}
                     <div className="flex justify-between text-[9px] font-bold text-slate-400 dark:text-zinc-600 mb-1 px-0.5">
                       {Array.from({ length: WORK_END_H - WORK_START_H + 1 }, (_, i) => (
-                        <span key={i}>{String(WORK_START_H + i).padStart(2,'0')}h</span>
+                        <span key={i}>{String(WORK_START_H + i).padStart(2, '0')}h</span>
                       ))}
                     </div>
 
@@ -1112,11 +1111,10 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                           <div
                             key={i}
                             title={seg.busy ? `🔴 ${fmt(seg.s)} – ${fmt(seg.e)}: ${t.slotBusy}` : `🟢 ${fmt(seg.s)} – ${fmt(seg.e)}: ${t.slotFree}`}
-                            className={`h-full transition-all ${
-                              seg.busy
+                            className={`h-full transition-all ${seg.busy
                                 ? 'bg-rose-500 opacity-80'
                                 : 'bg-emerald-500/40'
-                            }`}
+                              }`}
                             style={{ width: `${widthPct}%` }}
                           />
                         );
@@ -1198,288 +1196,285 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                 )}
 
                 {bookingMode === "SHOOTING" ? (
-                <>
-                {/* Package selection — Dropdown */}
-                <div>
-                  <label className={labelClass}>{t.packagesLabel}</label>
-                  <div className="relative">
-                    <Gift className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <select
-                      value={selectedPackageId}
-                      onChange={(e) => { setSelectedPackageId(e.target.value); setShowAllImages(false); }}
-                      className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-orange-500 appearance-none font-semibold ${inputBgClass}`}
-                      disabled={packagesLoading}
-                    >
-                      <option value="">✨ {t.customBooking}</option>
-                      {packages.map((pkg) => (
-                        <option key={pkg._id} value={pkg._id}>
-                          📦 {pkg.title} - {pkg.price.toLocaleString()} VNĐ ({pkg.durationHours}h)
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {packagesLoading && <p className="text-xs text-slate-500 mt-1.5 animate-pulse">{t.loadingPackages}</p>}
-                </div>
-
-                {/* Package image gallery — hiển thị khi gói được chọn có ảnh */}
-                {selectedPackageId && (() => {
-                  const pkg = packages.find(p => p._id === selectedPackageId);
-                  const rawImages = Array.isArray(pkg?.images) ? pkg.images : [];
-                  if (rawImages.length === 0) return null;
-                  const urls = rawImages
-                    .map(img => typeof img === "string" ? img : img?.imageUrl || "")
-                    .filter(Boolean)
-                    .map(url => url.startsWith("http") ? url : `http://localhost:3000${url.startsWith("/") ? "" : "/"}${url}`);
-                  const MAX_VISIBLE = 6;
-                  const visibleUrls = showAllImages ? urls : urls.slice(0, MAX_VISIBLE);
-                  const remaining = urls.length - MAX_VISIBLE;
-                  return (
-                    <div className={`p-3 rounded-2xl border ${isDark ? "border-zinc-800 bg-zinc-900/40" : "border-slate-200 bg-slate-50/60"}`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-500">
-                          🖼 {language === "vi" ? "Ảnh mẫu của gói" : "Package sample photos"}
-                          <span className="ml-1 normal-case font-semibold">({urls.length})</span>
-                        </p>
-                        {showAllImages && urls.length > MAX_VISIBLE && (
-                          <button
-                            type="button"
-                            onClick={() => setShowAllImages(false)}
-                            className="text-[10px] font-black text-orange-500 hover:text-orange-400 transition-colors"
-                          >
-                            {language === "vi" ? "Thu gọn ↑" : "Collapse ↑"}
-                          </button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        {visibleUrls.map((url, i) => (
-                          <div key={i} className="aspect-square rounded-xl overflow-hidden bg-slate-200 dark:bg-zinc-800">
-                            <img src={url} alt={`sample-${i}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
-                          </div>
-                        ))}
-                        {/* "Xem thêm" tile — ô cuối trong grid */}
-                        {!showAllImages && remaining > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setShowAllImages(true)}
-                            className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all hover:border-orange-500 hover:text-orange-500 ${
-                              isDark ? "border-zinc-700 text-zinc-400" : "border-slate-300 text-slate-500"
-                            }`}
-                          >
-                            <span className="text-lg font-black">+{remaining}</span>
-                            <span className="text-[9px] font-black uppercase tracking-wide">
-                              {language === "vi" ? "Xem thêm" : "See more"}
-                            </span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Session Title */}
-                <div>
-                  <label className={labelClass}>{t.sessionTitle} <span className="text-rose-500">*</span></label>
-                  <div className="relative">
-                    <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input
-                      type="text"
-                      placeholder={t.sessionTitlePlaceholder}
-                      value={formData.title}
-                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-orange-500 ${inputBgClass}`}
-                      disabled={!!selectedPackageId}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Start & End Dates */}
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelClass}>{t.startDate} <span className="text-rose-500">*</span></label>
-                    <div className="relative">
-                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                      <input
-                        type="datetime-local"
-                        value={formData.start}
-                        onChange={(e) => handleDateChange("start", e.target.value)}
-                        className={`w-full rounded-2xl pl-10 pr-3 py-3 outline-none border transition focus:border-orange-500 ${inputBgClass} ${conflictWarning ? "border-rose-500 focus:border-rose-500" : ""}`}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className={labelClass}>{t.endDate} <span className="text-rose-500">*</span></label>
-                    <div className="relative">
-                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                      <input
-                        type="datetime-local"
-                        value={formData.end}
-                        onChange={(e) => handleDateChange("end", e.target.value)}
-                        className={`w-full rounded-2xl pl-10 pr-3 py-3 outline-none border transition focus:border-orange-500 ${inputBgClass} ${
-                          selectedPackageId ? "opacity-60 cursor-not-allowed" : ""
-                        } ${conflictWarning ? "border-rose-500 focus:border-rose-500" : ""}`}
-                        required
-                        disabled={!!selectedPackageId}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Conflict Warning Banner */}
-                {conflictWarning && (() => {
-                  const fmt = (iso) => {
-                    const d = new Date(iso);
-                    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-                  };
-                  const cs = fmt(conflictWarning.start);
-                  const ce = conflictWarning.end ? fmt(conflictWarning.end) : fmt(new Date(new Date(conflictWarning.start).getTime() + 3600000));
-                  return (
-                    <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold animate-pulse">
-                      <AlertCircle size={15} className="shrink-0 mt-0.5 text-rose-500" />
-                      <div>
-                        <p className="font-black">{t.timeConflict}</p>
-                        <p className="mt-0.5 opacity-80">
-                          {language === "vi" ? "Trùng với lịch" : "Conflicts with"}: <strong className="text-rose-500">{cs} – {ce}</strong>
-                          {conflictWarning.title && <span className="ml-1 italic">({conflictWarning.title})</span>}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-
-                {/* Location */}
-                <div>
-                  <label className={labelClass}>{t.locationLabel} <span className="text-rose-500">*</span></label>
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input
-                      type="text"
-                      placeholder={t.locationPlaceholder}
-                      value={formData.location}
-                      onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                      className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-orange-500 ${inputBgClass}`}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Note */}
-                <div>
-                  <label className={labelClass}>{t.noteLabel}</label>
-                  <textarea
-                    placeholder={t.notePlaceholder}
-                    value={formData.note}
-                    onChange={(e) => setFormData(prev => ({ ...prev, note: e.target.value }))}
-                    rows={3}
-                    className={`w-full rounded-2xl p-4 outline-none border transition focus:border-orange-500 ${inputBgClass}`}
-                  />
-                </div>
-
-                {/* Vouchers Selection (Select Dropdown) */}
-                <div>
-                  <label className={labelClass}>
-                    {language === "vi" ? "Mã giảm giá (Voucher)" : "Discount Voucher"}
-                  </label>
-                  <div className="relative">
-                    <Gift className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <select
-                      value={selectedVoucherCode}
-                      onChange={(e) => setSelectedVoucherCode(e.target.value)}
-                      disabled={vouchers.length === 0}
-                      className={`w-full rounded-2xl pl-12 pr-10 py-3.5 outline-none border transition focus:border-orange-500 appearance-none font-semibold ${inputBgClass} ${
-                        vouchers.length === 0 ? "opacity-60 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      {vouchers.length === 0 ? (
-                        <option value="">
-                          {language === "vi" ? "Bạn chưa có mã giảm giá nào khả dụng" : "No available vouchers"}
-                        </option>
-                      ) : (
-                        <>
-                          <option value="">
-                            {language === "vi" ? "Không áp dụng mã giảm giá" : "Do not apply discount code"}
-                          </option>
-                          {vouchers.map((v) => (
-                            <option key={v._id} value={v.code}>
-                              🎟 {v.code} (Giảm -{Number(v.discountAmount).toLocaleString("vi-VN")} đ)
+                  <>
+                    {/* Package selection — Dropdown */}
+                    <div>
+                      <label className={labelClass}>{t.packagesLabel}</label>
+                      <div className="relative">
+                        <Gift className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <select
+                          value={selectedPackageId}
+                          onChange={(e) => { setSelectedPackageId(e.target.value); setShowAllImages(false); }}
+                          className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-orange-500 appearance-none font-semibold ${inputBgClass}`}
+                          disabled={packagesLoading}
+                        >
+                          <option value="">✨ {t.customBooking}</option>
+                          {packages.map((pkg) => (
+                            <option key={pkg._id} value={pkg._id}>
+                              📦 {pkg.title} - {pkg.price.toLocaleString()} VNĐ ({pkg.durationHours}h)
                             </option>
                           ))}
-                        </>
-                      )}
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
-                      ▼
+                        </select>
+                      </div>
+                      {packagesLoading && <p className="text-xs text-slate-500 mt-1.5 animate-pulse">{t.loadingPackages}</p>}
                     </div>
-                  </div>
-                </div>
 
-                {/* Pricing / Packages info messages */}
-                {!selectedPackageId && photographer?.hourlyRate && (
-                  <div className={`flex items-start gap-2.5 p-3.5 rounded-2xl border text-xs font-semibold ${isDark ? "bg-orange-500/5 border-orange-500/20 text-orange-300" : "bg-orange-50/50 border-orange-200 text-orange-700"}`}>
-                    <Info size={14} className="shrink-0 mt-0.5 text-orange-500" />
-                    <div>
-                      <p>{t.hourlyRateInfo} <strong className="text-sm font-black text-rose-500">{Number(photographer.hourlyRate || 0).toLocaleString("vi-VN")} đ/giờ</strong></p>
-                      <p className="opacity-80 mt-0.5">{t.calcHourly}</p>
-                    </div>
-                  </div>
-                )}
-
-                {selectedPackageId && (
-                  <div className={`flex items-start gap-2.5 p-3.5 rounded-2xl border text-xs font-semibold ${isDark ? "bg-orange-500/5 border-orange-500/20 text-orange-300" : "bg-orange-50/50 border-orange-200 text-orange-700"}`}>
-                    <Info size={14} className="shrink-0 mt-0.5 text-orange-500" />
-                    <p className="opacity-90">{t.packageNotice}</p>
-                  </div>
-                )}
-
-                {/* Total Price and Submit Button */}
-                <div className="pt-4 border-t border-slate-200/50 dark:border-zinc-800/80 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-extrabold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
-                      {t.priceLabel}
-                    </p>
-                    {(() => {
-                      const matched = vouchers.find(
-                        (v) => v.code.toLowerCase() === selectedVoucherCode.toLowerCase()
-                      );
-                      const discount = matched ? matched.discountAmount : 0;
-                      
-                      if (discount > 0) {
-                        return (
-                          <div className="text-right">
-                            <p className="text-xs text-slate-500 line-through flex items-center justify-end">
-                              {formData.price.toLocaleString()} VNĐ
-                            </p>
-                            <p className="text-2xl font-black text-rose-500 tracking-tight flex items-center justify-end mt-0.5">
-                              {Math.max(1000, formData.price - discount).toLocaleString()}{" "}
-                              <span className="text-xs font-extrabold ml-1 uppercase">VNĐ</span>
-                              <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-lg ml-2">
-                                -{Number(discount).toLocaleString()}đ
-                              </span>
-                            </p>
-                          </div>
-                        );
-                      }
-                      
+                    {/* Package image gallery — hiển thị khi gói được chọn có ảnh */}
+                    {selectedPackageId && (() => {
+                      const pkg = packages.find(p => p._id === selectedPackageId);
+                      const rawImages = Array.isArray(pkg?.images) ? pkg.images : [];
+                      if (rawImages.length === 0) return null;
+                      const urls = rawImages
+                        .map(img => typeof img === "string" ? img : img?.imageUrl || "")
+                        .filter(Boolean)
+                        .map(url => url.startsWith("http") ? url : `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${url.startsWith("/") ? "" : "/"}${url}`);
+                      const MAX_VISIBLE = 6;
+                      const visibleUrls = showAllImages ? urls : urls.slice(0, MAX_VISIBLE);
+                      const remaining = urls.length - MAX_VISIBLE;
                       return (
-                        <p className="text-2xl font-black text-rose-500 tracking-tight flex items-center">
-                          {formData.price.toLocaleString()} <span className="text-xs font-extrabold ml-1 uppercase">VNĐ</span>
-                        </p>
+                        <div className={`p-3 rounded-2xl border ${isDark ? "border-zinc-800 bg-zinc-900/40" : "border-slate-200 bg-slate-50/60"}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-500">
+                              🖼 {language === "vi" ? "Ảnh mẫu của gói" : "Package sample photos"}
+                              <span className="ml-1 normal-case font-semibold">({urls.length})</span>
+                            </p>
+                            {showAllImages && urls.length > MAX_VISIBLE && (
+                              <button
+                                type="button"
+                                onClick={() => setShowAllImages(false)}
+                                className="text-[10px] font-black text-orange-500 hover:text-orange-400 transition-colors"
+                              >
+                                {language === "vi" ? "Thu gọn ↑" : "Collapse ↑"}
+                              </button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-3 gap-1.5">
+                            {visibleUrls.map((url, i) => (
+                              <div key={i} className="aspect-square rounded-xl overflow-hidden bg-slate-200 dark:bg-zinc-800">
+                                <img src={url} alt={`sample-${i}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                              </div>
+                            ))}
+                            {/* "Xem thêm" tile — ô cuối trong grid */}
+                            {!showAllImages && remaining > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setShowAllImages(true)}
+                                className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all hover:border-orange-500 hover:text-orange-500 ${isDark ? "border-zinc-700 text-zinc-400" : "border-slate-300 text-slate-500"
+                                  }`}
+                              >
+                                <span className="text-lg font-black">+{remaining}</span>
+                                <span className="text-[9px] font-black uppercase tracking-wide">
+                                  {language === "vi" ? "Xem thêm" : "See more"}
+                                </span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       );
                     })()}
-                  </div>
 
-                  <button
-                    type="submit"
-                    disabled={submitLoading || formData.price <= 0 || !photographer?.isAvailable}
-                    className="w-full py-4 bg-gradient-to-r from-orange-500 via-orange-500 to-amber-600 hover:brightness-110 active:scale-[0.98] text-white font-bold rounded-2xl shadow-lg transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    {submitLoading ? t.submitting : t.submitBtn}
-                  </button>
-                </div>
-                </>
+                    {/* Session Title */}
+                    <div>
+                      <label className={labelClass}>{t.sessionTitle} <span className="text-rose-500">*</span></label>
+                      <div className="relative">
+                        <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <input
+                          type="text"
+                          placeholder={t.sessionTitlePlaceholder}
+                          value={formData.title}
+                          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                          className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-orange-500 ${inputBgClass}`}
+                          disabled={!!selectedPackageId}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Start & End Dates */}
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className={labelClass}>{t.startDate} <span className="text-rose-500">*</span></label>
+                        <div className="relative">
+                          <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                          <input
+                            type="datetime-local"
+                            value={formData.start}
+                            onChange={(e) => handleDateChange("start", e.target.value)}
+                            className={`w-full rounded-2xl pl-10 pr-3 py-3 outline-none border transition focus:border-orange-500 ${inputBgClass} ${conflictWarning ? "border-rose-500 focus:border-rose-500" : ""}`}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className={labelClass}>{t.endDate} <span className="text-rose-500">*</span></label>
+                        <div className="relative">
+                          <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                          <input
+                            type="datetime-local"
+                            value={formData.end}
+                            onChange={(e) => handleDateChange("end", e.target.value)}
+                            className={`w-full rounded-2xl pl-10 pr-3 py-3 outline-none border transition focus:border-orange-500 ${inputBgClass} ${selectedPackageId ? "opacity-60 cursor-not-allowed" : ""
+                              } ${conflictWarning ? "border-rose-500 focus:border-rose-500" : ""}`}
+                            required
+                            disabled={!!selectedPackageId}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Conflict Warning Banner */}
+                    {conflictWarning && (() => {
+                      const fmt = (iso) => {
+                        const d = new Date(iso);
+                        return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                      };
+                      const cs = fmt(conflictWarning.start);
+                      const ce = conflictWarning.end ? fmt(conflictWarning.end) : fmt(new Date(new Date(conflictWarning.start).getTime() + 3600000));
+                      return (
+                        <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold animate-pulse">
+                          <AlertCircle size={15} className="shrink-0 mt-0.5 text-rose-500" />
+                          <div>
+                            <p className="font-black">{t.timeConflict}</p>
+                            <p className="mt-0.5 opacity-80">
+                              {language === "vi" ? "Trùng với lịch" : "Conflicts with"}: <strong className="text-rose-500">{cs} – {ce}</strong>
+                              {conflictWarning.title && <span className="ml-1 italic">({conflictWarning.title})</span>}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+
+                    {/* Location */}
+                    <div>
+                      <label className={labelClass}>{t.locationLabel} <span className="text-rose-500">*</span></label>
+                      <div className="relative">
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <input
+                          type="text"
+                          placeholder={t.locationPlaceholder}
+                          value={formData.location}
+                          onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                          className={`w-full rounded-2xl pl-12 pr-4 py-3.5 outline-none border transition focus:border-orange-500 ${inputBgClass}`}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Note */}
+                    <div>
+                      <label className={labelClass}>{t.noteLabel}</label>
+                      <textarea
+                        placeholder={t.notePlaceholder}
+                        value={formData.note}
+                        onChange={(e) => setFormData(prev => ({ ...prev, note: e.target.value }))}
+                        rows={3}
+                        className={`w-full rounded-2xl p-4 outline-none border transition focus:border-orange-500 ${inputBgClass}`}
+                      />
+                    </div>
+
+                    {/* Vouchers Selection (Select Dropdown) */}
+                    <div>
+                      <label className={labelClass}>
+                        {language === "vi" ? "Mã giảm giá (Voucher)" : "Discount Voucher"}
+                      </label>
+                      <div className="relative">
+                        <Gift className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <select
+                          value={selectedVoucherCode}
+                          onChange={(e) => setSelectedVoucherCode(e.target.value)}
+                          disabled={vouchers.length === 0}
+                          className={`w-full rounded-2xl pl-12 pr-10 py-3.5 outline-none border transition focus:border-orange-500 appearance-none font-semibold ${inputBgClass} ${vouchers.length === 0 ? "opacity-60 cursor-not-allowed" : ""
+                            }`}
+                        >
+                          {vouchers.length === 0 ? (
+                            <option value="">
+                              {language === "vi" ? "Bạn chưa có mã giảm giá nào khả dụng" : "No available vouchers"}
+                            </option>
+                          ) : (
+                            <>
+                              <option value="">
+                                {language === "vi" ? "Không áp dụng mã giảm giá" : "Do not apply discount code"}
+                              </option>
+                              {vouchers.map((v) => (
+                                <option key={v._id} value={v.code}>
+                                  🎟 {v.code} (Giảm -{Number(v.discountAmount).toLocaleString("vi-VN")} đ)
+                                </option>
+                              ))}
+                            </>
+                          )}
+                        </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">
+                          ▼
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Pricing / Packages info messages */}
+                    {!selectedPackageId && photographer?.hourlyRate && (
+                      <div className={`flex items-start gap-2.5 p-3.5 rounded-2xl border text-xs font-semibold ${isDark ? "bg-orange-500/5 border-orange-500/20 text-orange-300" : "bg-orange-50/50 border-orange-200 text-orange-700"}`}>
+                        <Info size={14} className="shrink-0 mt-0.5 text-orange-500" />
+                        <div>
+                          <p>{t.hourlyRateInfo} <strong className="text-sm font-black text-rose-500">{Number(photographer.hourlyRate || 0).toLocaleString("vi-VN")} đ/giờ</strong></p>
+                          <p className="opacity-80 mt-0.5">{t.calcHourly}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedPackageId && (
+                      <div className={`flex items-start gap-2.5 p-3.5 rounded-2xl border text-xs font-semibold ${isDark ? "bg-orange-500/5 border-orange-500/20 text-orange-300" : "bg-orange-50/50 border-orange-200 text-orange-700"}`}>
+                        <Info size={14} className="shrink-0 mt-0.5 text-orange-500" />
+                        <p className="opacity-90">{t.packageNotice}</p>
+                      </div>
+                    )}
+
+                    {/* Total Price and Submit Button */}
+                    <div className="pt-4 border-t border-slate-200/50 dark:border-zinc-800/80 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-extrabold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+                          {t.priceLabel}
+                        </p>
+                        {(() => {
+                          const matched = vouchers.find(
+                            (v) => v.code.toLowerCase() === selectedVoucherCode.toLowerCase()
+                          );
+                          const discount = matched ? matched.discountAmount : 0;
+
+                          if (discount > 0) {
+                            return (
+                              <div className="text-right">
+                                <p className="text-xs text-slate-500 line-through flex items-center justify-end">
+                                  {formData.price.toLocaleString()} VNĐ
+                                </p>
+                                <p className="text-2xl font-black text-rose-500 tracking-tight flex items-center justify-end mt-0.5">
+                                  {Math.max(1000, formData.price - discount).toLocaleString()}{" "}
+                                  <span className="text-xs font-extrabold ml-1 uppercase">VNĐ</span>
+                                  <span className="text-[10px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-lg ml-2">
+                                    -{Number(discount).toLocaleString()}đ
+                                  </span>
+                                </p>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <p className="text-2xl font-black text-rose-500 tracking-tight flex items-center">
+                              {formData.price.toLocaleString()} <span className="text-xs font-extrabold ml-1 uppercase">VNĐ</span>
+                            </p>
+                          );
+                        })()}
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={submitLoading || formData.price <= 0 || !photographer?.isAvailable}
+                        className="w-full py-4 bg-gradient-to-r from-orange-500 via-orange-500 to-amber-600 hover:brightness-110 active:scale-[0.98] text-white font-bold rounded-2xl shadow-lg transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {submitLoading ? t.submitting : t.submitBtn}
+                      </button>
+                    </div>
+                  </>
                 ) : (
                   <div className="space-y-4">
                     <div className="rounded-3xl border border-orange-200/70 bg-orange-50/60 p-4 dark:border-orange-500/20 dark:bg-orange-500/10">
@@ -1508,11 +1503,10 @@ export default function BookingPage({ theme = "dark", language = "vi" }) {
                                 key={pkg._id}
                                 type="button"
                                 onClick={() => setSelectedMonthlyPackageId(pkg._id)}
-                                className={`w-full rounded-3xl border p-4 text-left transition-all hover:-translate-y-0.5 ${
-                                  isSelected
+                                className={`w-full rounded-3xl border p-4 text-left transition-all hover:-translate-y-0.5 ${isSelected
                                     ? "border-orange-400 bg-white shadow-lg shadow-orange-500/10 dark:bg-orange-500/10"
                                     : "border-orange-100 bg-white/90 dark:border-white/10 dark:bg-white/5"
-                                }`}
+                                  }`}
                               >
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="min-w-0">

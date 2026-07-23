@@ -23,15 +23,15 @@ const formatMoney = (value) =>
 const resolveAvatar = (avatar) => {
   if (!avatar) return "";
   if (/^https?:\/\//i.test(avatar)) return avatar;
-  return `http://localhost:3000${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
+  return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
 };
 
 const resolveImageUrl = (image) => {
   const raw = typeof image === "string" ? image : image?.imageUrl || image?.secure_url || image?.url || "";
   if (!raw) return "";
   if (/^https?:\/\//i.test(raw)) return raw;
-  if (raw.startsWith("/")) return `http://localhost:3000${raw}`;
-  return `http://localhost:3000/${raw}`;
+  if (raw.startsWith("/")) return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${raw}`;
+  return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/${raw}`;
 };
 
 const normalizePlanStatus = (plan) => String(plan?.status || "ACTIVE").toUpperCase();
@@ -59,49 +59,49 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
 
   const t = useMemo(
     () =>
-      ({
-        vi: {
-          eyebrow: "Hội viên PhotoHub",
-          title: "Hợp đồng tháng theo từng photographer",
-          subtitle:
-            "Mỗi photographer có hợp đồng tháng riêng. Trang này đóng vai trò giới thiệu và dẫn người dùng tới đúng photographer để xem gói phù hợp.",
-          stepsTitle: "Luồng hợp lý",
-          step1: "Chọn photographer",
-          step2: "Xem hợp đồng tháng riêng",
-          step3: "Mở hồ sơ hoặc tiếp tục ký hợp đồng",
-          selected: "Photographer đang xem",
-          monthlyPlans: "Hợp đồng tháng công khai",
-          featured: "Photographer nổi bật",
-          openProfile: "Mở hồ sơ",
-          viewPlans: "Xem hợp đồng tháng",
-          explore: "Khám phá photographer",
-          loginHint: "Nếu gói tháng chưa hiện ra, hãy đăng nhập để xem dữ liệu công khai của photographer.",
-          emptyPlans: "Photographer này chưa có hợp đồng tháng công khai.",
-          noPhotographer:
-            "Chưa chọn photographer nào. Hãy vào danh sách nhiếp ảnh gia để chọn người phù hợp rồi xem gói tháng của họ.",
-          backToList: "Xem danh sách nhiếp ảnh gia",
-        },
-        en: {
-          eyebrow: "PhotoHub Membership",
-          title: "Monthly contracts are tied to each photographer",
-          subtitle:
-            "This page is an entry point, not a global package catalog. Pick a photographer to see their recurring contract and continue from there.",
-          stepsTitle: "Recommended flow",
-          step1: "Choose a photographer",
-          step2: "View their monthly contract",
-          step3: "Open the profile or continue the contract",
-          selected: "Current photographer",
-          monthlyPlans: "Public monthly contracts",
-          featured: "Featured photographers",
-          openProfile: "Open profile",
-          viewPlans: "View monthly contract",
-          explore: "Explore photographers",
-          loginHint: "If plans are missing, sign in to view the photographer's public data.",
-          emptyPlans: "This photographer does not have a public monthly contract yet.",
-          noPhotographer: "No photographer selected yet. Open the photographer list and choose one to continue.",
-          backToList: "Browse photographers",
-        },
-      }[language] || {}),
+    ({
+      vi: {
+        eyebrow: "Hội viên PhotoHub",
+        title: "Hợp đồng tháng theo từng photographer",
+        subtitle:
+          "Mỗi photographer có hợp đồng tháng riêng. Trang này đóng vai trò giới thiệu và dẫn người dùng tới đúng photographer để xem gói phù hợp.",
+        stepsTitle: "Luồng hợp lý",
+        step1: "Chọn photographer",
+        step2: "Xem hợp đồng tháng riêng",
+        step3: "Mở hồ sơ hoặc tiếp tục ký hợp đồng",
+        selected: "Photographer đang xem",
+        monthlyPlans: "Hợp đồng tháng công khai",
+        featured: "Photographer nổi bật",
+        openProfile: "Mở hồ sơ",
+        viewPlans: "Xem hợp đồng tháng",
+        explore: "Khám phá photographer",
+        loginHint: "Nếu gói tháng chưa hiện ra, hãy đăng nhập để xem dữ liệu công khai của photographer.",
+        emptyPlans: "Photographer này chưa có hợp đồng tháng công khai.",
+        noPhotographer:
+          "Chưa chọn photographer nào. Hãy vào danh sách nhiếp ảnh gia để chọn người phù hợp rồi xem gói tháng của họ.",
+        backToList: "Xem danh sách nhiếp ảnh gia",
+      },
+      en: {
+        eyebrow: "PhotoHub Membership",
+        title: "Monthly contracts are tied to each photographer",
+        subtitle:
+          "This page is an entry point, not a global package catalog. Pick a photographer to see their recurring contract and continue from there.",
+        stepsTitle: "Recommended flow",
+        step1: "Choose a photographer",
+        step2: "View their monthly contract",
+        step3: "Open the profile or continue the contract",
+        selected: "Current photographer",
+        monthlyPlans: "Public monthly contracts",
+        featured: "Featured photographers",
+        openProfile: "Open profile",
+        viewPlans: "View monthly contract",
+        explore: "Explore photographers",
+        loginHint: "If plans are missing, sign in to view the photographer's public data.",
+        emptyPlans: "This photographer does not have a public monthly contract yet.",
+        noPhotographer: "No photographer selected yet. Open the photographer list and choose one to continue.",
+        backToList: "Browse photographers",
+      },
+    }[language] || {}),
     [language]
   );
 
@@ -322,9 +322,8 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
     return (
       <div
         key={photographer._id}
-        className={`rounded-[28px] border p-5 shadow-lg transition hover:-translate-y-1 ${
-          isDark ? "border-white/10 bg-white/[0.04]" : "border-orange-100 bg-white shadow-orange-100/60"
-        }`}
+        className={`rounded-[28px] border p-5 shadow-lg transition hover:-translate-y-1 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-orange-100 bg-white shadow-orange-100/60"
+          }`}
       >
         <div className="flex items-center gap-4">
           <div className="h-14 w-14 overflow-hidden rounded-2xl bg-orange-500/10">
@@ -451,11 +450,10 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
             type="button"
             onClick={() => handlePurchasePlan(pkg)}
             disabled={!bookable || purchasingPlanId === pkg._id}
-            className={`flex-1 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold shadow-lg transition disabled:cursor-not-allowed disabled:opacity-60 ${
-              bookable
+            className={`flex-1 inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-bold shadow-lg transition disabled:cursor-not-allowed disabled:opacity-60 ${bookable
                 ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-orange-500/20 hover:brightness-110"
                 : "border border-slate-200 bg-slate-100 text-slate-500 shadow-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300"
-            }`}
+              }`}
           >
             {purchasingPlanId === pkg._id ? (
               <Loader2 size={16} className="animate-spin" />
@@ -699,19 +697,17 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
             onClick={() => setShowPlanDetailModal(false)}
           >
             <div
-              className={`relative w-full max-w-4xl overflow-hidden rounded-[32px] border shadow-2xl ${
-                isDark ? "border-white/10 bg-[#09111f] text-white" : "border-orange-100 bg-white text-slate-900"
-              }`}
+              className={`relative w-full max-w-4xl overflow-hidden rounded-[32px] border shadow-2xl ${isDark ? "border-white/10 bg-[#09111f] text-white" : "border-orange-100 bg-white text-slate-900"
+                }`}
               onClick={(event) => event.stopPropagation()}
             >
               <button
                 type="button"
                 onClick={() => setShowPlanDetailModal(false)}
-                className={`absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border transition ${
-                  isDark
+                className={`absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border transition ${isDark
                     ? "border-white/10 bg-white/5 text-white hover:bg-white/10"
                     : "border-orange-100 bg-white text-slate-700 hover:bg-orange-50"
-                }`}
+                  }`}
                 aria-label="Close"
               >
                 <X size={18} />
@@ -811,11 +807,10 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
                         setShowPlanDetailModal(false);
                         navigate(`/photographers/${photographerId}`);
                       }}
-                      className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold transition ${
-                        isDark
+                      className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold transition ${isDark
                           ? "border-white/10 bg-white/5 text-white hover:bg-white/10"
                           : "border-orange-200 bg-white text-orange-600 hover:border-orange-400 hover:bg-orange-50"
-                      }`}
+                        }`}
                     >
                       <ArrowRight size={16} />
                       {language === "vi" ? "Mở hồ sơ photographer" : "Open photographer profile"}

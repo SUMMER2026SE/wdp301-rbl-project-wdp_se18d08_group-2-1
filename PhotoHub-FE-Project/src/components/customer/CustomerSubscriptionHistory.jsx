@@ -43,7 +43,7 @@ const money = (value) => new Intl.NumberFormat("vi-VN", { maximumFractionDigits:
 const resolveAvatar = (avatar) => {
   if (!avatar) return "";
   if (/^https?:\/\//i.test(avatar)) return avatar;
-  return `http://localhost:3000${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
+  return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
 };
 
 const dayOptions = [
@@ -291,15 +291,15 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
           <h3 className="text-lg font-black tracking-tight md:text-xl">{t.title}</h3>
           <p className={`mt-1 text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>{t.subtitle}</p>
         </div>
-          <button
-            type="button"
-            onClick={loadSubscriptions}
-            className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3.5 py-2 text-sm font-bold text-orange-600 transition hover:border-orange-400 hover:bg-orange-500 hover:text-white dark:border-white/10 dark:bg-white/5 dark:text-white"
-          >
-            <RefreshCcw size={15} />
-            {t.refresh}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={loadSubscriptions}
+          className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3.5 py-2 text-sm font-bold text-orange-600 transition hover:border-orange-400 hover:bg-orange-500 hover:text-white dark:border-white/10 dark:bg-white/5 dark:text-white"
+        >
+          <RefreshCcw size={15} />
+          {t.refresh}
+        </button>
+      </div>
 
       <div className="mt-4 flex flex-wrap gap-2 overflow-x-auto pb-1">
         {filterOptions.map((option) => {
@@ -309,13 +309,12 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
               key={option.value}
               type="button"
               onClick={() => setStatusFilter(option.value)}
-              className={`rounded-full border px-3.5 py-2 text-xs font-bold uppercase tracking-[0.14em] transition ${
-                active
+              className={`rounded-full border px-3.5 py-2 text-xs font-bold uppercase tracking-[0.14em] transition ${active
                   ? "border-orange-500 bg-orange-500 text-white shadow-sm shadow-orange-500/20"
                   : isDark
                     ? "border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
                     : "border-slate-200 bg-slate-50 text-slate-600 hover:border-orange-300 hover:text-orange-600"
-              }`}
+                }`}
             >
               {option.label}
             </button>
@@ -430,9 +429,8 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
       {showDetailModal && createPortal(
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-950/70 px-4 py-4 backdrop-blur-sm">
           <div
-            className={`flex w-full max-w-6xl max-h-[88vh] flex-col overflow-hidden rounded-[28px] border shadow-2xl ${
-              isDark ? "border-white/10 bg-[#09111f] text-white" : "border-slate-200 bg-white text-slate-900"
-            }`}
+            className={`flex w-full max-w-6xl max-h-[88vh] flex-col overflow-hidden rounded-[28px] border shadow-2xl ${isDark ? "border-white/10 bg-[#09111f] text-white" : "border-slate-200 bg-white text-slate-900"
+              }`}
           >
             <div className={`flex items-start justify-between gap-4 border-b px-5 py-4 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-100 bg-slate-50"}`}>
               <div>
@@ -458,207 +456,207 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
                 <div className="px-5 py-12 text-center text-sm text-rose-500">{detailError}</div>
               ) : (
                 <div className="grid gap-5 p-5 lg:grid-cols-[1.15fr_0.85fr]">
-                <div className="space-y-4">
-                  <div className={`rounded-[22px] border p-4 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-slate-50"}`}>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {statusBadge(selectedSubscription?.status)}
-                      {paymentBadge(selectedSubscription?.lastPaymentStatus)}
-                      <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${isDark ? "border-orange-500/20 bg-orange-500/10 text-orange-300" : "border-orange-200 bg-orange-50 text-orange-700"}`}>
-                        {selectedSubscription?.remainingSessions?.remainingSessions ?? selectedSubscription?.remainingSessions ?? 0} sessions left
-                      </span>
+                  <div className="space-y-4">
+                    <div className={`rounded-[22px] border p-4 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-slate-50"}`}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {statusBadge(selectedSubscription?.status)}
+                        {paymentBadge(selectedSubscription?.lastPaymentStatus)}
+                        <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${isDark ? "border-orange-500/20 bg-orange-500/10 text-orange-300" : "border-orange-200 bg-orange-50 text-orange-700"}`}>
+                          {selectedSubscription?.remainingSessions?.remainingSessions ?? selectedSubscription?.remainingSessions ?? 0} sessions left
+                        </span>
+                      </div>
+                      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                        <div className={`rounded-2xl border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-slate-200 bg-white"}`}>
+                          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{t.amount}</p>
+                          <p className="mt-1 text-lg font-black text-orange-500">{money(selectedSubscription?.lastPaymentAmount || selectedSubscription?.package?.monthlyPrice || selectedSubscription?.amountPaid || 0)} VNĐ</p>
+                        </div>
+                        <div className={`rounded-2xl border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-slate-200 bg-white"}`}>
+                          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{t.timeline}</p>
+                          <p className="mt-1 text-sm font-bold">
+                            {selectedSubscription?.startDate ? new Date(selectedSubscription.startDate).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US") : "-"} → {selectedSubscription?.endDate ? new Date(selectedSubscription.endDate).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US") : "-"}
+                          </p>
+                        </div>
+                        <div className={`rounded-2xl border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-slate-200 bg-white"}`}>
+                          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{t.lastPayment}</p>
+                          <p className="mt-1 text-sm font-bold">
+                            {selectedSubscription?.lastPaymentAt ? new Date(selectedSubscription.lastPaymentAt).toLocaleString(language === "vi" ? "vi-VN" : "en-US") : (language === "vi" ? "Chưa ghi nhận" : "Not recorded")}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                      <div className={`rounded-2xl border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-slate-200 bg-white"}`}>
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{t.amount}</p>
-                        <p className="mt-1 text-lg font-black text-orange-500">{money(selectedSubscription?.lastPaymentAmount || selectedSubscription?.package?.monthlyPrice || selectedSubscription?.amountPaid || 0)} VNĐ</p>
+
+                    <div className={`rounded-[22px] border p-4 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-white"}`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-orange-500">{t.draftSessions}</p>
+                          <h4 className="mt-1 text-lg font-black">{t.contract}</h4>
+                        </div>
+                        <CalendarDays size={18} className="text-orange-500" />
                       </div>
-                      <div className={`rounded-2xl border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-slate-200 bg-white"}`}>
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{t.timeline}</p>
-                        <p className="mt-1 text-sm font-bold">
-                          {selectedSubscription?.startDate ? new Date(selectedSubscription.startDate).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US") : "-"} → {selectedSubscription?.endDate ? new Date(selectedSubscription.endDate).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US") : "-"}
-                        </p>
-                      </div>
-                      <div className={`rounded-2xl border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-slate-200 bg-white"}`}>
-                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{t.lastPayment}</p>
-                        <p className="mt-1 text-sm font-bold">
-                          {selectedSubscription?.lastPaymentAt ? new Date(selectedSubscription.lastPaymentAt).toLocaleString(language === "vi" ? "vi-VN" : "en-US") : (language === "vi" ? "Chưa ghi nhận" : "Not recorded")}
-                        </p>
+
+                      <div className="mt-4 grid gap-3">
+                        {Array.isArray(selectedSubscription?.bookingSchedule) && selectedSubscription.bookingSchedule.length > 0 ? (
+                          selectedSubscription.bookingSchedule.map((cycle) => (
+                            <div key={cycle._id || cycle.cycleIndex} className={`rounded-2xl border p-4 ${isDark ? "border-white/10 bg-black/20" : "border-slate-200 bg-slate-50"}`}>
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                  <p className="text-sm font-black">Cycle {cycle.cycleIndex + 1}</p>
+                                  <p className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                                    {cycle.cycleStart ? new Date(cycle.cycleStart).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US") : "-"} → {cycle.cycleEnd ? new Date(cycle.cycleEnd).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US") : "-"}
+                                  </p>
+                                </div>
+                                <span className="rounded-full bg-orange-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-orange-500">
+                                  {cycle.generatedSessions || 0}/{cycle.totalSessions || 0}
+                                </span>
+                              </div>
+                              <div className="mt-3 grid gap-2">
+                                {(cycle.sessions || []).length > 0 ? (
+                                  cycle.sessions.map((session) => (
+                                    <div key={session._id || `${cycle.cycleIndex}-${session.sessionNumber}`} className={`rounded-2xl border px-3 py-2 ${isDark ? "border-white/10 bg-white/[0.02]" : "border-slate-200 bg-white"}`}>
+                                      <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                          <p className="text-sm font-bold">
+                                            Buổi {session.sessionNumber}
+                                          </p>
+                                          <p className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                                            {session.scheduledStart ? new Date(session.scheduledStart).toLocaleString(language === "vi" ? "vi-VN" : "en-US") : "-"} → {session.scheduledEnd ? new Date(session.scheduledEnd).toLocaleString(language === "vi" ? "vi-VN" : "en-US") : "-"}
+                                          </p>
+                                        </div>
+                                        <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${toneClass(String(session.status || "").toUpperCase() === "NEED_RESCHEDULE" ? "rose" : String(session.status || "").toUpperCase() === "DRAFT" ? "amber" : "emerald", isDark)}`}>
+                                          {String(session.status || "DRAFT")}
+                                        </span>
+                                      </div>
+                                      {session.conflictReason && (
+                                        <p className={`mt-2 text-xs ${isDark ? "text-amber-300" : "text-amber-700"}`}>{session.conflictReason}</p>
+                                      )}
+                                      {session.note && (
+                                        <div className={`mt-2 rounded-xl border px-3 py-2 text-xs leading-relaxed ${isDark ? "border-white/10 bg-white/[0.02] text-slate-300" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
+                                          <span className="mr-1 font-black uppercase tracking-[0.14em] text-orange-500">{t.note}:</span>
+                                          {session.note}
+                                        </div>
+                                      )}
+                                      {Array.isArray(session.suggestedSlots) && session.suggestedSlots.length > 0 && (
+                                        <div className="mt-2 flex flex-wrap gap-2">
+                                          {session.suggestedSlots.map((slot, index) => (
+                                            <span key={`${session.sessionNumber}-${index}`} className={`rounded-full border px-2 py-1 text-[10px] font-semibold ${isDark ? "border-white/10 bg-white/[0.03] text-slate-300" : "border-slate-200 bg-white text-slate-600"}`}>
+                                              {slot.start ? new Date(slot.start).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US") : "-"}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className={`rounded-2xl border border-dashed px-4 py-5 text-sm ${isDark ? "border-white/10 text-slate-400" : "border-slate-200 text-slate-500"}`}>
+                                    {language === "vi" ? "Chưa có draft nào được sinh cho chu kỳ này." : "No draft sessions generated for this cycle yet."}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className={`rounded-2xl border border-dashed px-4 py-5 text-sm ${isDark ? "border-white/10 text-slate-400" : "border-slate-200 text-slate-500"}`}>
+                            {language === "vi" ? "Chưa có lịch nháp." : "No draft schedule yet."}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  <div className={`rounded-[22px] border p-4 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-white"}`}>
+                  <div className={`rounded-[22px] border p-4 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-slate-50"}`}>
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-orange-500">{t.draftSessions}</p>
-                        <h4 className="mt-1 text-lg font-black">{t.contract}</h4>
+                        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-orange-500">{t.preferredSchedule}</p>
+                        <h4 className="mt-1 text-lg font-black">{t.chooseHint}</h4>
                       </div>
-                      <CalendarDays size={18} className="text-orange-500" />
+                      <Sparkles size={18} className="text-orange-500" />
                     </div>
 
-                    <div className="mt-4 grid gap-3">
-                      {Array.isArray(selectedSubscription?.bookingSchedule) && selectedSubscription.bookingSchedule.length > 0 ? (
-                        selectedSubscription.bookingSchedule.map((cycle) => (
-                          <div key={cycle._id || cycle.cycleIndex} className={`rounded-2xl border p-4 ${isDark ? "border-white/10 bg-black/20" : "border-slate-200 bg-slate-50"}`}>
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <div>
-                                <p className="text-sm font-black">Cycle {cycle.cycleIndex + 1}</p>
-                                <p className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                                  {cycle.cycleStart ? new Date(cycle.cycleStart).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US") : "-"} → {cycle.cycleEnd ? new Date(cycle.cycleEnd).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US") : "-"}
-                                </p>
-                              </div>
-                              <span className="rounded-full bg-orange-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-orange-500">
-                                {cycle.generatedSessions || 0}/{cycle.totalSessions || 0}
-                              </span>
-                            </div>
-                            <div className="mt-3 grid gap-2">
-                              {(cycle.sessions || []).length > 0 ? (
-                                cycle.sessions.map((session) => (
-                                  <div key={session._id || `${cycle.cycleIndex}-${session.sessionNumber}`} className={`rounded-2xl border px-3 py-2 ${isDark ? "border-white/10 bg-white/[0.02]" : "border-slate-200 bg-white"}`}>
-                                    <div className="flex flex-wrap items-center justify-between gap-2">
-                                      <div>
-                                        <p className="text-sm font-bold">
-                                          Buổi {session.sessionNumber}
-                                        </p>
-                                        <p className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                                          {session.scheduledStart ? new Date(session.scheduledStart).toLocaleString(language === "vi" ? "vi-VN" : "en-US") : "-"} → {session.scheduledEnd ? new Date(session.scheduledEnd).toLocaleString(language === "vi" ? "vi-VN" : "en-US") : "-"}
-                                        </p>
-                                      </div>
-                                      <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${toneClass(String(session.status || "").toUpperCase() === "NEED_RESCHEDULE" ? "rose" : String(session.status || "").toUpperCase() === "DRAFT" ? "amber" : "emerald", isDark)}`}>
-                                        {String(session.status || "DRAFT")}
-                                      </span>
-                                    </div>
-                                    {session.conflictReason && (
-                                      <p className={`mt-2 text-xs ${isDark ? "text-amber-300" : "text-amber-700"}`}>{session.conflictReason}</p>
-                                    )}
-                                    {session.note && (
-                                      <div className={`mt-2 rounded-xl border px-3 py-2 text-xs leading-relaxed ${isDark ? "border-white/10 bg-white/[0.02] text-slate-300" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
-                                        <span className="mr-1 font-black uppercase tracking-[0.14em] text-orange-500">{t.note}:</span>
-                                        {session.note}
-                                      </div>
-                                    )}
-                                    {Array.isArray(session.suggestedSlots) && session.suggestedSlots.length > 0 && (
-                                      <div className="mt-2 flex flex-wrap gap-2">
-                                        {session.suggestedSlots.map((slot, index) => (
-                                          <span key={`${session.sessionNumber}-${index}`} className={`rounded-full border px-2 py-1 text-[10px] font-semibold ${isDark ? "border-white/10 bg-white/[0.03] text-slate-300" : "border-slate-200 bg-white text-slate-600"}`}>
-                                            {slot.start ? new Date(slot.start).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US") : "-"}
-                                          </span>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))
-                              ) : (
-                                <div className={`rounded-2xl border border-dashed px-4 py-5 text-sm ${isDark ? "border-white/10 text-slate-400" : "border-slate-200 text-slate-500"}`}>
-                                  {language === "vi" ? "Chưa có draft nào được sinh cho chu kỳ này." : "No draft sessions generated for this cycle yet."}
-                                </div>
-                              )}
-                            </div>
+                    <div className="mt-4 space-y-3">
+                      {preferredSchedule.map((slot, index) => (
+                        <div key={`${index}-${slot.dayOfWeek}`} className={`rounded-2xl border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-slate-200 bg-white"}`}>
+                          <div className="grid gap-2 sm:grid-cols-3">
+                            <label className="block">
+                              <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Day</span>
+                              <select
+                                value={slot.dayOfWeek}
+                                onChange={(e) => updateSlot(index, "dayOfWeek", Number(e.target.value))}
+                                className={`w-full rounded-xl border px-3 py-2 text-sm outline-none ${isDark ? "border-white/10 bg-[#09111f] text-white" : "border-slate-200 bg-white text-slate-900"}`}
+                              >
+                                {dayOptions.map((day) => (
+                                  <option key={day.value} value={day.value}>{language === "vi" ? `Thứ ${day.value === 0 ? "CN" : day.value + 1}` : day.label}</option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="block">
+                              <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Start</span>
+                              <input
+                                type="time"
+                                value={slot.startTime}
+                                onChange={(e) => updateSlot(index, "startTime", e.target.value)}
+                                className={`w-full rounded-xl border px-3 py-2 text-sm outline-none ${isDark ? "border-white/10 bg-[#09111f] text-white" : "border-slate-200 bg-white text-slate-900"}`}
+                              />
+                            </label>
+                            <label className="block">
+                              <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">End</span>
+                              <input
+                                type="time"
+                                value={slot.endTime}
+                                onChange={(e) => updateSlot(index, "endTime", e.target.value)}
+                                className={`w-full rounded-xl border px-3 py-2 text-sm outline-none ${isDark ? "border-white/10 bg-[#09111f] text-white" : "border-slate-200 bg-white text-slate-900"}`}
+                              />
+                            </label>
                           </div>
-                        ))
-                      ) : (
-                        <div className={`rounded-2xl border border-dashed px-4 py-5 text-sm ${isDark ? "border-white/10 text-slate-400" : "border-slate-200 text-slate-500"}`}>
-                          {language === "vi" ? "Chưa có lịch nháp." : "No draft schedule yet."}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className={`rounded-[22px] border p-4 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-slate-50"}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.24em] text-orange-500">{t.preferredSchedule}</p>
-                      <h4 className="mt-1 text-lg font-black">{t.chooseHint}</h4>
-                    </div>
-                    <Sparkles size={18} className="text-orange-500" />
-                  </div>
-
-                  <div className="mt-4 space-y-3">
-                    {preferredSchedule.map((slot, index) => (
-                      <div key={`${index}-${slot.dayOfWeek}`} className={`rounded-2xl border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-slate-200 bg-white"}`}>
-                        <div className="grid gap-2 sm:grid-cols-3">
-                          <label className="block">
-                            <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Day</span>
-                            <select
-                              value={slot.dayOfWeek}
-                              onChange={(e) => updateSlot(index, "dayOfWeek", Number(e.target.value))}
-                              className={`w-full rounded-xl border px-3 py-2 text-sm outline-none ${isDark ? "border-white/10 bg-[#09111f] text-white" : "border-slate-200 bg-white text-slate-900"}`}
+                          <label className="mt-2 block">
+                            <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{t.note}</span>
+                            <textarea
+                              rows={2}
+                              value={slot.note || ""}
+                              onChange={(e) => updateSlot(index, "note", e.target.value)}
+                              placeholder={t.notePlaceholder}
+                              className={`w-full rounded-xl border px-3 py-2 text-sm outline-none ${isDark ? "border-white/10 bg-[#09111f] text-white placeholder:text-slate-500" : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"}`}
+                            />
+                          </label>
+                          <div className="mt-2 flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => removeSlot(index)}
+                              className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-rose-500 transition hover:bg-rose-500 hover:text-white"
                             >
-                              {dayOptions.map((day) => (
-                                <option key={day.value} value={day.value}>{language === "vi" ? `Thứ ${day.value === 0 ? "CN" : day.value + 1}` : day.label}</option>
-                              ))}
-                            </select>
-                          </label>
-                          <label className="block">
-                            <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Start</span>
-                            <input
-                              type="time"
-                              value={slot.startTime}
-                              onChange={(e) => updateSlot(index, "startTime", e.target.value)}
-                              className={`w-full rounded-xl border px-3 py-2 text-sm outline-none ${isDark ? "border-white/10 bg-[#09111f] text-white" : "border-slate-200 bg-white text-slate-900"}`}
-                            />
-                          </label>
-                          <label className="block">
-                            <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">End</span>
-                            <input
-                              type="time"
-                              value={slot.endTime}
-                              onChange={(e) => updateSlot(index, "endTime", e.target.value)}
-                              className={`w-full rounded-xl border px-3 py-2 text-sm outline-none ${isDark ? "border-white/10 bg-[#09111f] text-white" : "border-slate-200 bg-white text-slate-900"}`}
-                            />
-                          </label>
+                              <Trash2 size={11} />
+                              Remove
+                            </button>
+                          </div>
                         </div>
-                        <label className="mt-2 block">
-                          <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{t.note}</span>
-                          <textarea
-                            rows={2}
-                            value={slot.note || ""}
-                            onChange={(e) => updateSlot(index, "note", e.target.value)}
-                            placeholder={t.notePlaceholder}
-                            className={`w-full rounded-xl border px-3 py-2 text-sm outline-none ${isDark ? "border-white/10 bg-[#09111f] text-white placeholder:text-slate-500" : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"}`}
-                          />
-                        </label>
-                        <div className="mt-2 flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => removeSlot(index)}
-                            className="inline-flex items-center gap-1 rounded-full border border-rose-200 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-rose-500 transition hover:bg-rose-500 hover:text-white"
-                          >
-                            <Trash2 size={11} />
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={addSlot}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-orange-200 px-3.5 py-2 text-sm font-bold text-orange-600 transition hover:border-orange-400 hover:bg-orange-500 hover:text-white"
+                      >
+                        <Plus size={15} />
+                        {t.addSlot}
+                      </button>
+                    </div>
 
                     <button
                       type="button"
-                      onClick={addSlot}
-                      className="inline-flex items-center gap-2 rounded-2xl border border-orange-200 px-3.5 py-2 text-sm font-bold text-orange-600 transition hover:border-orange-400 hover:bg-orange-500 hover:text-white"
+                      onClick={savePreferredSchedule}
+                      disabled={savingSchedule}
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/15 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      <Plus size={15} />
-                      {t.addSlot}
+                      <Save size={15} />
+                      {savingSchedule ? (language === "vi" ? "Đang lưu..." : "Saving...") : t.saveSchedule}
                     </button>
-                  </div>
 
-                  <button
-                    type="button"
-                    onClick={savePreferredSchedule}
-                    disabled={savingSchedule}
-                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/15 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <Save size={15} />
-                    {savingSchedule ? (language === "vi" ? "Đang lưu..." : "Saving...") : t.saveSchedule}
-                  </button>
-
-                  <div className={`mt-4 rounded-2xl border px-4 py-3 text-xs leading-relaxed ${isDark ? "border-white/10 bg-white/[0.02] text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>
-                    {language === "vi"
-                      ? "Khi bạn lưu khung giờ ưu tiên, hệ thống sẽ sinh lại draft của chu kỳ hiện tại theo khung mới."
-                      : "Saving preferred slots will rebuild the current cycle draft sessions using the new timing preferences."}
+                    <div className={`mt-4 rounded-2xl border px-4 py-3 text-xs leading-relaxed ${isDark ? "border-white/10 bg-white/[0.02] text-slate-400" : "border-slate-200 bg-white text-slate-500"}`}>
+                      {language === "vi"
+                        ? "Khi bạn lưu khung giờ ưu tiên, hệ thống sẽ sinh lại draft của chu kỳ hiện tại theo khung mới."
+                        : "Saving preferred slots will rebuild the current cycle draft sessions using the new timing preferences."}
+                    </div>
                   </div>
                 </div>
-              </div>
               )}
             </div>
           </div>
