@@ -26,12 +26,16 @@ async function sendVerifyEmailOtp(to, otp, fullName) {
     </div>
   `;
 
+  console.log("START SEND OTP MAIL", to);
+
   await sendGmail({
     to,
     subject: "Mã xác thực email - PHOTOHUB",
     text: `Mã OTP của bạn: ${otp}`,
     html: htmlContent
   });
+
+  console.log("DONE SEND OTP MAIL", to);
   console.log(`[EMAIL] Đã gửi OTP tới ${to}`);
 }
 

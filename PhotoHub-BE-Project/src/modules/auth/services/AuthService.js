@@ -26,10 +26,13 @@ async function findUserByEmail(emailNorm) {
   return u;
 }
 
-function queueOtpEmail(to, otp, fullName) {
-  sendVerifyEmailOtp(to, otp, fullName).catch((err) =>
-    console.error(`[EMAIL] Gửi OTP thất bại (${to}):`, err.message)
-  );
+async function queueOtpEmail(to, otp, fullName) {
+  try {
+    await sendVerifyEmailOtp(to, otp, fullName);
+    console.log(`[EMAIL] OTP sent ${to}`);
+  } catch (err) {
+    console.error(`[EMAIL] Gửi OTP thất bại (${to}):`, err.message);
+  }
 }
 
 class AuthService {
@@ -73,7 +76,7 @@ class AuthService {
       }
 
       console.log(`[REGISTER] Gửi lại OTP (chưa verify): ${email} | OTP: ${otp}`);
-      queueOtpEmail(email, otp, existing.fullName);
+      await queueOtpEmail(email, otp, existing.fullName);
 
       return {
         message: "Đã cập nhật thông tin và gửi lại mã OTP. Vui lòng kiểm tra email.",
@@ -104,7 +107,7 @@ class AuthService {
     }
 
     console.log(`[REGISTER] User mới [${role}]: ${email} | OTP: ${otp}`);
-    queueOtpEmail(email, otp, data.fullName);
+    await queueOtpEmail(email, otp, data.fullName);
 
     return {
       message: "Đăng ký thành công! Vui lòng kiểm tra email để xác thực.",
