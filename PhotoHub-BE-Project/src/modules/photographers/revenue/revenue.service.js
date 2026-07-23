@@ -152,11 +152,23 @@ class RevenueService {
     const withdrawQuery = identity.photographerId
       ? { $or: [{ photographerId: photographerUserId }, { photographer: identity.photographerId }] }
       : { photographerId: photographerUserId };
-    const [paidBookingIds, openDisputeBookingIds, withdrawRequests, bids] = await Promise.all([
+    const [
+      paidBookingIds,
+      openDisputeBookingIds,
+      withdrawRequests,
+      bids,
+      successfulSubscriptionPayments,
+    ] = await Promise.all([
       this.getPaidBookingIds(allBookings),
       this.getOpenDisputeBookingIds(completedBookings),
       WithdrawRequest.find(withdrawQuery),
-      Bid.find({ photographerId: { $in: identity.ids } }).select("status price createdAt"),
+      Bid.find({ photographerId: { $in: identity.ids } })
+        .select("status price createdAt"),
+
+      SubscriptionPayment.find({
+        photographer: { $in: identity.ids },
+        status: "SUCCESS",
+      }).sort({ createdAt: -1 }),
     ]);
     const filteredBids =
       startDate && endDate
