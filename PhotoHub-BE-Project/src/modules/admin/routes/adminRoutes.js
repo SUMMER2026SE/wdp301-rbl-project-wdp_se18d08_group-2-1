@@ -37,29 +37,11 @@ router.get("/commissions", (req, res) => AdminController.getCommissions(req, res
 router.get("/commissions/summary", (req, res) => AdminController.getCommissionSummary(req, res));
 router.patch("/commission-rate", (req, res) => AdminController.updateCommissionRate(req, res));
 
-// ================= 7. RESOLVE DISPUTES =================
-router.get("/disputes", (req, res) => AdminController.getDisputes(req, res));
-router.get("/disputes/:id", (req, res) => AdminController.getDisputeById(req, res));
-router.patch("/disputes/:id/investigate", (req, res) => AdminController.investigateDispute(req, res));
-router.patch("/disputes/:id/resolve", (req, res) => AdminController.resolveDispute(req, res));
-router.patch("/disputes/:id/reject", (req, res) => AdminController.rejectDispute(req, res));
-
 // ================= 8. MANAGE REPORTS =================
 router.get("/reports", (req, res) => AdminController.getReports(req, res));
 router.get("/reports/:id", (req, res) => AdminController.getReportById(req, res));
 router.patch("/reports/:id/resolve", (req, res) => AdminController.resolveReport(req, res));
 router.patch("/reports/:id/reject", (req, res) => AdminController.rejectReport(req, res));
-
-// ================= 9. MODERATE CHAT =================
-router.get("/chat-messages", (req, res) => AdminController.getChatMessages(req, res));
-router.patch("/chat-messages/:id/hide", (req, res) => AdminController.hideChatMessage(req, res));
-router.patch("/chat-messages/:id/unhide", (req, res) => AdminController.unhideChatMessage(req, res));
-
-// ================= 10. MANAGE FEATURED PACKAGES =================
-router.get("/featured-packages", (req, res) => AdminController.getFeaturedPackages(req, res));
-router.post("/featured-packages", (req, res) => AdminController.createFeaturedPackage(req, res));
-router.patch("/featured-packages/:id", (req, res) => AdminController.updateFeaturedPackage(req, res));
-router.delete("/featured-packages/:id", (req, res) => AdminController.deleteFeaturedPackage(req, res));
 
 // ================= 11. SEND SYSTEM NOTIFICATIONS =================
 router.post("/notifications/send", (req, res) => AdminController.sendSystemNotification(req, res));
