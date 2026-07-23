@@ -1,0 +1,682 @@
+// DBML Auto-Generated from Mongoose Schemas
+
+Table adminaction.js {
+  _id varchar [pk]
+  admin text
+  actionType text
+  targetType text
+  targetId text
+  details text
+  ipAddress text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table chatmessage.js {
+  _id varchar [pk]
+  sender text
+  receiver text
+  booking text
+  message text
+  isHidden text
+  scamDetected text
+  flaggedReason text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table commission.js {
+  _id varchar [pk]
+  booking text
+  amount text
+  rate text
+  status text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table dispute.js {
+  _id varchar [pk]
+  booking text
+  customer text
+  photographer text
+  payment text
+  title text
+  description text
+  evidenceImages text
+  status text
+  resolutionType text
+  refundAmount text
+  releaseAmount text
+  resolutionNote text
+  resolvedBy text
+  resolvedAt text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table featuredpackage.js {
+  _id varchar [pk]
+  title text
+  description text
+  price text
+  durationDays text
+  isFeatured text
+  startDate text
+  endDate text
+  status text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table notification.js {
+  _id varchar [pk]
+  recipientType text
+  recipient text
+  title text
+  message text
+  isRead text
+  type text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table payment.js {
+  _id varchar [pk]
+  booking text
+  sender text
+  receiver text
+  amount text
+  paymentType text
+  paymentMethod text
+  transactionId text
+  status text
+  adminNote text
+  confirmedBy text
+  confirmedAt text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table photographerverification.js {
+  _id varchar [pk]
+  photographer text
+  user text
+  idCardNumber text
+  idCardFrontImage text
+  idCardBackImage text
+  portfolioLinks text
+  certificates text
+  status text
+  reviewedBy text
+  reviewedAt text
+  adminNote text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table report.js {
+  _id varchar [pk]
+  reporter text
+  reportedUser text
+  targetType text
+  targetId text
+  reason text
+  details text
+  status text
+  resolution text
+  resolvedBy text
+  resolvedAt text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table systemsetting.js {
+  _id varchar [pk]
+  key text
+  value text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table wallet.js {
+  _id varchar [pk]
+  user text
+  balance text
+  holdBalance text
+  currency text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table withdrawrequest.js {
+  _id varchar [pk]
+  photographer text
+  photographerId text
+  wallet text
+  amount text
+  commission text
+  commissionRate text
+  finalAmount text
+  eligibleBookingIds text
+  bankInfo text
+  bankName text
+  bankAccountNumber text
+  bankAccountName text
+  status text
+  processedBy text
+  processedAt text
+  adminNote text
+  rejectionReason text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table portfolio.js {
+  _id varchar [pk]
+  photographer text
+  image_url text
+  caption text
+  price_package text
+  embedding text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table portfolioalbum.js {
+  _id varchar [pk]
+  photographer text
+  title text
+  description text
+  coverImageUrl text
+  category text
+  styleTags text
+  price_package text
+  isPublic text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table portfolioimage.js {
+  _id varchar [pk]
+  album text
+  photographer text
+  image_url text
+  caption text
+  embedding text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table blogpost.js {
+  _id varchar [pk]
+  title text
+  content text
+  author text
+  coverImage text
+  tags text
+  likesCount text
+  commentsCount text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table bookings {
+  _id varchar [pk]
+  customer text
+  photographer text
+  subscription text
+  subscriptionBooking text
+  package text
+  title text
+  note text
+  start text
+  end text
+  location text
+  price text
+  status text
+  rejectReason text
+  statusLogs text
+  paymentStatus text
+  payosOrderCode text
+  paymentLinkId text
+  paymentLink text
+  paidAmount text
+  paidAt text
+  finalAlbum text
+  completionStatus text
+  deliveryDeadline text
+  completedAt text
+  payoutEligibleAt text
+  isReviewed text
+  appliedVoucherCode text
+  appliedAddonReward text
+  groupBooking text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table bookingaddon.js {
+  _id varchar [pk]
+  bookingId text
+  makeup text
+  costume text
+  studio text
+  makeupDetails text
+  costumeDetails text
+  studioDetails text
+  addonPrice text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table shootingcategory.js {
+  _id varchar [pk]
+  name text
+  slug text
+  description text
+  iconUrl text
+  coverImageUrl text
+  status text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table styletag.js {
+  _id varchar [pk]
+  name text
+  slug text
+  type text
+  description text
+  status text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table customer.js {
+  _id varchar [pk]
+  UUID text
+  user text
+  preferredStyles text
+  preferredLocation text
+  totalBookings text
+  completedBookings text
+  canceledBookings text
+  totalSpent text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table marketingevent.js {
+  _id varchar [pk]
+  title text
+  description text
+  banner text
+  startDate text
+  endDate text
+  status text
+  location text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table favoritephotographer.js {
+  _id varchar [pk]
+  UUID text
+  customer text
+  photographer text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table groupbookings {
+  _id varchar [pk]
+  groupCode text
+  concept text
+  photographer text
+  leader text
+  minMembers text
+  maxMembers text
+  currentMemberCount text
+  basePrice text
+  currentPrice text
+  discountPercent text
+  status text
+  expireTime text
+  confirmedAt text
+  canceledAt text
+  scheduledBooking text
+  note text
+  isLocked text
+  shootDate text
+  shootStartTime text
+  start text
+  end text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table groupmembers {
+  _id varchar [pk]
+  group text
+  user text
+  role text
+  paymentStatus text
+  depositAmount text
+  paidAt text
+  refundedAt text
+  payosOrderCode text
+  paymentLink text
+  paymentLinkId text
+  refundedAmount text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table loyaltyaccount.js {
+  _id varchar [pk]
+  userId text
+  points text
+  totalPointsAccumulatedYear text
+  membershipTier text
+  referralCode text
+  referredBy text
+  referredByRewarded text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table loyaltyaddonreward.js {
+  _id varchar [pk]
+  userId text
+  pointsCost text
+  addonType text
+  description text
+  isUsed text
+  bookingId text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table loyaltyhistory.js {
+  _id varchar [pk]
+  userId text
+  points text
+  type text
+  description text
+  referenceId text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table loyaltyvoucher.js {
+  _id varchar [pk]
+  code text
+  discountAmount text
+  pointsCost text
+  scope text
+  userId text
+  sourceVoucherId text
+  isUsed text
+  isActive text
+  usageLimit text
+  usedCount text
+  usedBy text
+  expiryDate text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table pendingreferral.js {
+  _id varchar [pk]
+  email text
+  referrerId text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table packagecategorys {
+  _id varchar [pk]
+  packageId text
+  categoryId text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table packageimages {
+  _id varchar [pk]
+  packageId text
+  imageUrl text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table packagestyles {
+  _id varchar [pk]
+  packageId text
+  styleTagId text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table photographerpackages {
+  _id varchar [pk]
+  photographerId text
+  title text
+  description text
+  packageType text
+  price text
+  durationHours text
+  sessionsPerMonth text
+  commitmentMonths text
+  maxCustomers text
+  numberOfPhotos text
+  editedPhotos text
+  locationType text
+  status text
+  isFeatured text
+  isGroupPackage text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table photographer.js {
+  _id varchar [pk]
+  UUID text
+  user text
+  displayName text
+  location varchar
+  experienceYears text
+  equipment varchar
+  bio varchar
+  socialLinks text
+  averageRating text
+  completedBookings text
+  totalReviews text
+  totalEarnings text
+  hourlyRate text
+  monthlySubscriptionCapacity text
+  verificationStatus text
+  isFeatured text
+  isAvailable text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table photographercategorys {
+  _id varchar [pk]
+  photographer text
+  category text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table photographerstyles {
+  _id varchar [pk]
+  photographer text
+  styleTag text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table photographerverification.js {
+  _id varchar [pk]
+  photographer text
+  documentType text
+  documentFrontUrl text
+  documentBackUrl varchar
+  status text
+  adminNote varchar
+  reviewedBy text
+  reviewedAt datetime
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table reviews {
+  _id varchar [pk]
+  booking text
+  customer text
+  photographer text
+  rating text
+  comment text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table paymentmethods {
+  _id varchar [pk]
+  user text
+  provider text
+  type text
+  displayName text
+  token text
+  last4 text
+  expMonth text
+  expYear text
+  isDefault text
+  isActive text
+  metadata text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table subscriptions {
+  _id varchar [pk]
+  customer text
+  photographer text
+  package text
+  paymentMethod text
+  status text
+  billingType text
+  autoRenew text
+  startDate text
+  endDate text
+  commitmentMonths text
+  sessionsPerMonth text
+  usedSessions text
+  currentCycleStart text
+  currentCycleEnd text
+  nextResetDate text
+  pausedAt text
+  pauseUntil text
+  pausedDaysTotal text
+  renewalCount text
+  amountPaid text
+  lastPaymentAmount text
+  penaltyPaid text
+  cancelPenaltyAmount text
+  lastPaymentStatus text
+  lastPaymentAt text
+  lastPaymentOrderCode text
+  preferredSchedule text
+  bookingLocationPreference text
+  notes text
+  commitmentSnapshot text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table subscriptionbookings {
+  _id varchar [pk]
+  subscription text
+  schedule text
+  booking text
+  cycleIndex text
+  sessionNumber text
+  status text
+  scheduledStart text
+  scheduledEnd text
+  note text
+  conflictReason text
+  rescheduleRequired text
+  suggestedSlots text
+  isAutoGenerated text
+  metadata text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table subscriptionpackages {
+  _id varchar [pk]
+  code text
+  slug text
+  name text
+  description text
+  billingType text
+  monthlyPrice text
+  perSessionPrice text
+  sessionsPerMonth text
+  commitmentMonths text
+  maxCustomers text
+  maxPauseDays text
+  autoRenewDefault text
+  features text
+  isActive text
+  sortOrder text
+  metadata text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table subscriptionpayments {
+  _id varchar [pk]
+  subscription text
+  customer text
+  photographer text
+  paymentMethod text
+  amount text
+  currency text
+  billingType text
+  paymentKind text
+  status text
+  provider text
+  orderCode text
+  paymentLinkId text
+  paymentLink text
+  transactionId text
+  paidAt text
+  failureReason text
+  metadata text
+  payloadSnapshot text
+  createdAt datetime
+  updatedAt datetime
+}
+
+Table subscriptionschedules {
+  _id varchar [pk]
+  subscription text
+  cycleIndex text
+  cycleStart text
+  cycleEnd text
+  status text
+  totalSessions text
+  generatedSessions text
+  conflictSessions text
+  generatedAt text
+  generatedBy text
+  sessions text
+  createdAt datetime
+  updatedAt datetime
+}
+

@@ -1,0 +1,2828 @@
+const mongoose = require("mongoose");
+
+const adminActionSchema = new mongoose.Schema(
+  {
+    admin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    actionType: {
+      type: String,
+      required: true,
+      // Ví dụ: LOCK_USER, UNLOCK_USER, APPROVE_PHOTOGRAPHER, RESOLVE_DISPUTE,...
+    },
+    targetType: {
+      type: String,
+      required: true,
+      // Ví dụ: User, Photographer, Booking, Dispute,...
+    },
+    targetId: {
+      type: String,
+      required: true,
+    },
+    details: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+    ipAddress: {
+      type: String,
+    },
+  },
+  {
+    timestamps: true,
+    collection: "admin_actions",
+  }
+);
+
+module.exports = mongoose.models.AdminAction || mongoose.model("AdminAction", adminActionSchema);
+module.exports = require("../../bookings/models/booking.model").Booking;
+const mongoose = require("mongoose");
+
+
+const chatMessageSchema = new mongoose.Schema(
+  {
+    sender: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    receiver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    booking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+    },
+    message: {
+      type: String,
+      required: true,
+    },
+    isHidden: {
+      type: Boolean,
+      default: false,
+    },
+    scamDetected: {
+      type: Boolean,
+      default: false,
+    },
+    flaggedReason: {
+      type: String,
+    },
+  },
+  {
+    timestamps: true,
+    collection: "chat_messages",
+  }
+);
+
+module.exports = mongoose.models.ChatMessage || mongoose.model("ChatMessage", chatMessageSchema);
+const mongoose = require("mongoose");
+
+const commissionSchema = new mongoose.Schema(
+  {
+    booking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+      required: true,
+    },
+    amount: {
+      type: Number,
+      required: true,
+    },
+    rate: {
+      type: Number,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["PENDING", "COLLECTED"],
+      default: "PENDING",
+    },
+  },
+  {
+    timestamps: true,
+    collection: "commissions",
+  }
+);
+
+module.exports = mongoose.models.Commission || mongoose.model("Commission", commissionSchema);
+const mongoose = require("mongoose");
+
+const disputeSchema = new mongoose.Schema(
+  {
+    booking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+      required: true,
+    },
+    customer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    photographer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Photographer",
+      required: true,
+    },
+    payment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Payment",
+    },
+    title: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    evidenceImages: {
+      type: [String],
+      default: [],
+    },
+    status: {
+      type: String,
+      enum: ["OPEN", "INVESTIGATING", "RESOLVED", "REJECTED"],
+      default: "OPEN",
+    },
+    resolutionType: {
+      type: String,
+      enum: ["REFUND_FULL", "REFUND_PARTIAL", "RELEASE_PAYMENT", "REJECT"],
+    },
+    refundAmount: {
+      type: Number,
+      default: 0,
+    },
+    releaseAmount: {
+      type: Number,
+      default: 0,
+    },
+    resolutionNote: {
+      type: String,
+    },
+    resolvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    resolvedAt: {
+      type: Date,
+    },
+  },
+  {
+    timestamps: true,
+    collection: "disputes",
+  }
+);
+
+module.exports = mongoose.models.Dispute || mongoose.model("Dispute", disputeSchema);
+const mongoose = require("mongoose");
+
+const featuredPackageSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+    },
+    price: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    durationDays: {
+      type: Number,
+      required: true,
+      default: 30,
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+    startDate: {
+      type: Date,
+    },
+    endDate: {
+      type: Date,
+    },
+    status: {
+      type: String,
+      enum: ["ACTIVE", "INACTIVE"],
+      default: "ACTIVE",
+    },
+  },
+  {
+    timestamps: true,
+    collection: "featured_packages",
+  }
+);
+
+module.exports = mongoose.models.FeaturedPackage || mongoose.model("FeaturedPackage", featuredPackageSchema);
+const mongoose = require("mongoose");
+
+const notificationSchema = new mongoose.Schema(
+  {
+    recipientType: {
+      type: String,
+      enum: ["ALL", "CUSTOMER", "PHOTOGRAPHER", "SPECIFIC"],
+      required: true,
+    },
+    recipient: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: function() {
+        return this.recipientType === "SPECIFIC";
+      },
+    },
+    title: {
+      type: String,
+      required: true,
+    },
+    message: {
+      type: String,
+      required: true,
+    },
+    isRead: {
+      type: Boolean,
+      default: false,
+    },
+    type: {
+      type: String,
+      enum: ["SYSTEM", "BOOKING", "VERIFICATION", "WALLET"],
+      default: "SYSTEM",
+    },
+  },
+  {
+    timestamps: true,
+    collection: "notifications",
+  }
+);
+
+module.exports = mongoose.models.Notification || mongoose.model("Notification", notificationSchema);
+const mongoose = require("mongoose");
+
+const paymentSchema = new mongoose.Schema(
+  {
+    booking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+    },
+    sender: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    receiver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    amount: {
+      type: Number,
+      required: true,
+    },
+    paymentType: {
+      type: String,
+      enum: ["DEPOSIT", "FINAL", "REFUND", "WITHDRAW"],
+      required: true,
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["VNPAY", "PAYOS", "WALLET", "MANUAL"],
+      default: "MANUAL",
+    },
+    transactionId: {
+      type: String,
+    },
+    status: {
+      type: String,
+      enum: ["PENDING", "SUCCESS", "FAILED", "REFUNDED"],
+      default: "PENDING",
+    },
+    adminNote: {
+      type: String,
+    },
+    confirmedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    confirmedAt: {
+      type: Date,
+    },
+  },
+  {
+    timestamps: true,
+    collection: "payments",
+  }
+);
+
+module.exports = mongoose.models.Payment || mongoose.model("Payment", paymentSchema);
+const mongoose = require("mongoose");
+
+const photographerVerificationSchema = new mongoose.Schema(
+  {
+    photographer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Photographer",
+      required: true,
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    idCardNumber: {
+      type: String,
+      required: true,
+    },
+    idCardFrontImage: {
+      type: String,
+      required: true,
+    },
+    idCardBackImage: {
+      type: String,
+      required: true,
+    },
+    portfolioLinks: {
+      type: [String],
+      default: [],
+    },
+    certificates: {
+      type: [String],
+      default: [],
+    },
+    status: {
+      type: String,
+      enum: ["PENDING", "VERIFIED", "REJECTED"],
+      default: "PENDING",
+    },
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    reviewedAt: {
+      type: Date,
+    },
+    adminNote: {
+      type: String,
+    },
+  },
+  {
+    timestamps: true,
+    collection: "photographer_verifications",
+  }
+);
+
+module.exports = mongoose.models.PhotographerVerification || mongoose.model("PhotographerVerification", photographerVerificationSchema);
+const mongoose = require("mongoose");
+
+const reportSchema = new mongoose.Schema(
+  {
+    reporter: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    reportedUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    targetType: {
+      type: String,
+      enum: ["USER", "BOOKING", "PORTFOLIO", "CHAT"],
+      required: true,
+    },
+    targetId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
+    reason: {
+      type: String,
+      required: true,
+    },
+    details: {
+      type: String,
+    },
+    status: {
+      type: String,
+      enum: ["PENDING", "REVIEWING", "RESOLVED", "REJECTED"],
+      default: "PENDING",
+    },
+    resolution: {
+      type: String,
+    },
+    resolvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    resolvedAt: {
+      type: Date,
+    },
+  },
+  {
+    timestamps: true,
+    collection: "reports",
+  }
+);
+
+module.exports = mongoose.models.Report || mongoose.model("Report", reportSchema);
+const mongoose = require("mongoose");
+
+const systemSettingSchema = new mongoose.Schema(
+  {
+    key: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    value: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+    collection: "system_settings",
+  }
+);
+
+module.exports = mongoose.models.SystemSetting || mongoose.model("SystemSetting", systemSettingSchema);
+const mongoose = require("mongoose");
+
+const walletSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+    },
+    balance: {
+      type: Number,
+      default: 0,
+    },
+    holdBalance: {
+      type: Number,
+      default: 0, // Dùng ký quỹ khi đang có lịch booking chưa hoàn thành
+    },
+    currency: {
+      type: String,
+      default: "VND",
+    },
+  },
+  {
+    timestamps: true,
+    collection: "wallets",
+  }
+);
+
+module.exports = mongoose.models.Wallet || mongoose.model("Wallet", walletSchema);
+const mongoose = require("mongoose");
+
+const withdrawRequestSchema = new mongoose.Schema(
+  {
+    photographer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Photographer",
+      required: true,
+    },
+    photographerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    wallet: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Wallet",
+      required: true,
+    },
+    amount: {
+      type: Number,
+      required: true,
+    },
+    commission: {
+      type: Number,
+      default: 0,
+    },
+    commissionRate: {
+      type: Number,
+      default: 0.1,
+    },
+    finalAmount: {
+      type: Number,
+      default: 0,
+    },
+    eligibleBookingIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Booking",
+      },
+    ],
+    bankInfo: {
+      bankName: String,
+      accountNumber: String,
+      accountName: String,
+    },
+    bankName: {
+      type: String,
+      required: true,
+    },
+    bankAccountNumber: {
+      type: String,
+      required: true,
+    },
+    bankAccountName: {
+      type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["PENDING", "APPROVED", "REJECTED", "PAID"],
+      default: "PENDING",
+    },
+    processedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    processedAt: {
+      type: Date,
+    },
+    adminNote: {
+      type: String,
+    },
+    rejectionReason: {
+      type: String,
+    },
+  },
+  {
+    timestamps: true,
+    collection: "withdraw_requests",
+  }
+);
+
+module.exports = mongoose.models.WithdrawRequest || mongoose.model("WithdrawRequest", withdrawRequestSchema);
+// src/modules/airecomment/models/portfolio.js
+
+const mongoose = require("mongoose");
+
+/**
+ * Portfolio Schema — Lưu ảnh portfolio của Photographer kèm Vector Embedding.
+ */
+const portfolioSchema = new mongoose.Schema(
+  {
+    // ── Photographer sở hữu ảnh này ─────────────────────────────────────────
+    photographer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Photographer",
+      required: [true, "photographer_id là bắt buộc"],
+      index: true,
+    },
+
+    // ── URL công khai của ảnh (Cloudinary / S3 / uploads local) ─────────────
+    image_url: {
+      type: String,
+      required: [true, "image_url là bắt buộc"],
+      trim: true,
+    },
+
+    // ── Mô tả ngắn về ảnh (tuỳ chọn) ──────────────────────────────────────
+    caption: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: [500, "Caption tối đa 500 ký tự"],
+    },
+
+    // ── Gói giá của photographer (đơn vị: VNĐ) ─────────────────────────────
+    price_package: {
+      type: Number,
+      required: [true, "price_package là bắt buộc"],
+      min: [0, "price_package không được âm"],
+    },
+
+    // ── Vector Embedding 512 chiều ──────────────────────────────────────────
+    embedding: {
+      type: [Number],
+      required: [true, "embedding là bắt buộc"],
+      select: false,
+      validate: {
+        validator: (v) => v.length === 512,
+        message: "Embedding phải có đúng 512 chiều",
+      },
+    },
+  },
+  {
+    timestamps: true,
+    collection: "portfolios",
+  }
+);
+
+// ── Indexes thông thường ──────────────────────────────────────────────────
+portfolioSchema.index({ photographer: 1, createdAt: -1 });
+portfolioSchema.index({ price_package: 1 });
+
+module.exports =
+  mongoose.models.Portfolio ||
+  mongoose.model("Portfolio", portfolioSchema);
+// src/modules/airecomment/models/portfolioAlbum.js
+
+const mongoose = require("mongoose");
+
+/**
+ * PortfolioAlbum Schema — Lưu Album portfolio của Photographer.
+ * Mỗi album chứa nhiều ảnh (PortfolioImage).
+ */
+const portfolioAlbumSchema = new mongoose.Schema(
+  {
+    // ── Photographer sở hữu album ──────────────────────────────────────────
+    photographer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Photographer",
+      required: [true, "photographer là bắt buộc"],
+      index: true,
+    },
+
+    // ── Tiêu đề album ──────────────────────────────────────────────────────
+    title: {
+      type: String,
+      required: [true, "Tiêu đề album là bắt buộc"],
+      trim: true,
+      maxlength: [150, "Tiêu đề tối đa 150 ký tự"],
+    },
+
+    // ── Mô tả album ────────────────────────────────────────────────────────
+    description: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: [1000, "Mô tả tối đa 1000 ký tự"],
+    },
+
+    // ── Ảnh bìa album (URL) ────────────────────────────────────────────────
+    coverImageUrl: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
+    // ── Thể loại chụp (ref ShootingCategory) ──────────────────────────────
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ShootingCategory",
+      default: null,
+    },
+
+    // ── Các style tags (ref StyleTag) ─────────────────────────────────────
+    styleTags: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "StyleTag",
+      },
+    ],
+
+    // ── Gói giá (VNĐ) ─────────────────────────────────────────────────────
+    price_package: {
+      type: Number,
+      required: [true, "price_package là bắt buộc"],
+      min: [0, "price_package không được âm"],
+    },
+
+    // ── Hiển thị công khai ─────────────────────────────────────────────────
+    isPublic: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+    collection: "portfolio_albums",
+  }
+);
+
+// ── Indexes ───────────────────────────────────────────────────────────────
+portfolioAlbumSchema.index({ photographer: 1, createdAt: -1 });
+portfolioAlbumSchema.index({ category: 1 });
+portfolioAlbumSchema.index({ price_package: 1 });
+
+module.exports =
+  mongoose.models.PortfolioAlbum ||
+  mongoose.model("PortfolioAlbum", portfolioAlbumSchema);
+const mongoose = require("mongoose");
+
+/**
+ * PortfolioImage schema.
+ * Stores each image in a portfolio album and its 512-dimension embedding for vector search.
+ */
+const portfolioImageSchema = new mongoose.Schema(
+  {
+    // Album containing this image
+    album: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PortfolioAlbum",
+      required: [true, "album is required"],
+      index: true,
+    },
+
+    // Photographer (denormalized for fast queries)
+    photographer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Photographer",
+      required: [true, "photographer is required"],
+      index: true,
+    },
+
+    // Image URL (Cloudinary / local)
+    image_url: {
+      type: String,
+      required: [true, "image_url is required"],
+      trim: true,
+    },
+
+    // Image caption
+    caption: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: [500, "Caption tối đa 500 ký tự"],
+    },
+
+    // Vector embedding 512 dimensions
+    embedding: {
+      type: [Number],
+      required: [true, "embedding is required"],
+      select: false,
+      validate: {
+        validator: (v) => Array.isArray(v) && v.length === 512,
+        message: "Embedding must have exactly 512 dimensions",
+      },
+    },
+  },
+  {
+    timestamps: true,
+    collection: "portfolio_images",
+  }
+);
+
+// Indexes
+portfolioImageSchema.index({ album: 1, createdAt: -1 });
+portfolioImageSchema.index({ photographer: 1, createdAt: -1 });
+
+module.exports =
+  mongoose.models.PortfolioImage ||
+  mongoose.model("PortfolioImage", portfolioImageSchema);
+const { Schema, model, Types } = require("mongoose");
+
+// Object thay cho enum
+const UserRole = {
+  ADMIN: "admin",
+  MANAGER: "manager",
+  STAFF: "staff",
+  CUSTOMER: "customer",
+  PHOTOGRAPHER: "photographer",
+};
+
+const UserSchema = new Schema({
+  UUID: { type: String, unique: true, default: () => new Types.ObjectId().toString() },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, default: null }, // Nullable for OAuth users
+  role: { type: String, enum: Object.values(UserRole), default: UserRole.CUSTOMER },
+  fullName: { type: String },
+  phoneNumber: { type: String, unique: true, sparse: true },
+  isBlocked: { type: Boolean, default: false },
+  isVerified: { type: Boolean, default: false },
+  verifyEmailOTP: { type: String },
+  verifyEmailExpires: { type: Date },
+  resetPasswordOTP: { type: String },
+  resetPasswordExpires: { type: Date },
+  // Google OAuth fields
+  googleId: { type: String, unique: true, sparse: true },
+  avatar: { type: String },
+  authProvider: { type: String, enum: ["local", "google"], default: "local" },
+  // Profile fields
+  dateOfBirth: { type: Date },
+  gender: { type: String, enum: ["male", "female", "other"] },
+  address: { type: String },
+  passwordPlainForAdmin: { type: String, default: null },
+  /** Chi nhánh rạp (staff/manager); manager thường 1 người / chi nhánh */
+  branch: { type: Schema.Types.ObjectId, ref: "CinemaBranch", default: null },
+}, { timestamps: true });
+
+// Tạo model Mongoose từ schema
+const User = model("User", UserSchema);
+
+// Export cả model và object enum
+module.exports = { User, UserRole };
+const mongoose = require("mongoose");
+
+const blogPostSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    content: {
+      type: String,
+      required: true,
+    },
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    coverImage: {
+      type: String,
+      default: "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=800&q=80",
+    },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    likesCount: {
+      type: Number,
+      default: 0,
+    },
+    commentsCount: {
+      type: Number,
+      default: 0,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports = mongoose.models.BlogPost || mongoose.model("BlogPost", blogPostSchema);
+const mongoose = require("mongoose");
+
+const BOOKING_STATUS = {
+  PENDING: "pending",
+  ACCEPTED: "accepted",
+  CONFIRMED: "confirmed",
+  COMPLETED: "completed",
+  REJECTED: "rejected",
+  CANCELLED: "cancelled",
+  DRAFT: "draft",
+  RESCHEDULED: "rescheduled",
+  NEED_RESCHEDULE: "need_reschedule",
+};
+
+const PAYMENT_STATUS = {
+  UNPAID: "unpaid",
+  PENDING: "pending",
+  PAID: "paid",
+  REFUNDED: "refunded",
+  CANCELLED: "cancelled",
+  EXPIRED: "expired",
+};
+
+const bookingSchema = new mongoose.Schema(
+  {
+    customer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    photographer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Photographer",
+      required: true,
+      index: true,
+    },
+    subscription: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subscription",
+      default: null,
+    },
+    subscriptionBooking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SubscriptionBooking",
+      default: null,
+    },
+    package: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PhotographerPackage",
+      default: null,
+    },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    note: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    start: {
+      type: Date,
+      required: true,
+    },
+    end: {
+      type: Date,
+      required: true,
+    },
+    location: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    status: {
+      type: String,
+      enum: Object.values(BOOKING_STATUS),
+      default: BOOKING_STATUS.PENDING,
+    },
+    rejectReason: {
+      type: String,
+      default: null,
+    },
+    statusLogs: [
+      {
+        status: {
+          type: String,
+          required: true,
+        },
+        note: {
+          type: String,
+          default: "",
+        },
+        updatedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    paymentStatus: {
+      type: String,
+      enum: Object.values(PAYMENT_STATUS),
+      default: PAYMENT_STATUS.UNPAID,
+    },
+    payosOrderCode: {
+      type: Number,
+      default: null,
+    },
+    paymentLinkId: {
+      type: String,
+      default: null,
+    },
+    paymentLink: {
+      type: String,
+      default: null,
+    },
+    paidAmount: {
+      type: Number,
+      default: 0,
+    },
+    paidAt: {
+      type: Date,
+      default: null,
+    },
+    finalAlbum: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Album",
+      default: null,
+    },
+    completionStatus: {
+      type: String,
+      enum: ["pending", "album_uploaded", "completed"],
+      default: "pending",
+    },
+    deliveryDeadline: {
+      type: Date,
+      default: null,
+    },
+    completedAt: {
+      type: Date,
+      default: null,
+    },
+    payoutEligibleAt: {
+      type: Date,
+      default: null,
+    },
+    isReviewed: {
+      type: Boolean,
+      default: false,
+    },
+    appliedVoucherCode: {
+      type: String,
+      default: null,
+    },
+    appliedAddonReward: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "LoyaltyAddonReward",
+      default: null,
+    },
+    groupBooking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "GroupBooking",
+      default: null,
+      index: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+bookingSchema.index({ photographer: 1, status: 1 });
+bookingSchema.index({ customer: 1, status: 1 });
+bookingSchema.index({ payosOrderCode: 1 }, { unique: true, sparse: true });
+bookingSchema.index({ start: 1, end: 1 });
+bookingSchema.index({ paymentStatus: 1, status: 1 });
+
+module.exports = {
+  Booking: mongoose.models.Booking || mongoose.model("Booking", bookingSchema),
+  BOOKING_STATUS,
+  PAYMENT_STATUS,
+};
+const mongoose = require("mongoose");
+
+const bookingAddonSchema = new mongoose.Schema(
+  {
+    bookingId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+      required: true,
+      unique: true,
+    },
+    makeup: {
+      type: Boolean,
+      default: false,
+    },
+    costume: {
+      type: Boolean,
+      default: false,
+    },
+    studio: {
+      type: Boolean,
+      default: false,
+    },
+    makeupDetails: {
+      type: String,
+      default: "",
+    },
+    costumeDetails: {
+      type: String,
+      default: "",
+    },
+    studioDetails: {
+      type: String,
+      default: "",
+    },
+    addonPrice: {
+      type: Number,
+      default: 0,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports = mongoose.models.BookingAddon || mongoose.model("BookingAddon", bookingAddonSchema);
+const mongoose = require("mongoose");
+
+const shootingCategorySchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+
+    slug: {
+      type: String,
+      unique: true,
+      lowercase: true,
+    },
+
+    description: {
+      type: String,
+      default: "",
+    },
+
+    iconUrl: {
+      type: String,
+      default: null,
+    },
+
+    coverImageUrl: {
+      type: String,
+      default: null,
+    },
+
+    status: {
+      type: String,
+      enum: ["ACTIVE", "INACTIVE"],
+      default: "ACTIVE",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports =
+  mongoose.models.ShootingCategory ||
+  mongoose.model(
+    "ShootingCategory",
+    shootingCategorySchema
+  );
+const mongoose = require("mongoose");
+
+const styleTagSchema = new mongoose.Schema(
+    {
+        name: {
+            type: String,
+            required: true,
+        },
+
+        slug: {
+            type: String,
+            unique: true,
+            lowercase: true,
+        },
+
+        type: {
+            type: String,
+            enum: [
+                "STYLE",
+                "MOOD",
+                "COLOR",
+                "CONCEPT",
+            ],
+            required: true,
+        },
+
+        description: {
+            type: String,
+            default: "",
+        },
+        status: {
+            type: String,
+            enum: ["ACTIVE", "INACTIVE"],
+            default: "ACTIVE"
+        },
+    },
+    {
+        timestamps: true,
+    }
+);
+
+module.exports =
+    mongoose.models.StyleTag ||
+    mongoose.model("StyleTag", styleTagSchema);
+const mongoose = require("mongoose");
+
+const customerSchema = new mongoose.Schema(
+  {
+    UUID: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+    },
+
+    preferredStyles: [
+      {
+        type: String,
+      },
+    ],
+
+    preferredLocation: {
+      type: String,
+    },
+
+    totalBookings: {
+      type: Number,
+      default: 0,
+    },
+
+    completedBookings: {
+      type: Number,
+      default: 0,
+    },
+
+    canceledBookings: {
+      type: Number,
+      default: 0,
+    },
+
+    totalSpent: {
+      type: Number,
+      default: 0,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports = mongoose.model(
+  "Customer",
+  customerSchema
+);
+const mongoose = require("mongoose");
+
+const marketingEventSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    banner: {
+      type: String,
+      default: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80",
+    },
+    startDate: {
+      type: Date,
+      required: true,
+    },
+    endDate: {
+      type: Date,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["active", "ended"],
+      default: "active",
+    },
+    location: {
+      type: String,
+      default: "Việt Nam",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports = mongoose.models.MarketingEvent || mongoose.model("MarketingEvent", marketingEventSchema);
+const mongoose = require("mongoose");
+
+const favoritePhotographerSchema =
+  new mongoose.Schema(
+    {
+      UUID: {
+        type: String,
+        unique: true,
+        default: () => new mongoose.Types.ObjectId().toString(),
+      },
+
+      customer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Customer",
+        required: true,
+      },
+
+      photographer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Photographer",
+        required: true,
+      },
+    },
+    {
+      timestamps: true,
+    }
+  );
+
+module.exports = mongoose.model(
+  "FavoritePhotographer",
+  favoritePhotographerSchema
+);
+/**
+ * groupBooking.model.js
+ *
+ * Schema lưu trữ thông tin một "nhóm chụp ảnh chung" (Group Booking).
+ *
+ * Vòng đời trạng thái:
+ *   PENDING → CONFIRMED (khi đủ minMembers + đã thanh toán)
+ *   PENDING → CANCELED  (khi hết expireTime mà thiếu người, hoặc Leader hủy)
+ */
+
+const mongoose = require("mongoose");
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+const GROUP_STATUS = {
+  PENDING: "PENDING",
+  CONFIRMED: "CONFIRMED",
+  CANCELED: "CANCELED",
+};
+
+// ─── Schema ───────────────────────────────────────────────────────────────────
+
+const groupBookingSchema = new mongoose.Schema(
+  {
+    /** Mã nhóm ngẫu nhiên 6-8 ký tự (chữ hoa + số), dùng để mời bạn bè */
+    groupCode: {
+      type: String,
+      required: true,
+      unique: true,
+      uppercase: true,
+      trim: true,
+      index: true,
+    },
+
+    /**
+     * Concept/Gói chụp ảnh mục tiêu.
+     * Tham chiếu đến PhotographerPackage — đây là "concept" trong hệ thống hiện tại.
+     */
+    concept: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PhotographerPackage",
+      required: true,
+      index: true,
+    },
+
+    /** Nhiếp ảnh gia phụ trách concept này */
+    photographer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Photographer",
+      required: true,
+      index: true,
+    },
+
+    /** User tạo nhóm (LEADER) */
+    leader: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+
+    /** Số lượng thành viên tối thiểu để chốt nhóm */
+    minMembers: {
+      type: Number,
+      required: true,
+      min: 2,
+    },
+
+    /** Số lượng thành viên tối đa của nhóm */
+    maxMembers: {
+      type: Number,
+      required: true,
+      min: 2,
+    },
+
+    /** Số lượng thành viên hiện tại có paymentStatus = PAID */
+    currentMemberCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    /** Giá gốc của concept (được chép lại để tránh thay đổi giá sau) */
+    basePrice: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    /** Giá thực tế sau khi áp dụng giảm giá bậc thang */
+    currentPrice: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    /** % giảm giá hiện tại (0, 10, 15, 20) */
+    discountPercent: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+
+    /** Trạng thái của nhóm */
+    status: {
+      type: String,
+      enum: Object.values(GROUP_STATUS),
+      default: GROUP_STATUS.PENDING,
+      index: true,
+    },
+
+    /** Thời gian hết hạn: sau mốc này nếu chưa đủ người → tự động hủy */
+    expireTime: {
+      type: Date,
+      required: true,
+      index: true,
+    },
+
+    /** Thời điểm nhóm được xác nhận (CONFIRMED) */
+    confirmedAt: {
+      type: Date,
+      default: null,
+    },
+
+    /** Thời điểm nhóm bị hủy (CANCELED) */
+    canceledAt: {
+      type: Date,
+      default: null,
+    },
+
+    /**
+     * Lịch hẹn chính thức được tạo ra sau khi nhóm CONFIRMED.
+     * Tham chiếu đến Booking thông thường.
+     */
+    scheduledBooking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+      default: null,
+    },
+
+    /** Ghi chú / mô tả thêm từ Leader */
+    note: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
+    /** Trạng thái bị khóa đăng ký bởi Leader */
+    isLocked: {
+      type: Boolean,
+      default: false,
+    },
+
+    /** Ngày chụp ảnh chung (định dạng YYYY-MM-DD) */
+    shootDate: {
+      type: String,
+      required: true,
+    },
+
+    /** Giờ bắt đầu chụp (định dạng HH:mm) */
+    shootStartTime: {
+      type: String,
+      required: true,
+    },
+
+    /** Thời điểm bắt đầu chụp (Date) */
+    start: {
+      type: Date,
+      required: true,
+      index: true,
+    },
+
+    /** Thời điểm kết thúc chụp (Date) */
+    end: {
+      type: Date,
+      required: true,
+      index: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// ─── Compound Indexes ─────────────────────────────────────────────────────────
+
+/** Query nhóm PENDING chưa hết hạn (cho Discover + Cron job) */
+groupBookingSchema.index({ status: 1, expireTime: 1 });
+
+/** Query nhóm của một photographer */
+groupBookingSchema.index({ photographer: 1, status: 1 });
+
+// ─── Export ───────────────────────────────────────────────────────────────────
+
+module.exports = {
+  GroupBooking:
+    mongoose.models.GroupBooking ||
+    mongoose.model("GroupBooking", groupBookingSchema),
+  GROUP_STATUS,
+};
+/**
+ * groupMember.model.js
+ *
+ * Schema lưu trữ thông tin từng thành viên trong một Group Booking.
+ *
+ * Vòng đời paymentStatus:
+ *   PENDING → PAID     (sau khi thanh toán đặt cọc thành công)
+ *   PAID    → REFUNDED (khi nhóm bị hủy hoặc thành viên rời nhóm)
+ */
+
+const mongoose = require("mongoose");
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+const MEMBER_ROLE = {
+  LEADER: "LEADER",
+  MEMBER: "MEMBER",
+};
+
+const MEMBER_PAYMENT_STATUS = {
+  PENDING: "PENDING",
+  PAID: "PAID",
+  REFUNDED: "REFUNDED",
+};
+
+// ─── Schema ───────────────────────────────────────────────────────────────────
+
+const groupMemberSchema = new mongoose.Schema(
+  {
+    /** Nhóm mà thành viên này thuộc về */
+    group: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "GroupBooking",
+      required: true,
+      index: true,
+    },
+
+    /** User tham gia nhóm */
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+
+    /** Vai trò trong nhóm */
+    role: {
+      type: String,
+      enum: Object.values(MEMBER_ROLE),
+      default: MEMBER_ROLE.MEMBER,
+    },
+
+    /** Trạng thái thanh toán đặt cọc */
+    paymentStatus: {
+      type: String,
+      enum: Object.values(MEMBER_PAYMENT_STATUS),
+      default: MEMBER_PAYMENT_STATUS.PENDING,
+      index: true,
+    },
+
+    /** Số tiền đặt cọc (bằng currentPrice của nhóm tại thời điểm join) */
+    depositAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    /** Thời điểm thanh toán đặt cọc thành công */
+    paidAt: {
+      type: Date,
+      default: null,
+    },
+
+    /** Thời điểm được hoàn tiền */
+    refundedAt: {
+      type: Date,
+      default: null,
+    },
+
+    /** Mã đơn hàng PayOS — dùng để tra cứu webhook */
+    payosOrderCode: {
+      type: Number,
+      default: null,
+    },
+
+    /** Link thanh toán PayOS */
+    paymentLink: {
+      type: String,
+      default: null,
+    },
+
+    /** ID link thanh toán PayOS */
+    paymentLinkId: {
+      type: String,
+      default: null,
+    },
+
+    /** Số tiền thực tế đã được hoàn */
+    refundedAmount: {
+      type: Number,
+      default: 0,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// ─── Compound Indexes ─────────────────────────────────────────────────────────
+
+/** Đảm bảo mỗi user chỉ có một slot trong một nhóm */
+groupMemberSchema.index({ group: 1, user: 1 }, { unique: true });
+
+/** Sparse index cho payosOrderCode — tra cứu nhanh qua webhook */
+groupMemberSchema.index({ payosOrderCode: 1 }, { unique: true, sparse: true });
+
+/** Query thành viên PAID của một nhóm */
+groupMemberSchema.index({ group: 1, paymentStatus: 1 });
+
+// ─── Export ───────────────────────────────────────────────────────────────────
+
+module.exports = {
+  GroupMember:
+    mongoose.models.GroupMember ||
+    mongoose.model("GroupMember", groupMemberSchema),
+  MEMBER_ROLE,
+  MEMBER_PAYMENT_STATUS,
+};
+const mongoose = require("mongoose");
+
+const loyaltyAccountSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+      index: true,
+    },
+    points: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalPointsAccumulatedYear: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    membershipTier: {
+      type: String,
+      enum: [null, "Silver", "Gold", "Platinum"],
+      default: null,
+    },
+    referralCode: {
+      type: String,
+      unique: true,
+      required: true,
+      index: true,
+    },
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    referredByRewarded: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports = mongoose.models.LoyaltyAccount || mongoose.model("LoyaltyAccount", loyaltyAccountSchema);
+const mongoose = require("mongoose");
+
+const loyaltyAddonRewardSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    pointsCost: {
+      type: Number,
+      required: true,
+    },
+    addonType: {
+      type: String,
+      enum: ["EXTRA_TIME", "EXTRA_RETOUCH"],
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    isUsed: {
+      type: Boolean,
+      default: false,
+    },
+    bookingId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+      default: null,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports = mongoose.models.LoyaltyAddonReward || mongoose.model("LoyaltyAddonReward", loyaltyAddonRewardSchema);
+const mongoose = require("mongoose");
+
+const loyaltyHistorySchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    points: {
+      type: Number,
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: ["Earn_Booking", "Earn_Review", "Earn_Referral", "Redeem_Voucher", "Redeem_Addon"],
+      required: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    referenceId: {
+      type: String,
+      default: null,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports = mongoose.models.LoyaltyHistory || mongoose.model("LoyaltyHistory", loyaltyHistorySchema);
+const mongoose = require("mongoose");
+
+const loyaltyVoucherSchema = new mongoose.Schema(
+  {
+    code: {
+      type: String,
+      unique: true,
+      required: true,
+      index: true,
+    },
+    discountAmount: {
+      type: Number,
+      required: true,
+    },
+    pointsCost: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    scope: {
+      type: String,
+      enum: ["PERSONAL", "GLOBAL"],
+      default: "PERSONAL",
+      index: true,
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: function () { return this.scope === "PERSONAL"; },
+      default: null,
+      index: true,
+    },
+    sourceVoucherId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "LoyaltyVoucher",
+      default: null,
+    },
+    isUsed: {
+      type: Boolean,
+      default: false,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    usageLimit: {
+      type: Number,
+      default: null,
+      min: 1,
+    },
+    usedCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    usedBy: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    }],
+    expiryDate: {
+      type: Date,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports = mongoose.models.LoyaltyVoucher || mongoose.model("LoyaltyVoucher", loyaltyVoucherSchema);
+const mongoose = require("mongoose");
+
+const pendingReferralSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      unique: true,
+      required: true,
+      index: true,
+    },
+    referrerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports = mongoose.models.PendingReferral || mongoose.model("PendingReferral", pendingReferralSchema);
+const mongoose = require("mongoose");
+
+const packageCategorySchema = new mongoose.Schema(
+  {
+    packageId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PhotographerPackage",
+      required: true,
+    },
+
+    categoryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ShootingCategory",
+      required: true,
+    },
+  },
+  {
+    timestamps: false,
+  }
+);
+
+// chống trùng (1 package không gắn 2 lần cùng category)
+packageCategorySchema.index(
+  { packageId: 1, categoryId: 1 },
+  { unique: true }
+);
+
+module.exports =
+  mongoose.models.PackageCategory ||
+  mongoose.model("PackageCategory", packageCategorySchema);
+const mongoose = require("mongoose");
+
+const packageImageSchema = new mongoose.Schema(
+  {
+    packageId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PhotographerPackage",
+      required: true,
+    },
+
+    imageUrl: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: {
+      createdAt: true,
+      updatedAt: false,
+    },
+  }
+);
+
+module.exports =
+  mongoose.models.PackageImage ||
+  mongoose.model("PackageImage", packageImageSchema);
+const mongoose = require("mongoose");
+
+const packageStyleSchema = new mongoose.Schema(
+  {
+    packageId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PhotographerPackage",
+      required: true,
+    },
+
+    styleTagId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "StyleTag",
+      required: true,
+    },
+  },
+  {
+    timestamps: false,
+  }
+);
+
+// chống trùng
+packageStyleSchema.index(
+  { packageId: 1, styleTagId: 1 },
+  { unique: true }
+);
+
+module.exports =
+  mongoose.models.PackageStyle ||
+  mongoose.model("PackageStyle", packageStyleSchema);
+const mongoose = require("mongoose");
+
+const photographerPackageSchema = new mongoose.Schema(
+  {
+    photographerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Photographer",
+      required: true,
+    },
+
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    description: {
+      type: String,
+      default: "",
+    },
+
+    packageType: {
+      type: String,
+      enum: ["SHOOTING", "MONTHLY"],
+      default: "SHOOTING",
+      index: true,
+    },
+
+    price: {
+      type: Number,
+      required: true,
+    },
+
+    durationHours: {
+      type: Number,
+      default: 0,
+    },
+
+    sessionsPerMonth: {
+      type: Number,
+      default: 0,
+    },
+
+    commitmentMonths: {
+      type: Number,
+      default: 0,
+    },
+
+    maxCustomers: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    numberOfPhotos: {
+      type: Number,
+      default: 0,
+    },
+
+    editedPhotos: {
+      type: Number,
+      default: 0,
+    },
+
+    locationType: {
+      type: String,
+      enum: ["STUDIO", "OUTDOOR", "CUSTOMER_LOCATION", "ANY"],
+      default: "ANY",
+    },
+
+    status: {
+      type: String,
+      enum: ["ACTIVE", "INACTIVE", "DELETED"],
+      default: "ACTIVE",
+    },
+
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+
+    /**
+     * Đánh dấu đây là gói dành riêng cho Group Booking.
+     * - true  → chỉ hiển thị trong trang Tạo nhóm
+     * - false → chỉ hiển thị trong trang Đặt lịch thường
+     */
+    isGroupPackage: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports =
+  mongoose.models.PhotographerPackage ||
+  mongoose.model("PhotographerPackage", photographerPackageSchema);
+// photographers/models/photographer.js
+
+const mongoose = require("mongoose");
+
+const photographerSchema = new mongoose.Schema(
+  {
+    UUID: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+    },
+
+    displayName: {
+      type: String,
+      required: true,
+    },
+
+    location: String,
+
+    experienceYears: {
+      type: Number,
+      default: 0,
+    },
+
+    equipment: String,
+
+    bio: String,
+
+    socialLinks: {
+      facebook: String,
+      instagram: String,
+      website: String,
+    },
+
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
+
+    completedBookings: {
+      type: Number,
+      default: 0,
+    },
+
+    totalReviews: {
+      type: Number,
+      default: 0,
+    },
+
+    totalEarnings: {
+      type: Number,
+      default: 0,
+    },
+
+    hourlyRate: {
+      type: Number,
+      default: 0,
+    },
+
+    monthlySubscriptionCapacity: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    verificationStatus: {
+      type: String,
+      enum: ["PENDING", "VERIFIED", "REJECTED"],
+      default: "PENDING",
+    },
+
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+
+    isAvailable: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+module.exports = mongoose.models.Photographer || mongoose.model("Photographer", photographerSchema);
+const mongoose = require("mongoose");
+
+const photographerCategorySchema = new mongoose.Schema(
+  {
+    photographer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Photographer",
+      required: true,
+    },
+
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ShootingCategory",
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+photographerCategorySchema.index(
+  { photographer: 1, category: 1 },
+  { unique: true }
+);
+
+module.exports =
+  mongoose.models.PhotographerCategory ||
+  mongoose.model(
+    "PhotographerCategory",
+    photographerCategorySchema
+  );
+const mongoose = require("mongoose");
+
+const photographerStyleSchema = new mongoose.Schema(
+  {
+    photographer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Photographer",
+      required: true,
+    },
+
+    styleTag: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "StyleTag",
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+photographerStyleSchema.index(
+  { photographer: 1, styleTag: 1 },
+  { unique: true }
+);
+
+module.exports =
+  mongoose.models.PhotographerStyle ||
+  mongoose.model(
+    "PhotographerStyle",
+    photographerStyleSchema
+  );
+
+const mongoose = require("mongoose");
+
+const reviewSchema = new mongoose.Schema(
+  {
+    booking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+      required: true,
+      unique: true, // Only one review allowed per booking
+    },
+    customer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    photographer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Photographer", // Photographer's profile ID
+      required: true,
+    },
+    rating: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 5,
+    },
+    comment: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+reviewSchema.index({ photographer: 1 });
+
+module.exports =
+  mongoose.models.Review ||
+  mongoose.model("Review", reviewSchema);
+const mongoose = require("mongoose");
+
+const paymentMethodSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    provider: {
+      type: String,
+      enum: ["PAYOS", "WALLET", "CARD", "BANK_TRANSFER", "MOCK"],
+      default: "PAYOS",
+    },
+    type: {
+      type: String,
+      enum: ["CARD", "BANK", "EWALLET", "PAYOS", "WALLET", "MOCK"],
+      default: "PAYOS",
+    },
+    displayName: {
+      type: String,
+      required: true,
+    },
+    token: {
+      type: String,
+      default: null,
+    },
+    last4: {
+      type: String,
+      default: null,
+    },
+    expMonth: {
+      type: Number,
+      default: null,
+    },
+    expYear: {
+      type: Number,
+      default: null,
+    },
+    isDefault: {
+      type: Boolean,
+      default: false,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+  },
+  {
+    timestamps: true,
+    collection: "paymentMethods",
+  }
+);
+
+paymentMethodSchema.index({ user: 1, isDefault: 1 });
+
+module.exports = mongoose.models.PaymentMethod || mongoose.model("PaymentMethod", paymentMethodSchema);
+const mongoose = require("mongoose");
+
+const subscriptionSchema = new mongoose.Schema(
+  {
+    customer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    photographer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Photographer",
+      required: true,
+      index: true,
+    },
+    package: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SubscriptionPackage",
+      required: true,
+    },
+    paymentMethod: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PaymentMethod",
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: [
+        "ACTIVE",
+        "PAUSED",
+        "CANCELLED",
+        "EXPIRED",
+        "PENDING_PAYMENT",
+        "RENEWING",
+        "PENDING_CANCEL",
+      ],
+      default: "PENDING_PAYMENT",
+      index: true,
+    },
+    billingType: {
+      type: String,
+      enum: ["MONTHLY", "PER_SESSION"],
+      default: "MONTHLY",
+    },
+    autoRenew: {
+      type: Boolean,
+      default: true,
+    },
+    startDate: {
+      type: Date,
+      required: true,
+      index: true,
+    },
+    endDate: {
+      type: Date,
+      required: true,
+      index: true,
+    },
+    commitmentMonths: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    sessionsPerMonth: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    usedSessions: {
+      type: Number,
+      default: 0,
+    },
+    currentCycleStart: {
+      type: Date,
+      required: true,
+    },
+    currentCycleEnd: {
+      type: Date,
+      required: true,
+    },
+    nextResetDate: {
+      type: Date,
+      default: null,
+    },
+    pausedAt: {
+      type: Date,
+      default: null,
+    },
+    pauseUntil: {
+      type: Date,
+      default: null,
+    },
+    pausedDaysTotal: {
+      type: Number,
+      default: 0,
+    },
+    renewalCount: {
+      type: Number,
+      default: 0,
+    },
+    amountPaid: {
+      type: Number,
+      default: 0,
+    },
+    lastPaymentAmount: {
+      type: Number,
+      default: 0,
+    },
+    penaltyPaid: {
+      type: Number,
+      default: 0,
+    },
+    cancelPenaltyAmount: {
+      type: Number,
+      default: 0,
+    },
+    lastPaymentStatus: {
+      type: String,
+      enum: ["PENDING", "SUCCESS", "FAILED", "REFUNDED", null],
+      default: null,
+    },
+    lastPaymentAt: {
+      type: Date,
+      default: null,
+    },
+    lastPaymentOrderCode: {
+      type: Number,
+      default: null,
+    },
+    preferredSchedule: {
+      type: mongoose.Schema.Types.Mixed,
+      default: [],
+    },
+    bookingLocationPreference: {
+      type: String,
+      default: "",
+    },
+    notes: {
+      type: String,
+      default: "",
+    },
+    commitmentSnapshot: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+  },
+  {
+    timestamps: true,
+    collection: "subscriptions",
+  }
+);
+
+subscriptionSchema.index({ customer: 1, status: 1 });
+subscriptionSchema.index({ photographer: 1, status: 1 });
+
+module.exports = mongoose.models.Subscription || mongoose.model("Subscription", subscriptionSchema);
+const mongoose = require("mongoose");
+
+const subscriptionBookingSchema = new mongoose.Schema(
+  {
+    subscription: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subscription",
+      required: true,
+      index: true,
+    },
+    schedule: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SubscriptionSchedule",
+      default: null,
+    },
+    booking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+      required: true,
+      index: true,
+    },
+    cycleIndex: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    sessionNumber: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    status: {
+      type: String,
+      enum: ["DRAFT", "CONFIRMED", "COMPLETED", "CANCELLED", "RESCHEDULED", "NEED_RESCHEDULE"],
+      default: "DRAFT",
+      index: true,
+    },
+    scheduledStart: {
+      type: Date,
+      required: true,
+    },
+    scheduledEnd: {
+      type: Date,
+      required: true,
+    },
+    note: {
+      type: String,
+      default: "",
+    },
+    conflictReason: {
+      type: String,
+      default: "",
+    },
+    rescheduleRequired: {
+      type: Boolean,
+      default: false,
+    },
+    suggestedSlots: {
+      type: [mongoose.Schema.Types.Mixed],
+      default: [],
+    },
+    isAutoGenerated: {
+      type: Boolean,
+      default: true,
+    },
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+  },
+  {
+    timestamps: true,
+    collection: "subscriptionBookings",
+  }
+);
+
+subscriptionBookingSchema.index({ subscription: 1, cycleIndex: 1, sessionNumber: 1 }, { unique: true });
+
+module.exports = mongoose.models.SubscriptionBooking || mongoose.model("SubscriptionBooking", subscriptionBookingSchema);
+const mongoose = require("mongoose");
+
+const subscriptionPackageSchema = new mongoose.Schema(
+  {
+    code: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+      uppercase: true,
+      trim: true,
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+      lowercase: true,
+      trim: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+      default: "",
+    },
+    billingType: {
+      type: String,
+      enum: ["MONTHLY", "PER_SESSION"],
+      default: "MONTHLY",
+    },
+    monthlyPrice: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+    perSessionPrice: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    sessionsPerMonth: {
+      type: Number,
+      required: true,
+      min: 1,
+      default: 1,
+    },
+    commitmentMonths: {
+      type: Number,
+      required: true,
+      min: 1,
+      default: 1,
+    },
+    maxCustomers: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    maxPauseDays: {
+      type: Number,
+      default: 30,
+      min: 0,
+    },
+    autoRenewDefault: {
+      type: Boolean,
+      default: true,
+    },
+    features: {
+      type: [String],
+      default: [],
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    sortOrder: {
+      type: Number,
+      default: 0,
+    },
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+  },
+  {
+    timestamps: true,
+    collection: "subscriptionPackages",
+  }
+);
+
+module.exports = mongoose.models.SubscriptionPackage || mongoose.model("SubscriptionPackage", subscriptionPackageSchema);
+const mongoose = require("mongoose");
+
+const subscriptionPaymentSchema = new mongoose.Schema(
+  {
+    subscription: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subscription",
+      required: true,
+      index: true,
+    },
+    customer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    photographer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Photographer",
+      required: true,
+      index: true,
+    },
+    paymentMethod: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PaymentMethod",
+      default: null,
+    },
+    amount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    currency: {
+      type: String,
+      default: "VND",
+    },
+    billingType: {
+      type: String,
+      enum: ["MONTHLY", "PER_SESSION"],
+      default: "MONTHLY",
+    },
+    paymentKind: {
+      type: String,
+      enum: ["PURCHASE", "RENEWAL", "PENALTY"],
+      required: true,
+      index: true,
+    },
+    status: {
+      type: String,
+      enum: ["PENDING", "SUCCESS", "FAILED", "REFUNDED"],
+      default: "PENDING",
+      index: true,
+    },
+    provider: {
+      type: String,
+      enum: ["PAYOS", "MOCK", "WALLET", "MANUAL"],
+      default: "PAYOS",
+    },
+    orderCode: {
+      type: Number,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
+    paymentLinkId: {
+      type: String,
+      default: null,
+    },
+    paymentLink: {
+      type: String,
+      default: null,
+    },
+    transactionId: {
+      type: String,
+      default: null,
+    },
+    paidAt: {
+      type: Date,
+      default: null,
+    },
+    failureReason: {
+      type: String,
+      default: "",
+    },
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+    payloadSnapshot: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+  },
+  {
+    timestamps: true,
+    collection: "subscriptionPayments",
+  }
+);
+
+module.exports = mongoose.models.SubscriptionPayment || mongoose.model("SubscriptionPayment", subscriptionPaymentSchema);
+const mongoose = require("mongoose");
+
+const subscriptionScheduleSchema = new mongoose.Schema(
+  {
+    subscription: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subscription",
+      required: true,
+      index: true,
+    },
+    cycleIndex: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    cycleStart: {
+      type: Date,
+      required: true,
+    },
+    cycleEnd: {
+      type: Date,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["ACTIVE", "PAUSED", "CANCELLED", "EXPIRED"],
+      default: "ACTIVE",
+    },
+    totalSessions: {
+      type: Number,
+      default: 0,
+    },
+    generatedSessions: {
+      type: Number,
+      default: 0,
+    },
+    conflictSessions: {
+      type: Number,
+      default: 0,
+    },
+    generatedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    generatedBy: {
+      type: String,
+      default: "system",
+    },
+    sessions: {
+      type: [
+        {
+          booking: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Booking",
+          },
+          subscriptionBooking: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "SubscriptionBooking",
+          },
+          sessionNumber: Number,
+          scheduledStart: Date,
+          scheduledEnd: Date,
+          note: {
+            type: String,
+            default: "",
+          },
+          conflictReason: String,
+          rescheduleRequired: {
+            type: Boolean,
+            default: false,
+          },
+          suggestedSlots: {
+            type: [mongoose.Schema.Types.Mixed],
+            default: [],
+          },
+          status: {
+            type: String,
+            enum: ["DRAFT", "CONFIRMED", "COMPLETED", "CANCELLED", "RESCHEDULED", "NEED_RESCHEDULE"],
+            default: "DRAFT",
+          },
+        },
+      ],
+      default: [],
+    },
+  },
+  {
+    timestamps: true,
+    collection: "subscriptionSchedules",
+  }
+);
+
+subscriptionScheduleSchema.index({ subscription: 1, cycleIndex: 1 }, { unique: true });
+
+module.exports = mongoose.models.SubscriptionSchedule || mongoose.model("SubscriptionSchedule", subscriptionScheduleSchema);
