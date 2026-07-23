@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { X, Camera, Users, Clock, FileText, Loader2, Info, Eye, Percent, BadgeCheck } from "lucide-react";
+import { X, Camera, Users, Clock, FileText, Loader2, Info, Eye, Percent, BadgeCheck, Search } from "lucide-react";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { groupBookingService } from "../../services/groupBookingService";
@@ -30,6 +30,7 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [previewPackage, setPreviewPackage] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Tính ngày mai làm mặc định cho shootDate
   const getTomorrowString = () => {
@@ -78,6 +79,19 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
     };
     fetchPackages();
   }, []);
+
+  const filteredPackages = packages.filter((pkg) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const title = (pkg.title || "").toLowerCase();
+    const desc = (pkg.description || "").toLowerCase();
+    const photographerName = (
+      pkg.photographer?.displayName ||
+      pkg.photographer?.user?.fullName ||
+      ""
+    ).toLowerCase();
+    return title.includes(q) || desc.includes(q) || photographerName.includes(q);
+  });
 
   const handleSubmit = async () => {
     if (!selectedPackage) return;
@@ -179,20 +193,61 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
                 Chọn Concept / Gói chụp ảnh <span className="text-rose-500">*</span>
               </label>
 
+              {/* Thanh tìm kiếm gói chụp */}
+              <div className="relative mb-3.5">
+                <Search size={16} className={`absolute left-3.5 top-1/2 -translate-y-1/2 ${isDark ? "text-slate-400" : "text-slate-500"}`} />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm gói chụp theo tên, mô tả hoặc nhiếp ảnh gia..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`w-full rounded-2xl pl-10 pr-9 py-2.5 outline-none border transition-all focus:border-orange-500 text-sm ${
+                    isDark
+                      ? "bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
+                      : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400"
+                  }`}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-slate-500/20 transition-all ${
+                      isDark ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-800"
+                    }`}
+                    title="Xóa từ khóa"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
               {packagesLoading ? (
                 <div className="flex items-center justify-center py-10">
                   <Loader2 size={24} className="animate-spin text-orange-400" />
                   <span className="ml-3 text-slate-400 text-sm">Đang tải danh sách gói...</span>
                 </div>
-              ) : packages.length === 0 ? (
+              ) : filteredPackages.length === 0 ? (
                 <div className={`text-center py-8 rounded-2xl border ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-slate-50"
                   }`}>
                   <Camera size={32} className="mx-auto text-slate-500 mb-2" />
-                  <p className="text-slate-500 text-sm">Không tìm thấy gói dịch vụ nào</p>
+                  <p className="text-slate-500 text-sm">
+                    {searchQuery.trim()
+                      ? `Không tìm thấy gói dịch vụ phù hợp với từ khóa "${searchQuery}"`
+                      : "Không tìm thấy gói dịch vụ nào"}
+                  </p>
+                  {searchQuery.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="mt-3 px-3 py-1.5 text-xs font-bold text-orange-400 hover:underline"
+                    >
+                      Xóa tìm kiếm
+                    </button>
+                  )}
                 </div>
               ) : (
-                <div className="grid gap-3 max-h-[400px] overflow-y-auto pr-1">
-                  {packages.map((pkg) => (
+                <div className="grid gap-3 max-h-[380px] overflow-y-auto pr-1">
+                  {filteredPackages.map((pkg) => (
                     <div
                       key={pkg._id}
                       onClick={() => setSelectedPackage(pkg)}
