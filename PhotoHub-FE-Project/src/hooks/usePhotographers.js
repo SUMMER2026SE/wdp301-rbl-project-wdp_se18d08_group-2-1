@@ -1,7 +1,7 @@
 // src/hooks/usePhotographers.js
 import { useState, useCallback } from "react";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3000/api";
+const API_BASE_URL = process.env.REACT_APP_API_URL || "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api";
 
 export const usePhotographers = () => {
   const [photographers, setPhotographers] = useState([]);

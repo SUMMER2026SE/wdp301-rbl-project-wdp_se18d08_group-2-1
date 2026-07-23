@@ -145,7 +145,7 @@ function InviteModal({ isDark, groupCode, inviteData, onClose }) {
       navigator.clipboard.writeText(inviteUrl).then(() => {
         setCopiedField("link");
         setTimeout(() => setCopiedField(null), 2000);
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     const urls = {
@@ -291,7 +291,7 @@ export default function GroupDetailPage({ theme = "dark", language = "vi" }) {
   useEffect(() => {
     if (!groupId) return;
 
-    const socket = io("http://localhost:3000");
+    const socket = io("https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com");
 
     socket.on("connect", () => {
       console.log(`[Socket] Connected to group room: group:${groupId}`);
@@ -944,11 +944,10 @@ export default function GroupDetailPage({ theme = "dark", language = "vi" }) {
               <button
                 onClick={handleInvite}
                 disabled={actionLoading || paidCount >= maxMembers}
-                className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                  isDark
+                className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${isDark
                     ? "border-white/10 text-white hover:bg-white/[0.06]"
                     : "border-slate-200 text-slate-700 hover:bg-slate-50"
-                }`}
+                  }`}
               >
                 {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />}
                 Mời bạn bè
@@ -959,11 +958,10 @@ export default function GroupDetailPage({ theme = "dark", language = "vi" }) {
                 <button
                   onClick={handleToggleLock}
                   disabled={actionLoading}
-                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl border text-sm font-bold transition-all disabled:opacity-50 ${
-                    group.isLocked
+                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl border text-sm font-bold transition-all disabled:opacity-50 ${group.isLocked
                       ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
                       : "border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
-                  }`}
+                    }`}
                 >
                   {group.isLocked ? <Unlock size={16} /> : <Lock size={16} />}
                   {group.isLocked ? "Mở khóa đăng ký" : "Khóa đăng ký nhóm"}

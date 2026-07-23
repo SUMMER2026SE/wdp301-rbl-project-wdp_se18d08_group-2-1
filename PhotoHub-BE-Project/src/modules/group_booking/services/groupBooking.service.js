@@ -17,7 +17,7 @@ const { getIO } = require("../../../socket");
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 const DEFAULT_FRONTEND_URL =
-  process.env.FRONTEND_URL || "http://localhost:3000";
+  process.env.FRONTEND_URL || "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com";
 
 const payos = new PayOS({
   clientId: process.env.PAYOS_CLIENT_ID,
@@ -679,7 +679,7 @@ class GroupBookingService {
         paymentStatus: MEMBER_PAYMENT_STATUS.REFUNDED,
         refundedAt: new Date(),
         refundedAmount: refundAmount,
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     // Tính lại giá giảm sau khi member rời
@@ -981,7 +981,7 @@ class GroupBookingService {
         const Commission = require("../../admin/models/Commission");
         const SystemSetting = require("../../admin/models/SystemSetting");
         const COMMISSION_RATE = Number(process.env.PHOTOGRAPHER_COMMISSION_RATE || 0.1);
-        
+
         const rateSetting = await SystemSetting.findOne({ key: "commissionRate" });
         const currentRate = rateSetting ? rateSetting.value : COMMISSION_RATE;
         const finalCommission = Math.round(newBooking.price * currentRate);
@@ -1082,8 +1082,8 @@ class GroupBookingService {
     const discountText =
       group.discountPercent > 0
         ? `Giảm giá: <strong>${group.discountPercent}%</strong> — Tiết kiệm ${(
-            group.basePrice - group.currentPrice
-          ).toLocaleString("vi-VN")}đ/người`
+          group.basePrice - group.currentPrice
+        ).toLocaleString("vi-VN")}đ/người`
         : "";
 
     for (const member of members) {
@@ -1650,9 +1650,8 @@ class GroupBookingService {
         groupId,
         groupCode: group.groupCode,
         refundAmount,
-        message: `Bạn đã bị trục xuất khỏi nhóm ${group.groupCode} bởi Trưởng nhóm. ${
-          wasPaid ? `${refundAmount.toLocaleString("vi-VN")}đ tiền cọc đã được hoàn vào ví của bạn.` : ""
-        }`,
+        message: `Bạn đã bị trục xuất khỏi nhóm ${group.groupCode} bởi Trưởng nhóm. ${wasPaid ? `${refundAmount.toLocaleString("vi-VN")}đ tiền cọc đã được hoàn vào ví của bạn.` : ""
+          }`,
       });
 
       // Emit socket cập nhật nhóm realtime cho những người còn lại

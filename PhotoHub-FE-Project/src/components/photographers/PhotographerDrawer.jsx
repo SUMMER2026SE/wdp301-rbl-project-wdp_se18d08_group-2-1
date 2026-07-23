@@ -38,7 +38,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
   const [activeTab, setActiveTab] = useState("photos");
   const [showMoreBio, setShowMoreBio] = useState(false);
   const [lightboxImg, setLightboxImg] = useState(null);
-  const navigate = useNavigate();  const [albums, setAlbums] = useState([]);
+  const navigate = useNavigate(); const [albums, setAlbums] = useState([]);
   const [selectedAlbumImages, setSelectedAlbumImages] = useState(null); // null | { album, images }
 
 
@@ -167,7 +167,7 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
   const getAvatarUrl = (avatar) => {
     if (!avatar) return null;
     if (avatar.startsWith("http://") || avatar.startsWith("https://")) return avatar;
-    return `http://localhost:3000${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
+    return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
   };
 
   const handleStartChat = async () => {
@@ -399,8 +399,8 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                     }}
                     disabled={favLoading}
                     className={`flex flex-1 items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-bold transition-all duration-200 ${isFavorited
-                        ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-200"
-                        : "border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:border-orange-400 hover:text-orange-600 dark:hover:text-orange-200"
+                      ? "border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-200"
+                      : "border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:border-orange-400 hover:text-orange-600 dark:hover:text-orange-200"
                       } ${favLoading ? "animate-pulse cursor-not-allowed opacity-70" : ""}`}
                   >
                     <Heart
@@ -428,8 +428,8 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                       navigate(`/booking/${photographerId}`);
                     }}
                     className={`w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-white transition-all duration-200 shadow-md active:scale-[0.98] ${isAvailable
-                        ? "bg-orange-500 hover:bg-orange-600 shadow-orange-400/30"
-                        : "bg-slate-400 cursor-not-allowed"
+                      ? "bg-orange-500 hover:bg-orange-600 shadow-orange-400/30"
+                      : "bg-slate-400 cursor-not-allowed"
                       }`}
                     disabled={!isAvailable}
                   >
@@ -440,8 +440,8 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
 
                 {/* Availability badge */}
                 <div className={`mb-5 flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold w-fit ${isAvailable
-                    ? "bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-200 border border-orange-200 dark:border-orange-500/25"
-                    : "bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 border border-slate-200 dark:border-zinc-700"
+                  ? "bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-200 border border-orange-200 dark:border-orange-500/25"
+                  : "bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 border border-slate-200 dark:border-zinc-700"
                   }`}>
                   <span className={`h-2 w-2 rounded-full ${isAvailable ? "bg-orange-500 animate-pulse" : "bg-slate-400"}`} />
                   {isAvailable ? t.available : t.unavailable}
@@ -551,8 +551,8 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                 <button
                   onClick={() => { setActiveTab("photos"); setSelectedAlbumImages(null); }}
                   className={`flex items-center gap-1.5 py-3 mr-6 text-sm font-bold border-b-2 transition-all ${activeTab === "photos"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-slate-400 dark:text-zinc-500 hover:text-slate-600"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-slate-400 dark:text-zinc-500 hover:text-slate-600"
                     }`}
                 >
                   <Camera size={14} />
@@ -561,8 +561,8 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                 <button
                   onClick={() => setActiveTab("reviews")}
                   className={`flex items-center gap-1.5 py-3 text-sm font-bold border-b-2 transition-all ${activeTab === "reviews"
-                      ? "border-orange-500 text-orange-500"
-                      : "border-transparent text-slate-400 dark:text-zinc-500 hover:text-slate-600"
+                    ? "border-orange-500 text-orange-500"
+                    : "border-transparent text-slate-400 dark:text-zinc-500 hover:text-slate-600"
                     }`}
                 >
                   <Star size={14} />
@@ -591,8 +591,8 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                               <div key={img._id || idx} onClick={() => setLightboxImg(getAvatarUrl(img.image_url) || img.image_url)}
                                 className="group relative aspect-square overflow-hidden rounded-xl bg-slate-100 dark:bg-zinc-800 cursor-pointer">
                                 <img
-                                  src={img.image_url?.startsWith("http") ? img.image_url : `http://localhost:3000${img.image_url}`}
-                                  alt={img.caption || `Photo ${idx+1}`}
+                                  src={img.image_url?.startsWith("http") ? img.image_url : `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${img.image_url}`}
+                                  alt={img.caption || `Photo ${idx + 1}`}
                                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <Eye size={18} className="text-white" />
@@ -613,13 +613,13 @@ const PhotographerDrawer = ({ photographerId, isOpen, onClose, language = "en" }
                               try {
                                 const res = await aiRecommendService.getAlbumDetail(album._id);
                                 if (res.success) setSelectedAlbumImages(res.data);
-                              } catch(e) { console.error(e); }
+                              } catch (e) { console.error(e); }
                             }}
                             className="group cursor-pointer rounded-xl overflow-hidden border border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 hover:shadow-md transition-all">
                             <div className="relative aspect-square overflow-hidden bg-slate-200 dark:bg-zinc-800">
                               {album.coverImageUrl ? (
                                 <img
-                                  src={album.coverImageUrl?.startsWith("http") ? album.coverImageUrl : `http://localhost:3000${album.coverImageUrl}`}
+                                  src={album.coverImageUrl?.startsWith("http") ? album.coverImageUrl : `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${album.coverImageUrl}`}
                                   alt={album.title}
                                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
                               ) : (

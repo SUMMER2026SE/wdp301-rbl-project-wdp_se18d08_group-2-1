@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:3000/api/photographers";
-const MARKETPLACE_BASE_URL = "http://localhost:3000/api/photographer";
+const BASE_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api/photographers";
+const MARKETPLACE_BASE_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api/photographer";
 
 export const photographerService = {
 

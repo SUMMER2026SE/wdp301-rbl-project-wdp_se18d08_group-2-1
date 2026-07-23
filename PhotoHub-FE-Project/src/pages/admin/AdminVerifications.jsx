@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { adminService } from "../../services/adminService";
 import { Check, X, FileText, Link as LinkIcon, Eye } from "lucide-react";
 import Swal from "sweetalert2";
-const API_URL = "http://localhost:3000";
+const API_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com";
 
 export default function AdminVerifications() {
   const [verifications, setVerifications] = useState([]);

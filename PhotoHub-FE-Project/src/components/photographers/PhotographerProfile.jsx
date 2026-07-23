@@ -185,38 +185,38 @@ const PhotographerProfile = ({ language = "en" }) => {
   const getFullUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    return `http://localhost:3000${url}`;
+    return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${url}`;
   };
 
   useEffect(() => {
-  if (id) {
-    const loadPhotographer = async () => {
-      const data = await getPhotographerDetail(id);
-      setPhotographer(data);
+    if (id) {
+      const loadPhotographer = async () => {
+        const data = await getPhotographerDetail(id);
+        setPhotographer(data);
 
-      // Tải danh sách Albums
-      try {
-        const albumRes = await aiRecommendService.getAlbumsByPhotographer(id);
-        if (albumRes.success) {
-          setAlbums(albumRes.data?.albums || []);
+        // Tải danh sách Albums
+        try {
+          const albumRes = await aiRecommendService.getAlbumsByPhotographer(id);
+          if (albumRes.success) {
+            setAlbums(albumRes.data?.albums || []);
+          }
+        } catch (err) {
+          console.error("Lỗi khi tải albums:", err);
         }
-      } catch (err) {
-        console.error("Lỗi khi tải albums:", err);
-      }
 
-      // Tải danh sách Reviews
-      try {
-        const reviewRes = await bookingService.getPhotographerReviews(id);
-        if (reviewRes.success && reviewRes.data) {
-          setReviews(reviewRes.data.reviews || []);
+        // Tải danh sách Reviews
+        try {
+          const reviewRes = await bookingService.getPhotographerReviews(id);
+          if (reviewRes.success && reviewRes.data) {
+            setReviews(reviewRes.data.reviews || []);
+          }
+        } catch (err) {
+          console.error("Lỗi khi tải reviews:", err);
         }
-      } catch (err) {
-        console.error("Lỗi khi tải reviews:", err);
-      }
-    };
-    loadPhotographer();
-  }
-}, [id, getPhotographerDetail]);
+      };
+      loadPhotographer();
+    }
+  }, [id, getPhotographerDetail]);
 
   useEffect(() => {
     let mounted = true;
@@ -310,7 +310,7 @@ const PhotographerProfile = ({ language = "en" }) => {
     if (user.avatar.startsWith("http://") || user.avatar.startsWith("https://")) {
       return user.avatar;
     }
-    const BACKEND_URL = "http://localhost:3000";
+    const BACKEND_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com";
     const cleanPath = user.avatar.startsWith("/") ? user.avatar : `/${user.avatar}`;
     return `${BACKEND_URL}${cleanPath}`;
   };
@@ -783,7 +783,7 @@ const PhotographerProfile = ({ language = "en" }) => {
             </div>
           )}
 
-          <button 
+          <button
             onClick={() => navigate(`/booking/${id}`)}
             className="w-full rounded-2xl bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 px-6 py-4 font-bold text-white shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 hover:brightness-110 active:scale-[0.98] transition-all duration-300 tracking-wide text-base"
           >
@@ -798,7 +798,7 @@ const PhotographerProfile = ({ language = "en" }) => {
             {language === "vi" ? "Xem gói tháng" : "View monthly plan"}
           </button>
 
-          <button 
+          <button
             onClick={handleStartChat}
             className="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl border-2 border-orange-500 bg-white hover:bg-orange-50 dark:bg-transparent dark:hover:bg-orange-500/10 px-6 py-3.5 font-bold text-orange-500 shadow-md hover:shadow-lg hover:shadow-orange-500/5 active:scale-[0.98] transition-all duration-300 tracking-wide text-base"
           >

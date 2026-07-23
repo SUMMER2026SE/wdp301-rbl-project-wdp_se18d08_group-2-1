@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 import { Send, User, MessageSquare, AlertCircle, Paperclip, X } from "lucide-react";
 import { photographerMarketplaceService } from "../../services/photographerService";
 
-const API_ORIGIN = "http://localhost:3000";
+const API_ORIGIN = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com";
 
 const normalizeId = (value) => String(value?._id || value?.id || value || "");
 
@@ -34,12 +34,12 @@ const getCurrentUserId = () => {
   const tokenPayload = decodeTokenPayload();
   return normalizeId(
     localStorage.getItem("userId") ||
-      storedUser._id ||
-      storedUser.id ||
-      storedUser.userId ||
-      tokenPayload.id ||
-      tokenPayload._id ||
-      tokenPayload.userId
+    storedUser._id ||
+    storedUser.id ||
+    storedUser.userId ||
+    tokenPayload.id ||
+    tokenPayload._id ||
+    tokenPayload.userId
   );
 };
 
@@ -278,13 +278,12 @@ export default function PhotographerChat({ theme = "dark", language = "vi", init
                     type="button"
                     key={conv._id}
                     onClick={() => handleSelectConversation(conv)}
-                    className={`w-full p-2 rounded-xl flex items-center gap-2.5 cursor-pointer transition text-left ${
-                      isSelected
+                    className={`w-full p-2 rounded-xl flex items-center gap-2.5 cursor-pointer transition text-left ${isSelected
                         ? "bg-orange-500 text-white border border-orange-500 shadow-sm shadow-orange-500/20"
                         : isDark
-                        ? "bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] text-slate-100"
-                        : "bg-orange-50/60 border border-orange-100 hover:bg-orange-50 text-slate-900"
-                    }`}
+                          ? "bg-white/[0.02] border border-white/5 hover:bg-white/[0.06] text-slate-100"
+                          : "bg-orange-50/60 border border-orange-100 hover:bg-orange-50 text-slate-900"
+                      }`}
                   >
                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 p-[1.5px] shrink-0">
                       <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden ${isDark ? "bg-slate-950" : "bg-white"}`}>
@@ -347,13 +346,12 @@ export default function PhotographerChat({ theme = "dark", language = "vi", init
                     return (
                       <div key={m._id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
                         <div
-                          className={`max-w-[75%] p-3 rounded-xl text-xs leading-relaxed font-semibold ${
-                            isOwn
+                          className={`max-w-[75%] p-3 rounded-xl text-xs leading-relaxed font-semibold ${isOwn
                               ? "bg-orange-500 text-white rounded-tr-none shadow-sm shadow-orange-500/20"
                               : isDark
-                              ? "bg-white/[0.05] border border-white/8 text-slate-100 rounded-tl-none"
-                              : "bg-orange-50 border border-orange-100 text-slate-900 rounded-tl-none"
-                          }`}
+                                ? "bg-white/[0.05] border border-white/8 text-slate-100 rounded-tl-none"
+                                : "bg-orange-50 border border-orange-100 text-slate-900 rounded-tl-none"
+                            }`}
                         >
                           {m.text && <p>{m.text}</p>}
                           {m.attachments?.length > 0 && (
@@ -401,11 +399,10 @@ export default function PhotographerChat({ theme = "dark", language = "vi", init
                 <select
                   value={messageType}
                   onChange={(e) => setMessageType(e.target.value)}
-                  className={`rounded-xl px-2 py-2 text-xs outline-none border font-bold transition-all ${
-                    isDark
+                  className={`rounded-xl px-2 py-2 text-xs outline-none border font-bold transition-all ${isDark
                       ? "bg-[#09090b] border-white/8 focus:border-orange-500 text-white"
                       : "bg-orange-50/60 border-orange-100 focus:border-orange-500 text-slate-900"
-                  }`}
+                    }`}
                 >
                   <option value="text">Text</option>
                   <option value="image">Image</option>
@@ -419,11 +416,10 @@ export default function PhotographerChat({ theme = "dark", language = "vi", init
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder={t.inputPlaceholder}
-                  className={`flex-1 rounded-xl px-3 py-2 text-xs outline-none border font-medium transition-all ${
-                    isDark
+                  className={`flex-1 rounded-xl px-3 py-2 text-xs outline-none border font-medium transition-all ${isDark
                       ? "bg-[#09090b] border-white/8 focus:border-orange-500 text-white"
                       : "bg-white border-orange-100 focus:border-orange-500 text-slate-900"
-                  }`}
+                    }`}
                 />
                 <button
                   type="submit"

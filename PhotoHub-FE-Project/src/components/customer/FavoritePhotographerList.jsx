@@ -46,7 +46,7 @@ export default function FavoritePhotographerList({ language = "vi", isDark = tru
       if (res.success !== false && Array.isArray(res.data)) {
         setFavorites(res.data);
       }
-    } catch (_) {}
+    } catch (_) { }
     finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ export default function FavoritePhotographerList({ language = "vi", isDark = tru
           prev.filter((fav) => fav.photographer?._id !== photographerId)
         );
       }
-    } catch (_) {}
+    } catch (_) { }
     finally {
       setRemovingId(null);
     }
@@ -76,7 +76,7 @@ export default function FavoritePhotographerList({ language = "vi", isDark = tru
     const avatar = photographer?.user?.avatar;
     if (!avatar) return null;
     if (avatar.startsWith("http://") || avatar.startsWith("https://")) return avatar;
-    return `http://localhost:3000${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
+    return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${avatar.startsWith("/") ? avatar : `/${avatar}`}`;
   };
 
   const cardBg = isDark
@@ -86,9 +86,8 @@ export default function FavoritePhotographerList({ language = "vi", isDark = tru
 
   return (
     <div
-      className={`border rounded-3xl p-8 transition-all ${
-        isDark ? "bg-white/5 border-white/10" : "bg-slate-50/50 border-slate-200/80 shadow-sm"
-      }`}
+      className={`border rounded-3xl p-8 transition-all ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50/50 border-slate-200/80 shadow-sm"
+        }`}
     >
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
@@ -100,9 +99,8 @@ export default function FavoritePhotographerList({ language = "vi", isDark = tru
           <p className={`text-sm mt-0.5 ${textMuted}`}>{t.subtitle}</p>
         </div>
         <span
-          className={`ml-auto text-sm font-bold px-3 py-1 rounded-full ${
-            isDark ? "bg-white/10 text-white" : "bg-slate-200 text-slate-700"
-          }`}
+          className={`ml-auto text-sm font-bold px-3 py-1 rounded-full ${isDark ? "bg-white/10 text-white" : "bg-slate-200 text-slate-700"
+            }`}
         >
           {favorites.length}
         </span>
@@ -114,18 +112,16 @@ export default function FavoritePhotographerList({ language = "vi", isDark = tru
           {[1, 2, 3].map((n) => (
             <div
               key={n}
-              className={`h-56 rounded-2xl animate-pulse ${
-                isDark ? "bg-white/5" : "bg-slate-200"
-              }`}
+              className={`h-56 rounded-2xl animate-pulse ${isDark ? "bg-white/5" : "bg-slate-200"
+                }`}
             />
           ))}
         </div>
       ) : favorites.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-4">
           <div
-            className={`flex h-20 w-20 items-center justify-center rounded-3xl ${
-              isDark ? "bg-white/5" : "bg-slate-100"
-            }`}
+            className={`flex h-20 w-20 items-center justify-center rounded-3xl ${isDark ? "bg-white/5" : "bg-slate-100"
+              }`}
           >
             <Heart size={36} className="text-rose-300" />
           </div>

@@ -32,6 +32,8 @@ app.use(express.urlencoded({ limit: "300mb", extended: true }));
 
 app.use(cors());
 
+app.set("trust proxy", 1);
+
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },

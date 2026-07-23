@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = "http://localhost:3000/api";
+const API_BASE = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api";
 
 const getHeaders = () => ({
   headers: {

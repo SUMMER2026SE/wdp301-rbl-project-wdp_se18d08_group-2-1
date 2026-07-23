@@ -29,7 +29,7 @@ Backend đóng vai trò cung cấp REST APIs, thiết lập kết nối WebSocke
 *   **Xuất tài liệu**: `pdfkit` (`^0.13.0`) để sinh hóa đơn giao dịch dạng PDF và `exceljs` (`^4.4.0`) xuất báo cáo tài chính Excel.
 
 ### 1.2. Mạng và Cổng Kết Nối (Port Mapping)
-*   **Cổng dịch vụ Backend**: Mặc định chạy tại port `3000` (Ví dụ: `http://localhost:3000`).
+*   **Cổng dịch vụ Backend**: Mặc định chạy tại port `3000` (Ví dụ: `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com`).
 
 ---
 
@@ -81,6 +81,6 @@ MAIL_FROM_NAME="PHOTOHUB System"
 # Tích hợp Google OAuth2
 GOOGLE_CLIENT_ID=449539395574-7hs2h9nj9u0fkfhaift6se52nnn6d53p.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=...
-GOOGLE_CALLBACK_URL=http://localhost:3000/api/auth/google/callback
+GOOGLE_CALLBACK_URL=https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api/auth/google/callback
 ```
 *Lưu ý bảo mật:* Cần loại bỏ các tệp tin chứa thông tin nhạy cảm này ra khỏi lịch sử Git trước khi đưa dự án lên môi trường Production thực tế.

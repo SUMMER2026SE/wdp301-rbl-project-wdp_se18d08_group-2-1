@@ -124,7 +124,7 @@ export default function PhotographerDashboard({
             infoService: "Cấu hình dịch vụ & Studio",
             infoPersonal: "Thông tin liên hệ cá nhân",
             stylesLabel: "Phong cách chuyên biệt (Cách nhau bằng dấu phẩy)",
-            categoriesLabel:"Danh mục",
+            categoriesLabel: "Danh mục",
             socialLabel: "Mạng xã hội tích hợp",
             successTitle: "Thành công",
             errorTitle: "Thất bại",
@@ -187,7 +187,7 @@ export default function PhotographerDashboard({
             infoService: "Service & Studio Configurations",
             infoPersonal: "Personal Identity Details",
             stylesLabel: "Specialized Styles (Separated by commas)",
-            categoriesLabel:"Categories",
+            categoriesLabel: "Categories",
             socialLabel: "Integrated Social Links",
             successTitle: "Success",
             errorTitle: "Error",
@@ -273,7 +273,7 @@ export default function PhotographerDashboard({
                             }
                     });
 
-                    const BACKEND_URL = "http://localhost:3000";
+                    const BACKEND_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com";
 
                     if (data.verification?.documentFrontUrl) {
                         setFrontPreview(
@@ -347,7 +347,7 @@ export default function PhotographerDashboard({
 
         // Nếu là đường dẫn tương đối từ server, nối thêm BACKEND_URL
         // Đảm bảo xử lý chuẩn dấu gạch chéo đầu chuỗi
-        const BACKEND_URL = "http://localhost:3000"; // <--- Đổi thành URL backend thực tế của bạn
+        const BACKEND_URL = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com"; // <--- Đổi thành URL backend thực tế của bạn
         const cleanPath = rawAvatar.startsWith("/") ? rawAvatar : `/${rawAvatar}`;
 
         return `${BACKEND_URL}${cleanPath}`;
@@ -1130,8 +1130,8 @@ export default function PhotographerDashboard({
 
                                     <div className="group">
                                         <label className={labelClass}>{t.hourlyRate}</label>
-                                         <div className="relative mt-1.5">
-                                             <span className={`${iconClass} font-bold text-sm`} style={{ left: '16px' }}>đ</span>
+                                        <div className="relative mt-1.5">
+                                            <span className={`${iconClass} font-bold text-sm`} style={{ left: '16px' }}>đ</span>
                                             <input type="number" name="hourlyRate" value={photographerData.hourlyRate || 0} onChange={handleChange} className={inputClass} />
                                         </div>
                                     </div>

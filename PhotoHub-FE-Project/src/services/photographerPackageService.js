@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API = "http://localhost:3000/api";
-const BACKEND_ORIGIN = "http://localhost:3000";
+const API = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com/api";
+const BACKEND_ORIGIN = "https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com";
 
 const getHeaders = () => ({
   headers: {

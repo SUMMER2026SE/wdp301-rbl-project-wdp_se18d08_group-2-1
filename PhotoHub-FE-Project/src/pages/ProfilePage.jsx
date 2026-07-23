@@ -405,7 +405,7 @@ export default function ProfilePage({
                                     user?.avatar
                                         ? user.avatar.startsWith("http")
                                             ? user.avatar
-                                            : `http://localhost:3000${user.avatar}`
+                                            : `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${user.avatar}`
                                         : "https://i.pravatar.cc/300"
                                 }
                                 name={user?.fullName}
@@ -453,9 +453,8 @@ export default function ProfilePage({
                             </div>
 
                             {user?.role === "customer" && (
-                                <div className={`flex items-center justify-between p-3 rounded-xl border border-orange-500/20 transition ${
-                                    isDark ? "bg-orange-500/5 text-orange-400" : "bg-orange-50/50 text-orange-600"
-                                }`}>
+                                <div className={`flex items-center justify-between p-3 rounded-xl border border-orange-500/20 transition ${isDark ? "bg-orange-500/5 text-orange-400" : "bg-orange-50/50 text-orange-600"
+                                    }`}>
                                     <div className="flex items-center gap-3">
                                         <Wallet size={18} className="text-orange-500" />
                                         <span className="text-sm font-bold">Ví PhotoHub</span>
@@ -467,7 +466,7 @@ export default function ProfilePage({
                             )}
                         </div>
 
-                        
+
                     </div>
                 </div>
 
@@ -478,145 +477,145 @@ export default function ProfilePage({
                             {/* PROFILE FORM */}
                             <div className={`border rounded-3xl p-8 transition-all ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50/50 border-slate-200/80 shadow-sm"
                                 }`}>
-                        <h2 className="text-2xl font-bold mb-6 transition-colors">
-                            {t.personalInfo}
-                        </h2>
+                                <h2 className="text-2xl font-bold mb-6 transition-colors">
+                                    {t.personalInfo}
+                                </h2>
 
-                        <div className="grid md:grid-cols-2 gap-5">
-                            {/* Full Name */}
-                            <div>
-                                <label className={labelClass}>{t.fullName}</label>
-                                <div className="relative mt-2">
-                                    <User className={iconClass} size={18} />
-                                    <input
-                                        type="text"
-                                        name="fullName"
-                                        value={formData.fullName}
-                                        onChange={handleChange}
-                                        className={inputClass}
-                                    />
+                                <div className="grid md:grid-cols-2 gap-5">
+                                    {/* Full Name */}
+                                    <div>
+                                        <label className={labelClass}>{t.fullName}</label>
+                                        <div className="relative mt-2">
+                                            <User className={iconClass} size={18} />
+                                            <input
+                                                type="text"
+                                                name="fullName"
+                                                value={formData.fullName}
+                                                onChange={handleChange}
+                                                className={inputClass}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Phone */}
+                                    <div>
+                                        <label className={labelClass}>{t.phone}</label>
+                                        <div className="relative mt-2">
+                                            <Phone className={iconClass} size={18} />
+                                            <input
+                                                type="text"
+                                                name="phoneNumber"
+                                                value={formData.phoneNumber}
+                                                onChange={handleChange}
+                                                className={inputClass}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Gender */}
+                                    <div>
+                                        <label className={labelClass}>{t.gender}</label>
+                                        <div className="relative mt-2">
+                                            <User className={iconClass} size={18} />
+                                            <select
+                                                name="gender"
+                                                value={formData.gender}
+                                                onChange={handleChange}
+                                                className={selectClass}
+                                            >
+                                                <option value="">{t.selectGender}</option>
+                                                <option value="male">{t.male}</option>
+                                                <option value="female">{t.female}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* DOB */}
+                                    <div>
+                                        <label className={labelClass}>{t.dob}</label>
+                                        <div className="relative mt-2">
+                                            <Calendar className={iconClass} size={18} />
+                                            <input
+                                                type="date"
+                                                name="dateOfBirth"
+                                                value={formData.dateOfBirth}
+                                                onChange={handleChange}
+                                                className={inputClass}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Address */}
+                                    <div className="md:col-span-2">
+                                        <label className={labelClass}>{t.address}</label>
+                                        <div className="relative mt-2">
+                                            <MapPin className={iconClass} size={18} />
+                                            <input
+                                                type="text"
+                                                name="address"
+                                                value={formData.address}
+                                                onChange={handleChange}
+                                                className={inputClass}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <button
+                                    onClick={handleUpdateProfile}
+                                    className="mt-6 flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white px-6 py-3 rounded-2xl font-semibold transition shadow-md shadow-orange-500/20"
+                                >
+                                    <Save size={18} />
+                                    {t.save}
+                                </button>
                             </div>
 
-                            {/* Phone */}
-                            <div>
-                                <label className={labelClass}>{t.phone}</label>
-                                <div className="relative mt-2">
-                                    <Phone className={iconClass} size={18} />
-                                    <input
-                                        type="text"
-                                        name="phoneNumber"
-                                        value={formData.phoneNumber}
-                                        onChange={handleChange}
-                                        className={inputClass}
-                                    />
+                            {/* PASSWORD FORM */}
+                            <div className={`border rounded-3xl p-8 transition-all ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50/50 border-slate-200/80 shadow-sm"
+                                }`}>
+                                <h2 className="text-2xl font-bold mb-6 transition-colors">
+                                    {t.changePassword}
+                                </h2>
+
+                                <div className="space-y-5">
+                                    {/* Current Password */}
+                                    <div>
+                                        <label className={labelClass}>{t.currentPassword}</label>
+                                        <div className="relative mt-2">
+                                            <Lock className={iconClass} size={18} />
+                                            <input
+                                                type="password"
+                                                name="currentPassword"
+                                                value={passwordData.currentPassword}
+                                                onChange={handlePasswordChange}
+                                                className={inputClass}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* New Password */}
+                                    <div>
+                                        <label className={labelClass}>{t.newPassword}</label>
+                                        <div className="relative mt-2">
+                                            <Lock className={iconClass} size={18} />
+                                            <input
+                                                type="password"
+                                                name="newPassword"
+                                                value={passwordData.newPassword}
+                                                onChange={handlePasswordChange}
+                                                className={inputClass}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <button
+                                    onClick={handleChangePassword}
+                                    className="mt-6 bg-purple-500 hover:bg-purple-400 text-white px-6 py-3 rounded-2xl font-semibold transition shadow-md shadow-purple-500/20"
+                                >
+                                    {t.updatePassword}
+                                </button>
                             </div>
-
-                            {/* Gender */}
-                            <div>
-                                <label className={labelClass}>{t.gender}</label>
-                                <div className="relative mt-2">
-                                    <User className={iconClass} size={18} />
-                                    <select
-                                        name="gender"
-                                        value={formData.gender}
-                                        onChange={handleChange}
-                                        className={selectClass}
-                                    >
-                                        <option value="">{t.selectGender}</option>
-                                        <option value="male">{t.male}</option>
-                                        <option value="female">{t.female}</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* DOB */}
-                            <div>
-                                <label className={labelClass}>{t.dob}</label>
-                                <div className="relative mt-2">
-                                    <Calendar className={iconClass} size={18} />
-                                    <input
-                                        type="date"
-                                        name="dateOfBirth"
-                                        value={formData.dateOfBirth}
-                                        onChange={handleChange}
-                                        className={inputClass}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Address */}
-                            <div className="md:col-span-2">
-                                <label className={labelClass}>{t.address}</label>
-                                <div className="relative mt-2">
-                                    <MapPin className={iconClass} size={18} />
-                                    <input
-                                        type="text"
-                                        name="address"
-                                        value={formData.address}
-                                        onChange={handleChange}
-                                        className={inputClass}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={handleUpdateProfile}
-                            className="mt-6 flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white px-6 py-3 rounded-2xl font-semibold transition shadow-md shadow-orange-500/20"
-                        >
-                            <Save size={18} />
-                            {t.save}
-                        </button>
-                    </div>
-
-                    {/* PASSWORD FORM */}
-                    <div className={`border rounded-3xl p-8 transition-all ${isDark ? "bg-white/5 border-white/10" : "bg-slate-50/50 border-slate-200/80 shadow-sm"
-                        }`}>
-                        <h2 className="text-2xl font-bold mb-6 transition-colors">
-                            {t.changePassword}
-                        </h2>
-
-                        <div className="space-y-5">
-                            {/* Current Password */}
-                            <div>
-                                <label className={labelClass}>{t.currentPassword}</label>
-                                <div className="relative mt-2">
-                                    <Lock className={iconClass} size={18} />
-                                    <input
-                                        type="password"
-                                        name="currentPassword"
-                                        value={passwordData.currentPassword}
-                                        onChange={handlePasswordChange}
-                                        className={inputClass}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* New Password */}
-                            <div>
-                                <label className={labelClass}>{t.newPassword}</label>
-                                <div className="relative mt-2">
-                                    <Lock className={iconClass} size={18} />
-                                    <input
-                                        type="password"
-                                        name="newPassword"
-                                        value={passwordData.newPassword}
-                                        onChange={handlePasswordChange}
-                                        className={inputClass}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={handleChangePassword}
-                            className="mt-6 bg-purple-500 hover:bg-purple-400 text-white px-6 py-3 rounded-2xl font-semibold transition shadow-md shadow-purple-500/20"
-                        >
-                            {t.updatePassword}
-                        </button>
-                    </div>
                         </>
                     ) : activeTab === "bookings" ? (
                         <div className="animate-fadeIn space-y-6">

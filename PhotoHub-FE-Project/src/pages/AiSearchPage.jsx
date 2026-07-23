@@ -40,7 +40,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
         "Xin chào! Tôi là **Trợ lý AI của PhotoHub**. Hãy gửi cho tôi một hình ảnh tham chiếu về phong cách chụp mà bạn mong muốn, và (tùy chọn) đặt ngân sách tối đa. Tôi sẽ quét hàng ngàn portfolio của các nhiếp ảnh gia để tìm ra người phù hợp nhất với bạn!",
       imagePrompt: "Tải lên phong cách của bạn",
       budgetPrompt: "Ngân sách tối đa (VNĐ)",
-    budgetPlaceholder: "Không giới hạn",
+      budgetPlaceholder: "Không giới hạn",
       limitLabel: "Số kết quả",
       btnSend: "Tìm kiếm",
       btnSending: "Đang phân tích phong cách...",
@@ -222,14 +222,13 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
   const getFullUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    return `http://localhost:3000${url}`;
+    return `https://wdp301-rbl-project-wdp-se18d08-group-2-1.onrender.com${url}`;
   };
 
   return (
     <div
-      className={`min-h-screen pt-28 pb-6 px-4 flex flex-col justify-between transition-colors duration-300 ${
-        isDark ? "bg-[#020617] text-white" : "bg-slate-50 text-slate-900"
-      }`}
+      className={`min-h-screen pt-28 pb-6 px-4 flex flex-col justify-between transition-colors duration-300 ${isDark ? "bg-[#020617] text-white" : "bg-slate-50 text-slate-900"
+        }`}
     >
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/5 dark:bg-orange-500/[0.02] rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-purple-500/5 dark:bg-purple-500/[0.02] rounded-full blur-3xl pointer-events-none" />
@@ -263,10 +262,9 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
               {/* Avatar Icon */}
               <div
                 className={`h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center border transition-all
-                  ${
-                    msg.sender === "user"
-                      ? "bg-slate-100 dark:bg-zinc-900 text-slate-600 dark:text-zinc-300 border-slate-200 dark:border-zinc-800"
-                      : "bg-orange-500/10 text-orange-400 border-orange-500/20"
+                  ${msg.sender === "user"
+                    ? "bg-slate-100 dark:bg-zinc-900 text-slate-600 dark:text-zinc-300 border-slate-200 dark:border-zinc-800"
+                    : "bg-orange-500/10 text-orange-400 border-orange-500/20"
                   }
                 `}
               >
@@ -277,10 +275,9 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
               <div className="space-y-3 max-w-[85%]">
                 <div
                   className={`rounded-3xl p-4 text-sm font-medium leading-relaxed shadow-md border
-                    ${
-                      msg.sender === "user"
-                        ? "bg-gradient-to-r from-orange-500 to-amber-600 text-white border-transparent"
-                        : "bg-white dark:bg-zinc-900 border-slate-100 dark:border-zinc-800 text-slate-800 dark:text-zinc-200"
+                    ${msg.sender === "user"
+                      ? "bg-gradient-to-r from-orange-500 to-amber-600 text-white border-transparent"
+                      : "bg-white dark:bg-zinc-900 border-slate-100 dark:border-zinc-800 text-slate-800 dark:text-zinc-200"
                     }
                   `}
                 >
@@ -401,10 +398,9 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
               <div
                 onClick={triggerFileSelect}
                 className={`border border-dashed rounded-2xl px-4 py-3 flex items-center gap-3 cursor-pointer transition-all duration-300
-                  ${
-                    previewUrl
-                      ? "border-orange-500 bg-orange-500/[0.02] text-orange-400"
-                      : "border-slate-200 dark:border-zinc-800 hover:border-orange-500 hover:bg-slate-50 dark:hover:bg-zinc-900/40 text-slate-500"
+                  ${previewUrl
+                    ? "border-orange-500 bg-orange-500/[0.02] text-orange-400"
+                    : "border-slate-200 dark:border-zinc-800 hover:border-orange-500 hover:bg-slate-50 dark:hover:bg-zinc-900/40 text-slate-500"
                   }
                 `}
               >
@@ -421,7 +417,7 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
               </div>
             </div>
 
-          {/* Budget Input */}
+            {/* Budget Input */}
             <div className="w-full sm:w-44 relative">
               <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
@@ -443,11 +439,10 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
                     key={n}
                     type="button"
                     onClick={() => setLimit(n)}
-                    className={`px-3 py-2.5 text-xs font-black transition-all ${
-                      limit === n
+                    className={`px-3 py-2.5 text-xs font-black transition-all ${limit === n
                         ? "bg-orange-500 text-white"
                         : "text-slate-500 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800"
-                    }`}
+                      }`}
                   >
                     {n}
                   </button>
@@ -460,10 +455,9 @@ export default function AiSearchPage({ language = "vi", theme = "dark" }) {
               type="submit"
               disabled={loading || !selectedFile}
               className={`rounded-2xl p-3.5 flex items-center justify-center font-bold transition-all shadow-md shadow-orange-500/10 select-none
-                ${
-                  !selectedFile || loading
-                    ? "bg-slate-100 dark:bg-zinc-900 text-slate-400 border border-slate-200 dark:border-zinc-800 cursor-not-allowed shadow-none"
-                    : "bg-orange-500 hover:bg-orange-600 text-white active:scale-95"
+                ${!selectedFile || loading
+                  ? "bg-slate-100 dark:bg-zinc-900 text-slate-400 border border-slate-200 dark:border-zinc-800 cursor-not-allowed shadow-none"
+                  : "bg-orange-500 hover:bg-orange-600 text-white active:scale-95"
                 }
               `}
             >
