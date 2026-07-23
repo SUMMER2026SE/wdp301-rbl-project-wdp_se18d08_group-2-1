@@ -19,43 +19,46 @@ const gmail = google.gmail({
 });
 
 
-async function sendGmail({
-    to,
-    subject,
-    text,
-    html,
-}) {
-
-    const message = [
-        `From: PHOTOHUB <${process.env.GMAIL_USER}>`,
-        `To: ${to}`,
-        `Subject: ${subject}`,
-        "MIME-Version: 1.0",
-        "Content-Type: text/html; charset=utf-8",
-        "",
-        html,
-    ].join("\r\n");
-
-
-    const encoded = Buffer
-        .from(message)
-        .toString("base64")
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=+$/, "");
-
-
-    await gmail.users.messages.send({
-        userId: "me",
-        requestBody: {
-            raw: encoded
-        }
-    });
-
-
-    console.log(`[GMAIL API] Sent ${to}`);
+function encodeSubject(subject) {
+  return `=?UTF-8?B?${Buffer.from(subject).toString("base64")}?=`;
 }
 
+
+async function sendGmail({
+  to,
+  subject,
+  text,
+  html,
+}) {
+
+  const message = [
+    `From: ${process.env.GMAIL_USER}`,
+    `To: ${to}`,
+    `Subject: ${encodeSubject(subject)}`,
+    "MIME-Version: 1.0",
+    "Content-Type: text/html; charset=UTF-8",
+    "",
+    html,
+  ].join("\r\n");
+
+
+  const encoded = Buffer
+    .from(message, "utf-8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+
+
+  await gmail.users.messages.send({
+    userId: "me",
+    requestBody: {
+      raw: encoded
+    }
+  });
+
+  console.log(`[GMAIL API] Sent ${to}`);
+}
 
 module.exports = {
     sendGmail
