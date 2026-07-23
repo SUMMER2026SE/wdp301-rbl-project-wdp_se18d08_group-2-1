@@ -16,7 +16,7 @@ function getTransporter() {
     transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST || "smtp.gmail.com",
       port: Number(process.env.MAIL_PORT) || 587,
-      secure: false,
+      secure: true,
       requireTLS: true,
       family: 4,
 
