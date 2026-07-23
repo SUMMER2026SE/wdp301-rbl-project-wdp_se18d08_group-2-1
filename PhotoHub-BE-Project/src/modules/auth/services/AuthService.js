@@ -1,6 +1,6 @@
 // auth.service.js
 const { User, UserRole } = require("../models/User");
-const Photographer = require("../../photographers/models/Photographer");
+const Photographer = require("../../photographers/models/photographer");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const { sendVerifyEmailOtp } = require("../../../utils/emailService");
