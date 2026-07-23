@@ -398,8 +398,15 @@ export const photographerMarketplaceService = {
     },
 
     // --- REVENUE ---
-    getRevenue: async () => {
-        const response = await axios.get(`${MARKETPLACE_BASE_URL}/revenue`, getAuthConfig());
+    getRevenue: async (params = {}) => {
+        const response = await axios.get(
+            `${MARKETPLACE_BASE_URL}/revenue`,
+            {
+                ...getAuthConfig(),
+                params,
+            }
+        );
+
         return response.data;
     },
 

@@ -20,7 +20,11 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
     monthlyRevenue: [],
   });
   const [loading, setLoading] = useState(false);
-
+  const [filterType, setFilterType] = useState("date");
+  const [filters, setFilters] = useState({
+    startDate: "",
+    endDate: "",
+  });
   const t = {
     vi: {
       title: "Báo Cáo Doanh Thu",
@@ -52,22 +56,26 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
 
   const fetchStats = async () => {
     setLoading(true);
+
     try {
-      const res = await photographerMarketplaceService.getRevenue();
-      setStats(res.data || {
-        totalRevenue: 0,
-        completedBookings: 0,
-        totalWithdrawn: 0,
-        pendingWithdrawn: 0,
-        withdrawableAmount: 0,
-        netWithdrawableAmount: 0,
-        bidWinRate: 0,
-        completionRate: 0,
-        pendingPayout: 0,
-        topStyles: [],
-        topPackages: [],
-        monthlyRevenue: [],
-      });
+      const res = await photographerMarketplaceService.getRevenue(filters);
+
+      setStats(
+        res.data || {
+          totalRevenue: 0,
+          completedBookings: 0,
+          totalWithdrawn: 0,
+          pendingWithdrawn: 0,
+          withdrawableAmount: 0,
+          netWithdrawableAmount: 0,
+          bidWinRate: 0,
+          completionRate: 0,
+          pendingPayout: 0,
+          topStyles: [],
+          topPackages: [],
+          monthlyRevenue: [],
+        }
+      );
     } catch (err) {
       console.error(err);
       Swal.fire(t.error, err.response?.data?.message || err.message, "error");
@@ -94,12 +102,81 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
         <button
           onClick={fetchStats}
           disabled={loading}
-          className={`p-3 rounded-2xl border transition-all ${
-            isDark ? "border-white/5 hover:bg-white/5" : "border-slate-200 hover:bg-slate-50"
-          }`}
+          className={`p-3 rounded-2xl border transition-all ${isDark ? "border-white/5 hover:bg-white/5" : "border-slate-200 hover:bg-slate-50"
+            }`}
         >
           <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
         </button>
+      </div>
+
+      {/* Revenue Filter */}
+      <div
+        className={`p-4 rounded-2xl border flex flex-wrap gap-3 items-end ${isDark
+            ? "bg-[#121214]/60 border-white/[0.06]"
+            : "bg-white border-slate-200"
+          }`}
+      >
+
+        <div>
+          <label className="text-xs font-bold text-slate-500">
+            From
+          </label>
+
+          <input
+            type="date"
+            value={filters.startDate}
+            onChange={(e) =>
+              setFilters((prev) => ({
+                ...prev,
+                startDate: e.target.value,
+              }))
+            }
+            className="block mt-1 px-3 py-2 rounded-xl border"
+          />
+        </div>
+
+
+        <div>
+          <label className="text-xs font-bold text-slate-500">
+            To
+          </label>
+
+          <input
+            type="date"
+            value={filters.endDate}
+            onChange={(e) =>
+              setFilters((prev) => ({
+                ...prev,
+                endDate: e.target.value,
+              }))
+            }
+            className="block mt-1 px-3 py-2 rounded-xl border"
+          />
+        </div>
+
+
+        <button
+          onClick={fetchStats}
+          className="px-4 py-2 rounded-xl bg-orange-500 text-white font-bold"
+        >
+          Apply
+        </button>
+
+
+        <button
+          onClick={() => {
+            setFilters({
+              startDate: "",
+              endDate: "",
+            });
+
+            setTimeout(fetchStats, 100);
+          }}
+          className="px-4 py-2 rounded-xl bg-slate-500 text-white font-bold"
+        >
+          Reset
+        </button>
+
       </div>
 
       {loading ? (
@@ -112,11 +189,10 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {/* Total Earnings Card */}
             <div
-              className={`p-4 rounded-2xl border relative overflow-hidden flex items-center gap-4 ${
-                isDark
-                  ? "bg-[#121214]/80 border-white/[0.06] shadow-xl"
-                  : "bg-white border-slate-200 shadow-md"
-              }`}
+              className={`p-4 rounded-2xl border relative overflow-hidden flex items-center gap-4 ${isDark
+                ? "bg-[#121214]/80 border-white/[0.06] shadow-xl"
+                : "bg-white border-slate-200 shadow-md"
+                }`}
             >
               <div className="p-3 rounded-xl bg-orange-500/10 text-orange-500">
                 <DollarSign size={20} />
@@ -137,11 +213,10 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
 
             {/* Withdrawn Stats Card */}
             <div
-              className={`p-4 rounded-2xl border relative overflow-hidden flex items-center gap-4 ${
-                isDark
-                  ? "bg-[#121214]/80 border-white/[0.06] shadow-xl"
-                  : "bg-white border-slate-200 shadow-md"
-              }`}
+              className={`p-4 rounded-2xl border relative overflow-hidden flex items-center gap-4 ${isDark
+                ? "bg-[#121214]/80 border-white/[0.06] shadow-xl"
+                : "bg-white border-slate-200 shadow-md"
+                }`}
             >
               <div className="p-3 rounded-xl bg-amber-500/10 text-amber-500">
                 <Landmark size={20} />
@@ -225,9 +300,8 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
 
           {/* Interactive Chart Section */}
           <div
-            className={`p-4 rounded-2xl border ${
-              isDark ? "bg-[#121214]/60 border-white/[0.06]" : "bg-white border-slate-200 shadow-sm"
-            }`}
+            className={`p-4 rounded-2xl border ${isDark ? "bg-[#121214]/60 border-white/[0.06]" : "bg-white border-slate-200 shadow-sm"
+              }`}
           >
             <h3 className="font-extrabold text-sm mb-4 flex items-center gap-2">
               <TrendingUp size={16} className="text-orange-500" />
