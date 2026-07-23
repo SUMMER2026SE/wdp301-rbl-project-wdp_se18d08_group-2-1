@@ -173,6 +173,28 @@ router.delete(
 );
 
 
+/**
+ * GET /api/group-bookings/:groupId/messages
+ * Lấy lịch sử nhắn tin nhóm (chỉ thành viên).
+ */
+router.get(
+  "/:groupId/messages",
+  authenticate,
+  validateGroupIdParam,
+  ctrl.getGroupMessages
+);
+
+/**
+ * POST /api/group-bookings/:groupId/messages
+ * Gửi tin nhắn vào nhóm (chỉ thành viên).
+ */
+router.post(
+  "/:groupId/messages",
+  authenticate,
+  validateGroupIdParam,
+  ctrl.sendGroupMessage
+);
+
 // ─── [5] Dynamic route thuần /:groupId — CUỐI CÙNG ──────────────────────────
 
 /**

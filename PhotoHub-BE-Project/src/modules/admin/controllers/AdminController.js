@@ -1,5 +1,5 @@
 const { User, UserRole } = require("../../auth/models/User");
-const Photographer = require("../../photographers/models/Photographer");
+const Photographer = require("../../photographers/models/photographer");
 const Customer = require("../../customers/models/customer");
 const AdminAction = require("../models/AdminAction");
 const PhotographerVerification = require("../../photographers/models/photographerVerification");
@@ -11,10 +11,7 @@ const Wallet = require("../models/Wallet");
 const WithdrawRequest = require("../models/WithdrawRequest");
 const Report = require("../models/Report");
 const Dispute = require("../models/Dispute");
-const ChatMessage = require("../models/ChatMessage");
-const FeaturedPackage = require("../models/FeaturedPackage");
 const Notification = require("../models/Notification");
-
 const logAdminAction = require("../utils/adminActionLogger");
 const ApiResponse = require("../../../utils/ApiResponse");
 const { sendApprovalEmail, sendRejectionEmail } = require("../../../utils/emailService");

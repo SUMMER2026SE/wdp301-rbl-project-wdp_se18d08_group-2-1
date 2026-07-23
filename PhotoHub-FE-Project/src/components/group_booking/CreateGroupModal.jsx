@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { X, Camera, Users, Clock, FileText, Loader2, Info } from "lucide-react";
+import { X, Camera, Users, Clock, FileText, Loader2, Info, Eye, Percent, BadgeCheck } from "lucide-react";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { groupBookingService } from "../../services/groupBookingService";
@@ -28,6 +28,7 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
   const [packages, setPackages] = useState([]);
   const [packagesLoading, setPackagesLoading] = useState(true);
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const [previewPackage, setPreviewPackage] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   // Tính ngày mai làm mặc định cho shootDate
@@ -132,11 +133,11 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
 
   return (
     <div
-      className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm overflow-y-auto flex items-center justify-center p-4"
+      className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm overflow-y-auto flex items-start justify-center p-4 py-8"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        className={`relative w-full max-w-2xl rounded-3xl border shadow-2xl ${
+        className={`relative w-full max-w-2xl rounded-3xl border shadow-2xl my-auto ${
           isDark ? "bg-[#0b0f19] border-white/10" : "bg-white border-slate-200"
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -174,7 +175,7 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
           ))}
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-120px)]">
           {/* ── Step 1: Chọn Concept ── */}
           {step === 1 && (
             <div>
@@ -198,10 +199,10 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
               ) : (
                 <div className="grid gap-3 max-h-[400px] overflow-y-auto pr-1">
                   {packages.map((pkg) => (
-                    <button
+                    <div
                       key={pkg._id}
                       onClick={() => setSelectedPackage(pkg)}
-                      className={`w-full text-left p-4 rounded-2xl border transition-all ${
+                      className={`w-full text-left p-4 rounded-2xl border transition-all cursor-pointer ${
                         selectedPackage?._id === pkg._id
                           ? "border-orange-500 bg-orange-500/10 shadow-md shadow-orange-500/10"
                           : isDark
@@ -233,14 +234,24 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
                             )}
                           </div>
                         </div>
-                        <div className="shrink-0 text-right">
+                        <div className="shrink-0 text-right flex flex-col items-end gap-1.5">
                           <p className="text-lg font-black text-orange-400">
                             {(pkg.price || 0).toLocaleString("vi-VN")}
                             <span className="text-xs ml-0.5">đ</span>
                           </p>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewPackage(pkg);
+                            }}
+                            className="text-xs text-orange-400 hover:text-orange-300 hover:underline flex items-center gap-1 font-bold transition-all px-2 py-1 rounded-lg bg-orange-500/10 hover:bg-orange-500/20"
+                          >
+                            <Eye size={12} /> Xem chi tiết
+                          </button>
                         </div>
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               )}
@@ -276,12 +287,22 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
                       Giá gốc: {(selectedPackage.price || 0).toLocaleString("vi-VN")}đ/người
                     </p>
                   </div>
-                  <button
-                    onClick={() => setStep(1)}
-                    className="text-xs text-slate-400 hover:text-orange-400 transition-colors underline shrink-0"
-                  >
-                    Đổi concept
-                  </button>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewPackage(selectedPackage)}
+                      className="text-xs text-orange-400 hover:underline font-bold flex items-center gap-1"
+                    >
+                      <Eye size={13} /> Chi tiết
+                    </button>
+                    <span className="text-slate-500">•</span>
+                    <button
+                      onClick={() => setStep(1)}
+                      className="text-xs text-slate-400 hover:text-orange-400 transition-colors underline"
+                    >
+                      Đổi concept
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -465,6 +486,304 @@ export default function CreateGroupModal({ isDark, onClose, onSuccess }) {
           )}
         </div>
       </div>
+
+      {/* Package Detail Modal Overlay */}
+      {previewPackage && (
+        <PackageDetailModal
+          isDark={isDark}
+          pkg={previewPackage}
+          onClose={() => setPreviewPackage(null)}
+        />
+      )}
     </div>
   );
 }
+
+// ─── Package Detail Modal Component ──────────────────────────────────────────
+
+function PackageDetailModal({ isDark, pkg, onClose }) {
+  if (!pkg) return null;
+
+  const photographer = pkg.photographer || {};
+  const photographerUser = photographer.user || {};
+  const displayName = photographer.displayName || photographerUser.fullName || "Nhiếp ảnh gia";
+  const avatar = photographerUser.avatar || photographer.avatar || photographer.avatarUrl || null;
+  const basePrice = pkg.price || 0;
+
+  const discountTiers = [
+    { members: "1 người", pct: 0, icon: "👤" },
+    { members: "2 người", pct: 10, icon: "👥" },
+    { members: "3–4 người", pct: 15, icon: "👪" },
+    { members: "≥5 người", pct: 20, icon: "🎉" },
+  ];
+
+  return (
+    <div
+      className="fixed inset-0 z-[160] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className={`relative w-full max-w-lg rounded-3xl border shadow-2xl overflow-hidden max-h-[90vh] flex flex-col ${
+          isDark ? "bg-[#0b0f19] border-white/10 text-white" : "bg-white border-slate-200 text-slate-900"
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className={`flex items-center justify-between p-5 border-b shrink-0 ${isDark ? "border-white/[0.07]" : "border-slate-100"}`}>
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+              <Camera size={17} className="text-white" />
+            </div>
+            <div>
+              <p className={`text-sm font-black ${isDark ? "text-white" : "text-slate-900"}`}>Chi tiết gói chụp</p>
+              <p className="text-xs text-slate-400">Gói chụp nhóm</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className={`p-2 rounded-xl border transition-all ${
+              isDark ? "border-white/[0.07] hover:bg-white/[0.06] text-slate-400 hover:text-white" : "border-slate-200 hover:bg-slate-50 text-slate-500"
+            }`}
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+          {/* Photographer info */}
+          <div className={`p-4 rounded-2xl border ${isDark ? "border-white/[0.07] bg-white/[0.02]" : "border-slate-100 bg-slate-50"}`}>
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 rounded-2xl overflow-hidden shrink-0 bg-gradient-to-br from-orange-500/30 to-amber-500/20 flex items-center justify-center border-2 border-orange-500/20">
+                {avatar ? (
+                  <img src={avatar} alt={displayName} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-xl font-black text-orange-400">{displayName[0]?.toUpperCase()}</span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className={`text-base font-black ${isDark ? "text-white" : "text-slate-900"}`}>{displayName}</p>
+                  {photographer.verificationStatus === "VERIFIED" && (
+                    <BadgeCheck size={16} className="text-sky-400 shrink-0" />
+                  )}
+                </div>
+                {photographer.location && (
+                  <p className="text-xs text-slate-400 mt-0.5">{photographer.location}</p>
+                )}
+                <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                  {photographer.averageRating > 0 && (
+                    <span className="text-xs font-bold text-amber-400">⭐ {Number(photographer.averageRating).toFixed(1)}</span>
+                  )}
+                  {photographer.completedBookings > 0 && (
+                    <span className="text-xs text-slate-400">{photographer.completedBookings} buổi chụp</span>
+                  )}
+                  {photographer.experienceYears > 0 && (
+                    <span className="text-xs text-slate-400">{photographer.experienceYears} năm kinh nghiệm</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Package Title & Description */}
+          <div>
+            <h3 className={`text-lg font-black mb-1 ${isDark ? "text-white" : "text-slate-900"}`}>
+              {pkg.title}
+            </h3>
+            {pkg.description && (
+              <p className={`text-sm leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                {pkg.description}
+              </p>
+            )}
+          </div>
+
+          {/* Package Details Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className={`p-3.5 rounded-2xl ${isDark ? "bg-white/[0.04]" : "bg-slate-50"}`}>
+              <p className="text-xs text-slate-400 mb-1">Giá gốc/người</p>
+              <p className="text-xl font-black text-orange-400">
+                {basePrice.toLocaleString("vi-VN")}
+                <span className="text-xs ml-0.5">đ</span>
+              </p>
+            </div>
+            {pkg.durationHours > 0 && (
+              <div className={`p-3.5 rounded-2xl ${isDark ? "bg-white/[0.04]" : "bg-slate-50"}`}>
+                <p className="text-xs text-slate-400 mb-1">Thời lượng</p>
+                <p className={`text-xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>{pkg.durationHours}h</p>
+              </div>
+            )}
+            {pkg.numberOfPhotos > 0 && (
+              <div className={`p-3.5 rounded-2xl ${isDark ? "bg-white/[0.04]" : "bg-slate-50"}`}>
+                <p className="text-xs text-slate-400 mb-1">Số ảnh bàn giao</p>
+                <p className={`text-lg font-black ${isDark ? "text-white" : "text-slate-900"}`}>{pkg.numberOfPhotos} ảnh</p>
+              </div>
+            )}
+            {pkg.editedPhotos > 0 && (
+              <div className={`p-3.5 rounded-2xl ${isDark ? "bg-white/[0.04]" : "bg-slate-50"}`}>
+                <p className="text-xs text-slate-400 mb-1">Ảnh chỉnh sửa</p>
+                <p className={`text-lg font-black ${isDark ? "text-white" : "text-slate-900"}`}>{pkg.editedPhotos} ảnh</p>
+              </div>
+            )}
+          </div>
+
+          {pkg.locationType && (
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl w-fit ${isDark ? "bg-white/[0.05] text-slate-300" : "bg-slate-100 text-slate-700"}`}>
+              <span className="text-xs font-semibold">Địa điểm: {pkg.locationType}</span>
+            </div>
+          )}
+
+          {/* Package Image Gallery */}
+          <PackageImageGallery images={pkg.images} isDark={isDark} />
+
+          {/* Group Discount Tiers */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Percent size={15} className="text-orange-400" />
+              <h4 className={`text-sm font-black ${isDark ? "text-white" : "text-slate-900"}`}>
+                Chính sách giảm giá nhóm
+              </h4>
+            </div>
+            <div className="space-y-2">
+              {discountTiers.map((tier) => {
+                const price = Math.round(basePrice * (1 - tier.pct / 100));
+                return (
+                  <div
+                    key={tier.members}
+                    className={`flex items-center justify-between p-3 rounded-2xl border ${
+                      tier.pct > 0
+                        ? isDark ? "border-orange-500/20 bg-orange-500/5" : "border-orange-200 bg-orange-50"
+                        : isDark ? "border-white/[0.06] bg-white/[0.02]" : "border-slate-100 bg-slate-50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-base">{tier.icon}</span>
+                      <div>
+                        <p className={`text-xs font-bold ${isDark ? "text-white" : "text-slate-800"}`}>{tier.members}</p>
+                        {tier.pct > 0 && <p className="text-[11px] font-bold text-orange-400">Giảm {tier.pct}%</p>}
+                      </div>
+                    </div>
+                    <p className={`text-sm font-black ${tier.pct > 0 ? "text-orange-400" : isDark ? "text-slate-300" : "text-slate-700"}`}>
+                      {price.toLocaleString("vi-VN")}đ
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {photographer.bio && (
+            <div className={`p-3.5 rounded-2xl ${isDark ? "bg-white/[0.04]" : "bg-slate-50"}`}>
+              <p className="text-xs font-bold text-slate-400 mb-1">Giới thiệu nhiếp ảnh gia</p>
+              <p className={`text-xs leading-relaxed ${isDark ? "text-slate-300" : "text-slate-600"}`}>{photographer.bio}</p>
+            </div>
+          )}
+
+          {photographer.equipment && (
+            <div className={`p-3.5 rounded-2xl ${isDark ? "bg-white/[0.04]" : "bg-slate-50"}`}>
+              <p className="text-xs font-bold text-slate-400 mb-1">Thiết bị</p>
+              <p className={`text-xs ${isDark ? "text-slate-300" : "text-slate-600"}`}>{photographer.equipment}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className={`p-4 border-t shrink-0 ${isDark ? "border-white/[0.07]" : "border-slate-100"}`}>
+          <button
+            onClick={onClose}
+            className={`w-full py-3 rounded-2xl font-bold text-sm transition-all ${
+              isDark ? "bg-white/[0.07] text-white hover:bg-white/[0.1]" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+            }`}
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Package Image Gallery Component ─────────────────────────────────────────
+
+function PackageImageGallery({ images = [], isDark }) {
+  const [showAll, setShowAll] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const formattedImages = (Array.isArray(images) ? images : [])
+    .map((img) => (typeof img === "string" ? img : img?.imageUrl || img?.url || img?.secure_url || ""))
+    .filter(Boolean);
+
+  if (formattedImages.length === 0) return null;
+
+  const visibleImages = showAll ? formattedImages : formattedImages.slice(0, 3);
+  const remainingCount = formattedImages.length - 3;
+
+  return (
+    <div className="mt-4 space-y-2">
+      <p className="text-xs font-bold text-slate-400">Hình ảnh mẫu gói chụp ({formattedImages.length})</p>
+
+      <div className="grid grid-cols-3 gap-2">
+        {visibleImages.map((url, idx) => {
+          const isLastInPreview = !showAll && idx === 2 && remainingCount > 0;
+          return (
+            <div
+              key={idx}
+              onClick={() => {
+                if (isLastInPreview) {
+                  setShowAll(true);
+                } else {
+                  setSelectedImage(url);
+                }
+              }}
+              className="relative aspect-square rounded-xl overflow-hidden cursor-pointer group bg-slate-800 border border-white/10"
+            >
+              <img
+                src={url}
+                alt={`Package preview ${idx + 1}`}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              {isLastInPreview && (
+                <div className="absolute inset-0 bg-black/75 backdrop-blur-[2px] flex flex-col items-center justify-center text-white p-1">
+                  <span className="text-sm font-black">+{remainingCount}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider">Xem thêm</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {formattedImages.length > 3 && showAll && (
+        <button
+          type="button"
+          onClick={() => setShowAll(false)}
+          className={`w-full py-2 rounded-xl border text-xs font-bold transition-all ${
+            isDark ? "border-white/10 text-slate-400 hover:text-white hover:bg-white/5" : "border-slate-200 text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          Thu gọn ảnh
+        </button>
+      )}
+
+      {/* Lightbox Overlay */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl">
+            <img src={selectedImage} alt="Large preview" className="max-w-full max-h-[85vh] object-contain rounded-2xl" />
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-3 right-3 p-2 rounded-full bg-black/60 text-white hover:bg-black/90 transition-all"
+            >
+              <X size={22} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+

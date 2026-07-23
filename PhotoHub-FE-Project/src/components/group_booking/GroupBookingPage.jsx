@@ -166,6 +166,14 @@ export default function GroupBookingPage({ theme = "dark", language = "vi" }) {
       if (res.success) {
         const targetGroupId = res.data.member?.group || res.data.group?._id;
         if (res.data.alreadyJoined) {
+          Swal.fire({
+            icon: "info",
+            title: "Đã ở trong nhóm",
+            text: "Bạn đã là thành viên của nhóm này rồi!",
+            background: isDark ? "#0f172a" : "#fff",
+            color: isDark ? "#fff" : "#000",
+            confirmButtonColor: "#f97316",
+          });
           navigate(`/group-booking/${targetGroupId}`);
           return;
         }

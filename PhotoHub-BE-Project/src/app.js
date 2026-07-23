@@ -74,8 +74,6 @@ app.use("/api/loyalty", loyaltyRoutes);
 // Potonow additional features
 app.use("/api/blogs", require("./modules/blog/routes/blog.routes"));
 app.use("/api/marketing-events", require("./modules/events/routes/event.routes"));
-app.use("/api/booking-addons", require("./modules/bookings/routes/addon.routes"));
-
 app.use("/api/group-bookings", groupBookingRoutes);
 
 // Health check

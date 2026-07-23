@@ -1412,7 +1412,7 @@ class GroupBookingService {
     await this.checkAndConfirmGroup(groupId);
 
     const group = await GroupBooking.findById(groupId)
-      .populate("concept", "title price durationHours locationType")
+      .populate("concept", "title description price durationHours numberOfPhotos editedPhotos locationType")
       .populate({
         path: "photographer",
         populate: { path: "user", select: "fullName avatar email" },
@@ -1437,8 +1437,15 @@ class GroupBookingService {
       ) || null;
     }
 
+    const groupObj = group.toObject();
+    if (groupObj.concept?._id) {
+      const PackageImage = require("../../packages/models/packageImage.model");
+      const pkgImages = await PackageImage.find({ packageId: groupObj.concept._id });
+      groupObj.concept.images = pkgImages;
+    }
+
     return {
-      ...group.toObject(),
+      ...groupObj,
       members,
       paidCount,
       remainingSlots: group.maxMembers - paidCount,
@@ -1701,6 +1708,59 @@ class GroupBookingService {
       isLocked: group.isLocked,
       message: isLocked ? "Đã khóa đăng ký nhóm thành công!" : "Đã mở khóa đăng ký nhóm thành công!",
     };
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Realtime Group Chat
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Lấy lịch sử nhắn tin nhóm (Chỉ dành cho thành viên của nhóm).
+   */
+  async getGroupMessages(groupId, userId) {
+    const isMember = await GroupMember.exists({ group: groupId, user: userId });
+    if (!isMember) {
+      throw new Error("Bạn phải là thành viên của nhóm mới được phép xem tin nhắn");
+    }
+
+    const GroupMessage = require("../models/groupMessage.model");
+    const messages = await GroupMessage.find({ group: groupId })
+      .populate("sender", "fullName avatar role")
+      .sort({ createdAt: 1 });
+
+    return messages;
+  }
+
+  /**
+   * Gửi tin nhắn nhóm realtime (Chỉ dành cho thành viên của nhóm).
+   */
+  async sendGroupMessage(groupId, userId, messageText) {
+    const isMember = await GroupMember.exists({ group: groupId, user: userId });
+    if (!isMember) {
+      throw new Error("Bạn phải là thành viên của nhóm mới được phép gửi tin nhắn");
+    }
+
+    const text = String(messageText || "").trim();
+    if (!text) {
+      throw new Error("Nội dung tin nhắn không được để trống");
+    }
+
+    const GroupMessage = require("../models/groupMessage.model");
+    const newMsg = await GroupMessage.create({
+      group: groupId,
+      sender: userId,
+      message: text,
+    });
+
+    const populatedMsg = await GroupMessage.findById(newMsg._id).populate(
+      "sender",
+      "fullName avatar role"
+    );
+
+    // Phát sự kiện realtime đến tất cả thành viên trong room group:groupId
+    safeEmit(`group:${groupId}`, "new-group-message", populatedMsg);
+
+    return populatedMsg;
   }
 }
 

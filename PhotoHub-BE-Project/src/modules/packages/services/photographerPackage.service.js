@@ -383,11 +383,32 @@ class PhotographerPackageService {
         },
       },
       {
+        $lookup: {
+          from: "packageimages",
+          localField: "_id",
+          foreignField: "packageId",
+          as: "images",
+        },
+      },
+      {
         $addFields: {
           photographer: { $arrayElemAt: ["$photographerInfo", 0] },
         },
       },
-      { $project: { photographerInfo: 0 } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "photographer.user",
+          foreignField: "_id",
+          as: "photographerUserInfo",
+        },
+      },
+      {
+        $addFields: {
+          "photographer.user": { $arrayElemAt: ["$photographerUserInfo", 0] },
+        },
+      },
+      { $project: { photographerInfo: 0, photographerUserInfo: 0 } },
       { $sort: { createdAt: -1 } },
     ]);
   }

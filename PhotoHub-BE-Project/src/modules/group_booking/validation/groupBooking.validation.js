@@ -38,15 +38,15 @@ const validateCreateGroup = [
   body("minMembers")
     .notEmpty()
     .withMessage("minMembers là bắt buộc")
-    .isInt({ min: 2, max: 5 })
-    .withMessage("Số thành viên tối thiểu phải từ 2 đến 5 người")
+    .isInt({ min: 2, max: 10 })
+    .withMessage("Số thành viên tối thiểu phải từ 2 đến 10 người")
     .toInt(),
 
   body("maxMembers")
     .notEmpty()
     .withMessage("maxMembers là bắt buộc")
-    .isInt({ min: 2, max: 5 })
-    .withMessage("Số thành viên tối đa phải từ 2 đến 5 người")
+    .isInt({ min: 2, max: 10 })
+    .withMessage("Số thành viên tối đa phải từ 2 đến 10 người")
     .toInt()
     .custom((value, { req }) => {
       if (value < req.body.minMembers) {

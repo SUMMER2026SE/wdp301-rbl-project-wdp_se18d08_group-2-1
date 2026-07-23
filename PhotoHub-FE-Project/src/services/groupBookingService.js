@@ -132,6 +132,24 @@ export const groupBookingService = {
     );
     return res.data;
   },
+
+  // ── Realtime Group Chat ───────────────────────────────────────────────────
+  getGroupMessages: async (groupId) => {
+    const res = await axios.get(
+      `${API_BASE}/group-bookings/${groupId}/messages`,
+      getHeaders()
+    );
+    return res.data;
+  },
+
+  sendGroupMessage: async (groupId, message) => {
+    const res = await axios.post(
+      `${API_BASE}/group-bookings/${groupId}/messages`,
+      { message },
+      getHeaders()
+    );
+    return res.data;
+  },
 };
 
 

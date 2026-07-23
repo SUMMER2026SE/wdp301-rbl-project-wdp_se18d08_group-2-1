@@ -323,6 +323,46 @@ class GroupBookingController {
       return ApiResponse.error(res, error.message, 400);
     }
   }
+
+  // ─── Realtime Chat ──────────────────────────────────────────────────────────
+
+  /**
+   * GET /api/group-bookings/:groupId/messages
+   * Lấy lịch sử nhắn tin của nhóm.
+   */
+  async getGroupMessages(req, res) {
+    try {
+      const result = await groupBookingService.getGroupMessages(
+        req.params.groupId,
+        req.user.id
+      );
+      return ApiResponse.success(res, result, "Lấy lịch sử tin nhắn nhóm thành công");
+    } catch (error) {
+      console.error("[GroupBooking] getGroupMessages:", error.message);
+      const statusCode = error.message.includes("thành viên") ? 403 : 400;
+      return ApiResponse.error(res, error.message, statusCode);
+    }
+  }
+
+  /**
+   * POST /api/group-bookings/:groupId/messages
+   * Gửi tin nhắn trong nhóm.
+   */
+  async sendGroupMessage(req, res) {
+    try {
+      const { message } = req.body;
+      const result = await groupBookingService.sendGroupMessage(
+        req.params.groupId,
+        req.user.id,
+        message
+      );
+      return ApiResponse.success(res, result, "Gửi tin nhắn thành công", 201);
+    } catch (error) {
+      console.error("[GroupBooking] sendGroupMessage:", error.message);
+      const statusCode = error.message.includes("thành viên") ? 403 : 400;
+      return ApiResponse.error(res, error.message, statusCode);
+    }
+  }
 }
 
 module.exports = new GroupBookingController();
