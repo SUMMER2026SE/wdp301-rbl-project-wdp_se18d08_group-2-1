@@ -26,8 +26,8 @@ function mimeToExt(mimetype = "") {
 function hasCloudinaryConfig() {
   return Boolean(
     process.env.CLOUDINARY_CLOUD_NAME &&
-      process.env.CLOUDINARY_API_KEY &&
-      process.env.CLOUDINARY_API_SECRET
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
   );
 }
 
@@ -73,10 +73,7 @@ async function uploadBufferToCloudinary(
   }
 
   if (!hasCloudinaryConfig()) {
-    console.warn(
-      "[Upload] Cloudinary is not configured. Saving image locally."
-    );
-    return saveBufferToLocalUploads(buffer, mimetype, options);
+    throw new Error("Cloudinary is not configured.");
   }
 
   return new Promise((resolve, reject) => {
@@ -87,21 +84,7 @@ async function uploadBufferToCloudinary(
       },
       (error, result) => {
         if (error) {
-          console.warn(
-            "[Upload] Cloudinary upload failed. Falling back to local storage:",
-            error.message
-          );
-
-          try {
-            const localResult = saveBufferToLocalUploads(
-              buffer,
-              mimetype,
-              options
-            );
-            return resolve(localResult);
-          } catch (localError) {
-            return reject(localError);
-          }
+          return reject(error);
         }
 
         resolve(result);

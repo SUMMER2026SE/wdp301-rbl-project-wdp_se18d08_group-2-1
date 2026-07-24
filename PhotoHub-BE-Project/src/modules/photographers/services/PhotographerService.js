@@ -5,6 +5,7 @@ const PhotographerStyle = require("../models/photographerStyle.model");
 const PhotographerCategory = require("../models/photographerCategory.model")
 const StyleTag = require("../../common/models/styleTag");
 const ShootingCategory = require("../../common/models/shootingCategory")
+const { uploadBufferToCloudinary } = require("../../../utils/cloudinaryUpload");
 const User = require("../../auth/models/User");
 const mongoose = require("mongoose");
 const path = require("path");
@@ -28,7 +29,7 @@ class PhotographerService {
         limit = 12,
       } = filters;
 
-      let query = {verificationStatus: "VERIFIED"};
+      let query = { verificationStatus: "VERIFIED" };
 
       // Helper: Hàm kiểm tra và chuyển đổi giá trị sang ObjectId nếu có thể
       const toObjectId = (val) => {
@@ -501,62 +502,48 @@ class PhotographerService {
         throw new Error("Front image is required");
       }
 
+      // Upload mặt trước
+      const frontUpload = await uploadBufferToCloudinary(
+        frontImage.buffer,
+        frontImage.mimetype,
+        {
+          folder: "photographer-verifications/front",
+          public_id: `${photographer._id}_front_${Date.now()}`,
+        }
+      );
+
+      // Upload mặt sau (nếu có)
+      let backUpload = null;
+
+      if (backImage) {
+        backUpload = await uploadBufferToCloudinary(
+          backImage.buffer,
+          backImage.mimetype,
+          {
+            folder: "photographer-verifications/back",
+            public_id: `${photographer._id}_back_${Date.now()}`,
+          }
+        );
+      }
+
+      // Nếu đã từng upload thì xóa record cũ
       const oldVerification = await PhotographerVerification.findOne({
         photographer: photographer._id,
       });
 
       if (oldVerification) {
-        // Cách tính đường dẫn tuyệt đối an toàn đến thư mục BE/src bất kể file này nằm ở đâu
-        // __dirname.split('src')[0] + 'src' sẽ lấy chính xác đến thư mục ...\PhotoHub-BE-Project\src hoặc ...\BE\src
-        const srcPath = __dirname.includes('src')
-          ? __dirname.split('src')[0] + 'src'
-          : path.join(__dirname, '..'); // fallback phòng hờ
-
-        if (
-          oldVerification.documentFrontUrl &&
-          oldVerification.documentFrontUrl.startsWith("/uploads/")
-        ) {
-          // Nối từ srcPath vào thẳng /uploads/...
-          const oldFrontPath = path.join(srcPath, oldVerification.documentFrontUrl);
-
-          // Chỉ xóa khi file thực sự tồn tại trên ổ đĩa
-          if (fsSync.existsSync(oldFrontPath)) {
-            try {
-              await fs.unlink(oldFrontPath); // ÉP PHẢI XÓA XONG FILE VẬT LÝ
-            } catch (err) {
-              console.error("Không thể xóa file mặt trước cũ:", err.message);
-            }
-          }
-        }
-
-        if (
-          oldVerification.documentBackUrl &&
-          oldVerification.documentBackUrl.startsWith("/uploads/")
-        ) {
-          const oldBackPath = path.join(srcPath, oldVerification.documentBackUrl);
-
-          if (fsSync.existsSync(oldBackPath)) {
-            try {
-              await fs.unlink(oldBackPath); // ÉP PHẢI XÓA XONG FILE VẬT LÝ
-            } catch (err) {
-              console.error("Không thể xóa file mặt sau cũ:", err.message);
-            }
-          }
-        }
-
-        // Xóa xong file cứng rồi mới xóa bản ghi trong DB
         await oldVerification.deleteOne();
       }
 
-      // Tiến hành tạo bản ghi verification mới
+      // Tạo verification mới
       const verification = await PhotographerVerification.create({
         photographer: photographer._id,
         documentType: "CCCD",
 
-        documentFrontUrl: `/uploads/photographer-verifications/${frontImage.filename}`,
+        documentFrontUrl: frontUpload.secure_url,
 
-        documentBackUrl: backImage
-          ? `/uploads/photographer-verifications/${backImage.filename}`
+        documentBackUrl: backUpload
+          ? backUpload.secure_url
           : null,
 
         status: "PENDING",
@@ -570,7 +557,7 @@ class PhotographerService {
       throw new Error(`Upload verification failed: ${error.message}`);
     }
   }
-
+  
   async getProfileStatus(userId) {
     try {
       const photographer = await Photographer.findOne({
