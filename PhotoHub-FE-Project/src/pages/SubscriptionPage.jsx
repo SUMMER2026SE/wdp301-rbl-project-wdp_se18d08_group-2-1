@@ -15,6 +15,7 @@ import {
 import { photographerService } from "../services/photographerService";
 import { getPhotographerPackages, getPackageDetail } from "../services/photographerPackageService";
 import { subscriptionService } from "../services/subscriptionService";
+import { getStoredToken } from "../services/apiAuth";
 import Swal from "sweetalert2";
 
 const formatMoney = (value) =>
@@ -31,7 +32,7 @@ const resolveImageUrl = (image) => {
   if (!raw) return "";
   if (/^https?:\/\//i.test(raw)) return raw;
   if (raw.startsWith("/")) return `https://photo-hub-be-project.vercel.app${raw}`;
-  return `https://photo-hub-be-project.vercel.app/${raw}`;
+  return `http://localhost:3000/${raw}`;
 };
 
 const normalizePlanStatus = (plan) => String(plan?.status || "ACTIVE").toUpperCase();
@@ -229,7 +230,7 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
   }, [selectedPlanId, monthlyPackages]);
 
   const handlePurchasePlan = async (plan) => {
-    const token = localStorage.getItem("token");
+    const token = getStoredToken();
     if (!token) {
       Swal.fire({
         icon: "warning",
@@ -237,7 +238,10 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
         text: language === "vi" ? "Hãy đăng nhập để đăng ký gói tháng." : "Please sign in to subscribe to a monthly plan.",
         confirmButtonColor: "#f97316",
       }).then((result) => {
-        if (result.isConfirmed) navigate("/login");
+        if (result.isConfirmed) {
+          const next = encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+          navigate(`/login?redirect=${next}`);
+        }
       });
       return;
     }
@@ -306,6 +310,16 @@ export default function SubscriptionPage({ language = "vi", theme = "dark" }) {
         navigate(`/payment/result?orderCode=${orderCode}&source=subscription`);
       }
     } catch (err) {
+      if (err.redirectTo) {
+        Swal.fire({
+          icon: "warning",
+          title: language === "vi" ? "Phiên đăng nhập hết hạn" : "Session expired",
+          text: err.message,
+          confirmButtonColor: "#f97316",
+        }).then(() => navigate(err.redirectTo));
+        return;
+      }
+
       Swal.fire({
         icon: "error",
         title: language === "vi" ? "Không thể tạo đăng ký" : "Unable to subscribe",

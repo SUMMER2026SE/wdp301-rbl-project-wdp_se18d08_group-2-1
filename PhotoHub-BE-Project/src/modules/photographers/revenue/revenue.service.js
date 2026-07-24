@@ -19,6 +19,7 @@ const isCompletedBooking = (booking) =>
   ["customer_approved", "auto_completed"].includes(booking.completionStatus);
 
 const monthKey = (date) => new Date(date).toISOString().substring(0, 7);
+const dayKey = (date) => new Date(date).toISOString().substring(0, 10);
 
 const incrementMap = (map, key, amount = 1) => {
   if (!key) return;
@@ -188,9 +189,9 @@ class RevenueService {
         )
         : successfulSubscriptionPayments;
 
-    const totalRevenue = completedBookings.reduce((sum, b) => sum + getBookingAmount(b), 0);
+    const bookingRevenue = completedBookings.reduce((sum, b) => sum + getBookingAmount(b), 0);
     const totalSubscriptionRevenue = filteredSubscriptions.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-    const totalGrossRevenue = totalRevenue + totalSubscriptionRevenue;
+    const totalGrossRevenue = bookingRevenue + totalSubscriptionRevenue;
     const completedBookingsCount = completedBookings.length;
 
     const totalWithdrawn = withdrawRequests
@@ -261,23 +262,30 @@ class RevenueService {
     );
 
     const monthlyRevenueMap = {};
+    const dailyRevenueMap = {};
     const monthlyJobsMap = {};
+    const dailyJobsMap = {};
     const styleRevenueMap = {};
     const packageRevenueMap = {};
     completedBookings.forEach((b) => {
       const dateToUse = b.completedAt || b.createdAt;
       const month = monthKey(dateToUse);
+      const day = dayKey(dateToUse);
       const bookingAmount = getBookingAmount(b);
       monthlyRevenueMap[month] = (monthlyRevenueMap[month] || 0) + bookingAmount;
+      dailyRevenueMap[day] = (dailyRevenueMap[day] || 0) + bookingAmount;
       monthlyJobsMap[month] = (monthlyJobsMap[month] || 0) + 1;
+      dailyJobsMap[day] = (dailyJobsMap[day] || 0) + 1;
       incrementMap(styleRevenueMap, b.style || "Uncategorized", bookingAmount);
       incrementMap(packageRevenueMap, b.packageName || "Standard", bookingAmount);
     });
 
     filteredSubscriptions.forEach((payment) => {
       const month = monthKey(payment.createdAt || new Date());
+      const day = dayKey(payment.createdAt || new Date());
       const amount = Number(payment.amount || 0);
       monthlyRevenueMap[month] = (monthlyRevenueMap[month] || 0) + amount;
+      dailyRevenueMap[day] = (dailyRevenueMap[day] || 0) + amount;
       const packageName = payment.metadata?.packageName || payment.metadata?.packageTitle || payment.metadata?.subscriptionName || "Monthly plan";
       incrementMap(packageRevenueMap, packageName, amount);
     });
@@ -292,6 +300,14 @@ class RevenueService {
     const monthlyJobs = Object.keys(monthlyJobsMap)
       .sort()
       .map((month) => ({ month, jobs: monthlyJobsMap[month] }));
+
+    const dailyRevenue = Object.keys(dailyRevenueMap)
+      .sort()
+      .map((day) => ({
+        day,
+        revenue: dailyRevenueMap[day],
+        jobs: dailyJobsMap[day] || 0,
+      }));
 
     const mapToRanking = (map) =>
       Object.entries(map)
@@ -310,7 +326,8 @@ class RevenueService {
         startDate,
         endDate,
       },
-      totalRevenue,
+      totalRevenue: totalGrossRevenue,
+      bookingRevenue,
       subscriptionRevenue: totalSubscriptionRevenue,
       grossRevenue: totalGrossRevenue,
       completedBookings: completedBookingsCount,
@@ -334,6 +351,7 @@ class RevenueService {
       })),
       blockedBookings,
       monthlyRevenue,
+      dailyRevenue,
       monthlyJobs,
       bidWinRate,
       acceptedBids,

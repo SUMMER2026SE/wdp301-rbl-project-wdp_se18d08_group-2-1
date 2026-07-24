@@ -103,6 +103,7 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
     const isDark = theme === 'dark';
     const styles = getDynamicStyles(isDark);
     const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const redirectAfterLogin = new URLSearchParams(window.location.search).get("redirect");
 
     const handleGoogleLogin = () => {
         googleAuthService.loginWithGoogle();
@@ -200,7 +201,7 @@ export default function AuthPage({ language = 'vi', theme = 'dark', onToggleLang
                 setIsLoggedIn(true);
 
                 const isAdminUser = result.data.user?.role === "admin";
-                const redirectPath = isAdminUser ? "/admin" : "/";
+                const redirectPath = isAdminUser ? "/admin" : (redirectAfterLogin ? decodeURIComponent(redirectAfterLogin) : "/");
                 const redirectText = isAdminUser
                     ? "Đang chuyển hướng đến trang quản trị Admin..."
                     : "Sẽ chuyển về trang chủ sau 5 giây.";

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import { DollarSign, CheckCircle, ArrowUpRight, ShieldAlert, TrendingUp, Landmark, RefreshCw } from "lucide-react";
+import { DollarSign, CheckCircle, ArrowUpRight, ShieldAlert, TrendingUp, Landmark, RefreshCw, CalendarDays, BarChart3 } from "lucide-react";
 import { photographerMarketplaceService } from "../../services/photographerService";
 
 export default function PhotographerRevenueDashboard({ theme = "dark", language = "vi", onNavigateToWithdraw }) {
@@ -20,7 +20,7 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
     monthlyRevenue: [],
   });
   const [loading, setLoading] = useState(false);
-  const [filterType, setFilterType] = useState("date");
+  const [filterType, setFilterType] = useState("month");
   const [filters, setFilters] = useState({
     startDate: "",
     endDate: "",
@@ -54,11 +54,11 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
     },
   }[language];
 
-  const fetchStats = async () => {
+  const fetchStats = async (nextFilters = filters) => {
     setLoading(true);
 
     try {
-      const res = await photographerMarketplaceService.getRevenue(filters);
+      const res = await photographerMarketplaceService.getRevenue(nextFilters);
 
       setStats(
         res.data || {
@@ -88,9 +88,29 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
     fetchStats();
   }, []);
 
+  const applyQuickRange = (days) => {
+    const now = new Date();
+    const start = new Date(now);
+    start.setDate(now.getDate() - days + 1);
+    const nextFilters = {
+      startDate: start.toISOString().slice(0, 10),
+      endDate: now.toISOString().slice(0, 10),
+    };
+    setFilterType("day");
+    setFilters(nextFilters);
+    fetchStats(nextFilters);
+  };
+
+  const resetFilters = () => {
+    const nextFilters = { startDate: "", endDate: "" };
+    setFilters(nextFilters);
+    setFilterType("month");
+    fetchStats(nextFilters);
+  };
+
   // Compute values for SVG Chart
-  const monthlyData = stats.monthlyRevenue || [];
-  const maxRevenue = monthlyData.length > 0 ? Math.max(...monthlyData.map((d) => d.revenue)) : 100;
+  const chartData = filterType === "day" ? (stats.dailyRevenue || []) : (stats.monthlyRevenue || []);
+  const maxRevenue = chartData.length > 0 ? Math.max(...chartData.map((d) => d.revenue)) : 100;
 
   return (
     <div className="space-y-8">
@@ -100,7 +120,7 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
           <h2 className="text-2xl font-black tracking-tight">{t.title}</h2>
         </div>
         <button
-          onClick={fetchStats}
+          onClick={() => fetchStats()}
           disabled={loading}
           className={`p-3 rounded-2xl border transition-all ${isDark ? "border-white/5 hover:bg-white/5" : "border-slate-200 hover:bg-slate-50"
             }`}
@@ -111,72 +131,69 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
 
       {/* Revenue Filter */}
       <div
-        className={`p-4 rounded-2xl border flex flex-wrap gap-3 items-end ${isDark
+        className={`p-4 rounded-2xl border flex flex-wrap gap-3 items-end justify-between ${isDark
             ? "bg-[#121214]/60 border-white/[0.06]"
             : "bg-white border-slate-200"
           }`}
       >
-
-        <div>
-          <label className="text-xs font-bold text-slate-500">
-            From
-          </label>
-
-          <input
-            type="date"
-            value={filters.startDate}
-            onChange={(e) =>
-              setFilters((prev) => ({
-                ...prev,
-                startDate: e.target.value,
-              }))
-            }
-            className="block mt-1 px-3 py-2 rounded-xl border"
-          />
+        <div className="flex min-w-[220px] items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500">
+            <BarChart3 size={18} />
+          </span>
+          <div>
+            <p className="text-sm font-black">{language === "vi" ? "Bộ lọc doanh thu" : "Revenue filters"}</p>
+            <p className="text-xs text-slate-500">{language === "vi" ? "Xem cột theo ngày hoặc theo tháng." : "View bars by day or by month."}</p>
+          </div>
         </div>
 
+        <div className="flex flex-wrap items-end gap-3">
+          <div className={`flex rounded-xl border p-1 ${isDark ? "border-white/10 bg-black/20" : "border-slate-200 bg-slate-50"}`}>
+            {[
+              { key: "day", label: language === "vi" ? "Theo ngày" : "Daily" },
+              { key: "month", label: language === "vi" ? "Theo tháng" : "Monthly" },
+            ].map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setFilterType(item.key)}
+                className={`rounded-lg px-3 py-2 text-xs font-black transition ${filterType === item.key
+                  ? "bg-orange-500 text-white shadow-sm shadow-orange-500/20"
+                  : isDark ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-orange-600"
+                  }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
 
-        <div>
-          <label className="text-xs font-bold text-slate-500">
-            To
+          <label>
+            <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">From</span>
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))}
+              className={`h-11 rounded-xl border px-3 text-sm outline-none ${isDark ? "border-white/10 bg-black/20 text-white" : "border-slate-200 bg-white text-slate-900"}`}
+            />
           </label>
-
-          <input
-            type="date"
-            value={filters.endDate}
-            onChange={(e) =>
-              setFilters((prev) => ({
-                ...prev,
-                endDate: e.target.value,
-              }))
-            }
-            className="block mt-1 px-3 py-2 rounded-xl border"
-          />
+          <label>
+            <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">To</span>
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={(e) => setFilters((prev) => ({ ...prev, endDate: e.target.value }))}
+              className={`h-11 rounded-xl border px-3 text-sm outline-none ${isDark ? "border-white/10 bg-black/20 text-white" : "border-slate-200 bg-white text-slate-900"}`}
+            />
+          </label>
+          <button type="button" onClick={() => applyQuickRange(7)} className={`h-11 rounded-xl border px-3 text-xs font-bold transition ${isDark ? "border-white/10 text-slate-300 hover:bg-white/5" : "border-slate-200 text-slate-600 hover:border-orange-300"}`}>7 ngày</button>
+          <button type="button" onClick={() => applyQuickRange(30)} className={`h-11 rounded-xl border px-3 text-xs font-bold transition ${isDark ? "border-white/10 text-slate-300 hover:bg-white/5" : "border-slate-200 text-slate-600 hover:border-orange-300"}`}>30 ngày</button>
+          <button type="button" onClick={() => fetchStats()} className="inline-flex h-11 items-center gap-2 rounded-xl bg-orange-500 px-4 text-sm font-bold text-white shadow-lg shadow-orange-500/15 transition hover:bg-orange-600">
+            <CalendarDays size={15} />
+            Apply
+          </button>
+          <button type="button" onClick={resetFilters} className="h-11 rounded-xl bg-slate-500 px-4 text-sm font-bold text-white transition hover:bg-slate-600">
+            Reset
+          </button>
         </div>
-
-
-        <button
-          onClick={fetchStats}
-          className="px-4 py-2 rounded-xl bg-orange-500 text-white font-bold"
-        >
-          Apply
-        </button>
-
-
-        <button
-          onClick={() => {
-            setFilters({
-              startDate: "",
-              endDate: "",
-            });
-
-            setTimeout(fetchStats, 100);
-          }}
-          className="px-4 py-2 rounded-xl bg-slate-500 text-white font-bold"
-        >
-          Reset
-        </button>
-
       </div>
 
       {loading ? (
@@ -274,7 +291,7 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Net payout after commission</p>
-              <p className="mt-0.5 text-xl font-black text-amber-300">${stats.netWithdrawableAmount || 0}</p>
+              <p className="mt-0.5 text-xl font-black text-amber-300">{Number(stats.netWithdrawableAmount || 0).toLocaleString("vi-VN")} đ</p>
             </div>
             <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-3.5 border-t border-slate-200 pt-3 dark:border-white/[0.04]">
               <div>
@@ -282,7 +299,7 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
                 {(stats.topStyles || []).slice(0, 3).map((item) => (
                   <div key={item.name} className="flex justify-between text-[11px] font-bold text-slate-400">
                     <span>{item.name}</span>
-                    <span>${item.revenue}</span>
+                    <span>{Number(item.revenue || 0).toLocaleString("vi-VN")} đ</span>
                   </div>
                 ))}
               </div>
@@ -291,7 +308,7 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
                 {(stats.topPackages || []).slice(0, 3).map((item) => (
                   <div key={item.name} className="flex justify-between text-[11px] font-bold text-slate-400">
                     <span>{item.name}</span>
-                    <span>${item.revenue}</span>
+                    <span>{Number(item.revenue || 0).toLocaleString("vi-VN")} đ</span>
                   </div>
                 ))}
               </div>
@@ -308,7 +325,7 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
               {t.chartTitle}
             </h3>
 
-            {monthlyData.length === 0 ? (
+            {chartData.length === 0 ? (
               <div className="h-48 flex items-center justify-center text-slate-500">
                 <p className="text-xs font-semibold">{t.noChartData}</p>
               </div>
@@ -322,9 +339,9 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
                   <line x1="0" y1="150" x2="500" y2="150" className="stroke-slate-200 dark:stroke-white/[0.02]" strokeWidth="1" />
 
                   {/* Bars */}
-                  {monthlyData.map((d, i) => {
+                  {chartData.map((d, i) => {
                     const width = 30;
-                    const spacing = 500 / monthlyData.length;
+                    const spacing = 500 / chartData.length;
                     const x = i * spacing + (spacing - width) / 2;
                     const barHeight = maxRevenue > 0 ? (d.revenue / maxRevenue) * 150 : 0;
                     const y = 170 - barHeight;
@@ -368,9 +385,9 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
 
                 {/* X Axis Labels */}
                 <div className="flex justify-between mt-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-                  {monthlyData.map((d, i) => (
+                  {chartData.map((d, i) => (
                     <div key={i} className="text-center flex-1">
-                      {d.month}
+                      {filterType === "day" ? (d.day || "").slice(5) : d.month}
                     </div>
                   ))}
                 </div>

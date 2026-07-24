@@ -1,13 +1,8 @@
 import axios from "axios";
+import { getAuthConfig, getStoredToken, normalizeAuthError } from "./apiAuth";
 
-const API = "https://photo-hub-be-project.vercel.app/api";
+const API = "http://localhost:3000/api";
 const BACKEND_ORIGIN = "https://photo-hub-be-project.vercel.app";
-
-const getHeaders = () => ({
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-  },
-});
 
 const normalizeImageUrls = (value) => {
   const raw = Array.isArray(value) ? value : value ? [value] : [];
@@ -38,7 +33,7 @@ export const uploadImages = async (files, onProgress) => {
 
   const res = await axios.post(`${API}/upload/images`, formData, {
     headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
+      Authorization: `Bearer ${getStoredToken()}`,
     },
     timeout: 10 * 60 * 1000,
     onUploadProgress: (event) => {
@@ -57,8 +52,12 @@ export const uploadImages = async (files, onProgress) => {
 };
 
 export const createPackage = async (payload) => {
-  const res = await axios.post(`${API}/packages`, payload, getHeaders());
-  return res.data;
+  try {
+    const res = await axios.post(`${API}/packages`, payload, getAuthConfig());
+    return res.data;
+  } catch (error) {
+    normalizeAuthError(error);
+  }
 };
 
 export const getMyPackages = async (filters = {}) => {
@@ -68,28 +67,48 @@ export const getMyPackages = async (filters = {}) => {
   if (filters.packageType) params.append("packageType", filters.packageType);
   if (filters.isGroupPackage !== undefined) params.append("isGroupPackage", filters.isGroupPackage);
 
-  const res = await axios.get(`${API}/packages/my?${params.toString()}`, getHeaders());
-  return res.data;
+  try {
+    const res = await axios.get(`${API}/packages/my?${params.toString()}`, getAuthConfig());
+    return res.data;
+  } catch (error) {
+    normalizeAuthError(error);
+  }
 };
 
 export const getPackageDetail = async (packageId) => {
-  const res = await axios.get(`${API}/packages/${packageId}`, getHeaders());
-  return res.data;
+  try {
+    const res = await axios.get(`${API}/packages/${packageId}`, getAuthConfig());
+    return res.data;
+  } catch (error) {
+    normalizeAuthError(error);
+  }
 };
 
 export const updatePackage = async (packageId, payload) => {
-  const res = await axios.put(`${API}/packages/${packageId}`, payload, getHeaders());
-  return res.data;
+  try {
+    const res = await axios.put(`${API}/packages/${packageId}`, payload, getAuthConfig());
+    return res.data;
+  } catch (error) {
+    normalizeAuthError(error);
+  }
 };
 
 export const toggleStatusPackage = async (packageId) => {
-  const res = await axios.patch(`${API}/packages/${packageId}/toggle-status`, {}, getHeaders());
-  return res.data;
+  try {
+    const res = await axios.patch(`${API}/packages/${packageId}/toggle-status`, {}, getAuthConfig());
+    return res.data;
+  } catch (error) {
+    normalizeAuthError(error);
+  }
 };
 
 export const softDeletePackage = async (packageId) => {
-  const res = await axios.delete(`${API}/packages/${packageId}`, getHeaders());
-  return res.data;
+  try {
+    const res = await axios.delete(`${API}/packages/${packageId}`, getAuthConfig());
+    return res.data;
+  } catch (error) {
+    normalizeAuthError(error);
+  }
 };
 
 export const getPhotographerPackages = async (photographerId, filters = {}) => {
@@ -99,9 +118,13 @@ export const getPhotographerPackages = async (photographerId, filters = {}) => {
   if (filters.packageType) params.append("packageType", filters.packageType);
 
   const query = params.toString();
-  const res = await axios.get(
-    `${API}/packages/photographer/${photographerId}${query ? `?${query}` : ""}`,
-    getHeaders()
-  );
-  return res.data;
+  try {
+    const res = await axios.get(
+      `${API}/packages/photographer/${photographerId}${query ? `?${query}` : ""}`,
+      getAuthConfig()
+    );
+    return res.data;
+  } catch (error) {
+    normalizeAuthError(error);
+  }
 };

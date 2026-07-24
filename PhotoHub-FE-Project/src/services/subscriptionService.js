@@ -1,16 +1,7 @@
 import axios from "axios";
+import { getJsonAuthConfig, normalizeAuthError } from "./apiAuth";
 
-const API_BASE = "https://photo-hub-be-project.vercel.app/api/subscriptions";
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  };
-};
+const API_BASE = "http://localhost:3000/api/subscriptions";
 
 export const subscriptionService = {
   getPackages: async () => {
@@ -19,55 +10,95 @@ export const subscriptionService = {
   },
 
   getMySubscriptions: async () => {
-    const res = await axios.get(`${API_BASE}/my`, getAuthHeaders());
-    return res.data;
+    try {
+      const res = await axios.get(`${API_BASE}/my`, getJsonAuthConfig());
+      return res.data;
+    } catch (error) {
+      normalizeAuthError(error);
+    }
   },
 
   getSubscriptionById: async (id) => {
-    const res = await axios.get(`${API_BASE}/${id}`, getAuthHeaders());
-    return res.data;
+    try {
+      const res = await axios.get(`${API_BASE}/${id}`, getJsonAuthConfig());
+      return res.data;
+    } catch (error) {
+      normalizeAuthError(error);
+    }
   },
 
   updatePreferredSchedule: async (id, preferredSchedule = []) => {
-    const res = await axios.post(`${API_BASE}/${id}/preferred-schedule`, { preferredSchedule }, getAuthHeaders());
-    return res.data;
+    try {
+      const res = await axios.post(`${API_BASE}/${id}/preferred-schedule`, { preferredSchedule }, getJsonAuthConfig());
+      return res.data;
+    } catch (error) {
+      normalizeAuthError(error);
+    }
   },
 
   createSubscription: async (payload) => {
-    const res = await axios.post(`${API_BASE}/purchase`, payload, getAuthHeaders());
-    return res.data;
+    try {
+      const res = await axios.post(`${API_BASE}/purchase`, payload, getJsonAuthConfig());
+      return res.data;
+    } catch (error) {
+      normalizeAuthError(error);
+    }
   },
 
   pauseSubscription: async (id, pauseDays = 30) => {
-    const res = await axios.post(`${API_BASE}/${id}/pause`, { pauseDays }, getAuthHeaders());
-    return res.data;
+    try {
+      const res = await axios.post(`${API_BASE}/${id}/pause`, { pauseDays }, getJsonAuthConfig());
+      return res.data;
+    } catch (error) {
+      normalizeAuthError(error);
+    }
   },
 
   resumeSubscription: async (id) => {
-    const res = await axios.post(`${API_BASE}/${id}/resume`, {}, getAuthHeaders());
-    return res.data;
+    try {
+      const res = await axios.post(`${API_BASE}/${id}/resume`, {}, getJsonAuthConfig());
+      return res.data;
+    } catch (error) {
+      normalizeAuthError(error);
+    }
   },
 
   cancelSubscription: async (id, reason = "") => {
-    const res = await axios.post(`${API_BASE}/${id}/cancel`, { reason }, getAuthHeaders());
-    return res.data;
+    try {
+      const res = await axios.post(`${API_BASE}/${id}/cancel`, { reason }, getJsonAuthConfig());
+      return res.data;
+    } catch (error) {
+      normalizeAuthError(error);
+    }
   },
 
   renewSubscription: async (id, forceCharge = false) => {
-    const res = await axios.post(`${API_BASE}/${id}/renew`, { forceCharge }, getAuthHeaders());
-    return res.data;
+    try {
+      const res = await axios.post(`${API_BASE}/${id}/renew`, { forceCharge }, getJsonAuthConfig());
+      return res.data;
+    } catch (error) {
+      normalizeAuthError(error);
+    }
   },
 
   getRemainingSessions: async (id) => {
-    const res = await axios.get(`${API_BASE}/${id}/remaining-sessions`, getAuthHeaders());
-    return res.data;
+    try {
+      const res = await axios.get(`${API_BASE}/${id}/remaining-sessions`, getJsonAuthConfig());
+      return res.data;
+    } catch (error) {
+      normalizeAuthError(error);
+    }
   },
 
   getPaymentStatus: async (orderCode) => {
-    const res = await axios.get(`${API_BASE}/payment/status`, {
-      ...getAuthHeaders(),
-      params: { orderCode },
-    });
-    return res.data;
+    try {
+      const res = await axios.get(`${API_BASE}/payment/status`, {
+        ...getJsonAuthConfig(),
+        params: { orderCode },
+      });
+      return res.data;
+    } catch (error) {
+      normalizeAuthError(error);
+    }
   },
 };

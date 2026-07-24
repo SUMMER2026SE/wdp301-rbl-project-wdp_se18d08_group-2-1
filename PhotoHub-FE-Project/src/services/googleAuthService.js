@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "https://photo-hub-be-project.vercel.app/api/auth";
+const BASE_URL = "http://localhost:3000/api/auth";
 
 export const googleAuthService = {
   loginWithGoogle() {

@@ -1,8 +1,8 @@
 import axios from "axios";
 
-const BASE_URL = "https://photo-hub-be-project.vercel.app/api/photographers";
-const MARKETPLACE_BASE_URL = "https://photo-hub-be-project.vercel.app/api/photographer";
-const BOOKING_BASE_URL = "https://photo-hub-be-project.vercel.app/api/bookings";
+const BASE_URL = "http://localhost:3000/api/photographers";
+const MARKETPLACE_BASE_URL = "http://localhost:3000/api/photographer";
+const BOOKING_BASE_URL = "http://localhost:3000/api/bookings";
 
 export const photographerService = {
 

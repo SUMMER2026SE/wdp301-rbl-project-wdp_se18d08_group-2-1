@@ -1,4 +1,4 @@
-const BASE_URL = "https://photo-hub-be-project.vercel.app/api/admin";
+const BASE_URL = "http://localhost:3000/api/admin";
 
 const getHeaders = () => {
   const token = localStorage.getItem("token");
@@ -10,8 +10,11 @@ const getHeaders = () => {
 
 export const adminService = {
   // ================= DASHBOARD STATISTICS =================
-  getDashboardStatistics: async () => {
-    const response = await fetch(`${BASE_URL}/dashboard/statistics`, {
+  getDashboardStatistics: async (params = {}) => {
+    const query = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== ""))
+    ).toString();
+    const response = await fetch(`${BASE_URL}/dashboard/statistics${query ? `?${query}` : ""}`, {
       method: "GET",
       headers: getHeaders(),
     });

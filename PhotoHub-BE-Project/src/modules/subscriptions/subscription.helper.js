@@ -29,14 +29,23 @@ const getMonthStart = (date) => dayjs(date).startOf("month").toDate();
 const sanitizePreferredSchedule = (preferredSchedule = [], fallback = []) => {
   const raw = Array.isArray(preferredSchedule) && preferredSchedule.length > 0 ? preferredSchedule : fallback;
   return raw
-    .map((item) => ({
-      dayOfWeek: Number(item.dayOfWeek ?? item.weekday ?? item.day ?? 5),
-      startTime: String(item.startTime || item.timeStart || "09:00"),
-      endTime: String(item.endTime || item.timeEnd || "12:00"),
-      location: String(item.location || item.locationPreference || ""),
-      note: String(item.note || ""),
-    }))
-    .filter((item) => Number.isInteger(item.dayOfWeek) && item.dayOfWeek >= 0 && item.dayOfWeek <= 6);
+    .map((item) => {
+      const exactDate = normalizeDate(item.exactDate || item.date || item.scheduledDate);
+      const dayOfMonth = Number(item.dayOfMonth || item.monthDay || 0);
+      return {
+        exactDate: exactDate ? startOfDay(exactDate).toISOString() : "",
+        dayOfMonth: Number.isInteger(dayOfMonth) && dayOfMonth >= 1 && dayOfMonth <= 31 ? dayOfMonth : null,
+        dayOfWeek: Number(item.dayOfWeek ?? item.weekday ?? item.day ?? 5),
+        startTime: String(item.startTime || item.timeStart || "09:00"),
+        endTime: String(item.endTime || item.timeEnd || "12:00"),
+        location: String(item.location || item.locationPreference || ""),
+        note: String(item.note || ""),
+      };
+    })
+    .filter((item) => {
+      if (item.exactDate || item.dayOfMonth) return true;
+      return Number.isInteger(item.dayOfWeek) && item.dayOfWeek >= 0 && item.dayOfWeek <= 6;
+    });
 };
 
 const getTimeRangeFromSlot = (slotDate, slot) => {
@@ -53,9 +62,31 @@ const getCandidateDates = (cycleStart, cycleEnd, preferredSchedule = []) => {
   const end = dayjs(cycleEnd).endOf("day");
   const slots = preferredSchedule.length > 0 ? preferredSchedule : [{ dayOfWeek: 5, startTime: "09:00", endTime: "12:00" }];
 
+  slots.forEach((slot) => {
+    if (!slot.exactDate && !slot.dayOfMonth) return;
+
+    let slotDate = slot.exactDate ? dayjs(slot.exactDate).startOf("day") : null;
+    if (!slotDate && slot.dayOfMonth) {
+      const monthDay = Math.min(Number(slot.dayOfMonth), cursor.daysInMonth());
+      slotDate = cursor.date(monthDay).startOf("day");
+    }
+
+    if (!slotDate || slotDate.isBefore(cursor) || slotDate.isAfter(end)) return;
+
+    const range = getTimeRangeFromSlot(slotDate.toDate(), slot);
+    if (range.start > new Date()) {
+      days.push({
+        start: range.start,
+        end: range.end,
+        slot,
+      });
+    }
+  });
+
   let current = cursor;
   while (current.isBefore(end) || current.isSame(end)) {
     slots.forEach((slot) => {
+      if (slot.exactDate || slot.dayOfMonth) return;
       if (current.day() === slot.dayOfWeek) {
         const range = getTimeRangeFromSlot(current.toDate(), slot);
         if (range.start > new Date()) {
@@ -69,7 +100,9 @@ const getCandidateDates = (cycleStart, cycleEnd, preferredSchedule = []) => {
     });
     current = current.add(1, "day");
   }
-  return days.sort((a, b) => new Date(a.start) - new Date(b.start));
+  const unique = new Map();
+  days.forEach((slot) => unique.set(`${new Date(slot.start).getTime()}-${new Date(slot.end).getTime()}`, slot));
+  return [...unique.values()].sort((a, b) => new Date(a.start) - new Date(b.start));
 };
 
 const makeSuggestedSlots = (candidateDates, limit = 3) =>

@@ -599,6 +599,21 @@ class SubscriptionService {
         ? [schedule]
         : await SubscriptionSchedule.find({ subscription: subscription._id }).sort({ cycleIndex: 1 }).session(session);
 
+      const photographerUserId = normalizeUserId(refreshed?.photographer?.user);
+      if (photographerUserId) {
+        safeEmit(photographerUserId, "subscription-schedule-updated", {
+          subscriptionId: refreshed._id,
+          customerId: refreshed.customer?._id || refreshed.customer,
+          status: refreshed.status,
+          bookingSchedule,
+        });
+      }
+      safeEmit(refreshed.customer?._id || refreshed.customer, "subscription-schedule-updated", {
+        subscriptionId: refreshed._id,
+        status: refreshed.status,
+        bookingSchedule,
+      });
+
       return {
         subscription: refreshed,
         bookingSchedule,

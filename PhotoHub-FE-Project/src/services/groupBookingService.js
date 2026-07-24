@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = "https://photo-hub-be-project.vercel.app/api";
+const API_BASE = "http://localhost:3000/api";
 
 const getHeaders = () => ({
   headers: {

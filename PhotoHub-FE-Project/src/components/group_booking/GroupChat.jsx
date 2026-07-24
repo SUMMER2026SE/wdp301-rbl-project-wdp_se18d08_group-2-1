@@ -84,7 +84,7 @@ export default function GroupChat({
   useEffect(() => {
     if (!groupId || !isMember) return;
 
-    const socket = io("http://localhost:3000");
+    const socket = io("http://localhost:3000/");
 
     socket.on("connect", () => {
       socket.emit("join-group-room", groupId);

@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const COMMUNITY_BASE_URL = "https://photo-hub-be-project.vercel.app/api/community";
-const PHOTOGRAPHER_CHAT_BASE_URL = "https://photo-hub-be-project.vercel.app/api/photographer/chat";
+const COMMUNITY_BASE_URL = "http://localhost:3000/api/community";
+const PHOTOGRAPHER_CHAT_BASE_URL = "http://localhost:3000/api/photographer/chat";
 
 const getAuthConfig = () => {
   const token = localStorage.getItem("token") || localStorage.getItem("accessToken");

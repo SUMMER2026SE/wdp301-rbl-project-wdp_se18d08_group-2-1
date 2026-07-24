@@ -13,7 +13,7 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { groupBookingService } from "../../services/groupBookingService";
 
-const API_BASE = "https://photo-hub-be-project.vercel.app/api";
+const API_BASE = "http://localhost:3000/api";
 
 // ── Preset expire options ─────────────────────────────────────────────────────
 const EXPIRE_PRESETS = [

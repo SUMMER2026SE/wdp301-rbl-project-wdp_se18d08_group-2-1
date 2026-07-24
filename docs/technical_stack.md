@@ -81,6 +81,6 @@ MAIL_FROM_NAME="PHOTOHUB System"
 # Tích hợp Google OAuth2
 GOOGLE_CLIENT_ID=449539395574-7hs2h9nj9u0fkfhaift6se52nnn6d53p.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=...
-GOOGLE_CALLBACK_URL=https://photo-hub-be-project.vercel.app/api/auth/google/callback
+GOOGLE_CALLBACK_URL=http://localhost:3000/api/auth/google/callback
 ```
 *Lưu ý bảo mật:* Cần loại bỏ các tệp tin chứa thông tin nhạy cảm này ra khỏi lịch sử Git trước khi đưa dự án lên môi trường Production thực tế.
