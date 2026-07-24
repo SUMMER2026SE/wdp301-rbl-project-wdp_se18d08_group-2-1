@@ -32,6 +32,7 @@ async function queueOtpEmail(to, otp, fullName) {
     console.log(`[EMAIL] OTP sent ${to}`);
   } catch (err) {
     console.error(`[EMAIL] Gửi OTP thất bại (${to}):`, err.message);
+    throw new Error("Cannot send OTP email. Please check Gmail/SMTP configuration.");
   }
 }
 

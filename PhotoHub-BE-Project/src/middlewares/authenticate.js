@@ -5,6 +5,11 @@ const { UserRole } = require("../modules/auth/models/User");
 
 const JWT_SECRET = process.env.JWT_SECRET || "cinema_secret";
 
+const isJwtLike = (token) => {
+  if (!token || token === "undefined" || token === "null") return false;
+  return String(token).split(".").length === 3;
+};
+
 const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -13,6 +18,9 @@ const authenticate = (req, res, next) => {
   }
 
   const token = authHeader.split(" ")[1];
+  if (!isJwtLike(token)) {
+    return ApiResponse.error(res, "Invalid token format", 401);
+  }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
@@ -27,7 +35,7 @@ const authenticate = (req, res, next) => {
 
     next();
   } catch (err) {
-    console.error("JWT verify error:", err);
+    console.error("JWT verify error:", err.message);
     return ApiResponse.error(res, "Invalid token", 401);
   }
 };

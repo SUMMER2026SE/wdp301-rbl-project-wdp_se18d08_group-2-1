@@ -1,12 +1,51 @@
 const { sendGmail } = require("./gmail.service");
+const nodemailer = require("nodemailer");
 
 function hasMailConfig() {
-  return Boolean(
+  const hasGmailApi = Boolean(
     process.env.GMAIL_USER &&
     process.env.GMAIL_CLIENT_ID &&
     process.env.GMAIL_CLIENT_SECRET &&
     process.env.GMAIL_REFRESH_TOKEN
   );
+  const hasSmtp = Boolean(process.env.MAIL_HOST && process.env.MAIL_USER && process.env.MAIL_PASSWORD);
+  return hasSmtp || hasGmailApi;
+}
+
+function createSmtpTransporter() {
+  if (!process.env.MAIL_HOST || !process.env.MAIL_USER || !process.env.MAIL_PASSWORD) return null;
+
+  return nodemailer.createTransport({
+    host: process.env.MAIL_HOST,
+    port: Number(process.env.MAIL_PORT) || 587,
+    secure: Number(process.env.MAIL_PORT) === 465,
+    auth: {
+      user: process.env.MAIL_USER,
+      pass: String(process.env.MAIL_PASSWORD || "").replace(/\s+/g, ""),
+    },
+  });
+}
+
+async function sendPhotoHubMail({ to, subject, text, html }) {
+  const smtpTransporter = createSmtpTransporter();
+  if (smtpTransporter) {
+    try {
+      const info = await smtpTransporter.sendMail({
+        from: `"${process.env.MAIL_FROM_NAME || "PHOTOHUB System"}" <${process.env.MAIL_FROM || process.env.MAIL_USER}>`,
+        to,
+        subject,
+        text,
+        html,
+      });
+      console.log(`[SMTP] Sent ${to} | msgId: ${info.messageId}`);
+      return info;
+    } catch (smtpError) {
+      console.error(`[SMTP] Send failed (${to}):`, smtpError.message);
+      if (!process.env.GMAIL_REFRESH_TOKEN) throw smtpError;
+    }
+  }
+
+  return sendGmail({ to, subject, text, html });
 }
 
 /**
@@ -42,7 +81,7 @@ async function sendVerifyEmailOtp(to, otp, fullName) {
     </div>
   `;
 
-  await sendGmail({
+  await sendPhotoHubMail({
     to,
     subject: "Mã xác thực email - PHOTOHUB",
     text: `Mã OTP của bạn là ${otp}`,
@@ -103,7 +142,7 @@ async function sendApprovalEmail(to, fullName, adminNote) {
     </div>
   `;
 
-  await sendGmail({
+  await sendPhotoHubMail({
     to,
     subject: "Hồ sơ Photographer đã được phê duyệt - PHOTOHUB",
     text: `Chúc mừng! Hồ sơ của bạn đã được phê duyệt.`,
@@ -164,7 +203,7 @@ async function sendRejectionEmail(to, fullName, adminNote) {
     </div>
   `;
 
-  await sendGmail({
+  await sendPhotoHubMail({
     to,
     subject: "Hồ sơ Photographer chưa được phê duyệt - PHOTOHUB",
     text: `Hồ sơ của bạn chưa được phê duyệt.`,
@@ -179,4 +218,5 @@ module.exports = {
   sendApprovalEmail,
   sendRejectionEmail,
   hasMailConfig,
+  sendPhotoHubMail,
 };
