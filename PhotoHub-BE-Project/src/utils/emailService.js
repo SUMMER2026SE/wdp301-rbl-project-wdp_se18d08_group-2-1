@@ -112,12 +112,7 @@ module.exports = { sendVerifyEmailOtp, sendApprovalEmail, sendRejectionEmail, ha
  */
 async function sendVerifyEmailOtp(to, otp, fullName) {
   const name = fullName || "bạn";
-  const t = getTransporter();
 
-  if (!t) {
-    console.log(`[EMAIL chưa cấu hình] OTP cho ${to}: ${otp}`);
-    return;
-  }
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
@@ -144,12 +139,7 @@ async function sendVerifyEmailOtp(to, otp, fullName) {
  */
 async function sendApprovalEmail(to, fullName, adminNote) {
   const name = fullName || "bạn";
-  const t = getTransporter();
 
-  if (!t) {
-    console.log(`[EMAIL chưa cấu hình] Thông báo duyệt cho ${to} | Ghi chú: ${adminNote}`);
-    return;
-  }
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background-color: #f9f9f9; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -183,12 +173,6 @@ async function sendApprovalEmail(to, fullName, adminNote) {
  */
 async function sendRejectionEmail(to, fullName, adminNote) {
   const name = fullName || "bạn";
-  const t = getTransporter();
-
-  if (!t) {
-    console.log(`[EMAIL chưa cấu hình] Thông báo từ chối cho ${to} | Lý do: ${adminNote}`);
-    return;
-  }
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background-color: #f9f9f9; border-radius: 8px; border: 1px solid #e2e8f0;">

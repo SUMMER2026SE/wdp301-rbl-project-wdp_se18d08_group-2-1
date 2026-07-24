@@ -200,7 +200,7 @@ export default function PhotographerRevenueDashboard({ theme = "dark", language 
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   {t.totalEarnings}
-                </p>
+                </p> 
                 <h3 className="text-xl font-black mt-0.5">
                   {Number(stats.totalRevenue || 0).toLocaleString('vi-VN')} đ
                 </h3>
