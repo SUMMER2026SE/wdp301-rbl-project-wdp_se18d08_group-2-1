@@ -1,4 +1,4 @@
-const BASE_URL = "https://photo-hub-be-project.vercel.app/api/loyalty";
+const BASE_URL = "http://localhost:3000/api/loyalty";
 
 export const loyaltyService = {
   getLoyaltyAccount: async () => {

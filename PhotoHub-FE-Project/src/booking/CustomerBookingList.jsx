@@ -208,7 +208,7 @@ export default function CustomerBookingList({ theme = "dark", language = "vi" })
         albumTitle = finalAlbum.title || booking.title;
         // Wait, let's load album images from BE.
         // Let's look at user view:
-        const response = await fetch(`https://photo-hub-be-project.vercel.app/api/photographer/albums/${booking._id}`, {
+        const response = await fetch(`http://localhost:3000/api/photographer/albums/${booking._id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           }

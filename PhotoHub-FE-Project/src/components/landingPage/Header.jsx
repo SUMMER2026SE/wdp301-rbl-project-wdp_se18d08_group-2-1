@@ -412,6 +412,22 @@ export default function Header({ language, theme, onToggleLanguage, onToggleThem
       );
     });
 
+    socket.on("subscription-schedule-updated", (payload) => {
+      window.dispatchEvent(new CustomEvent("subscription_changed", { detail: payload }));
+      window.dispatchEvent(new CustomEvent("subscription_history_changed", { detail: payload }));
+
+      const isPhotog = user?.role === "photographer";
+      const title = language === "vi"
+        ? (isPhotog ? "Khách vừa cập nhật lịch gói tháng" : "Lịch nháp gói tháng đã cập nhật")
+        : (isPhotog ? "Customer updated monthly plan schedule" : "Monthly draft schedule updated");
+      const message = language === "vi"
+        ? "Mở phần Gói tháng để xem lịch nháp và ghi chú mới nhất."
+        : "Open Monthly plans to review the latest draft schedule and notes.";
+
+      addNotification("subscription", { en: "Subscription Updated", vi: "Cập nhật gói tháng" }, { en: message, vi: message }, isPhotog ? "/photographerProfile" : "/profile");
+      showToast(title, message);
+    });
+
     return () => {
       socket.disconnect();
       socketRef.current = null;

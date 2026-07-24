@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "https://photo-hub-be-project.vercel.app/api/customer/jobs";
+const BASE_URL = "http://localhost:3000/api/customer/jobs";
 
 const getAuthConfig = (isMultipart = false) => {
   const token = localStorage.getItem("token");

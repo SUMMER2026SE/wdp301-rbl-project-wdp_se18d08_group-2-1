@@ -58,15 +58,24 @@ const dayOptions = [
 
 const normalizePreferredSchedule = (schedule = []) => {
   if (!Array.isArray(schedule) || schedule.length === 0) {
-    return [{ dayOfWeek: 5, startTime: "09:00", endTime: "12:00", note: "" }];
+    return [{ exactDate: "", dayOfWeek: 5, startTime: "09:00", endTime: "12:00", note: "" }];
   }
 
   return schedule.map((item) => ({
+    exactDate: item?.exactDate || item?.date || item?.scheduledDate || "",
+    dayOfMonth: item?.dayOfMonth || "",
     dayOfWeek: Number(item?.dayOfWeek ?? 5),
     startTime: String(item?.startTime || "09:00"),
     endTime: String(item?.endTime || "12:00"),
     note: String(item?.note || ""),
   }));
+};
+
+const toDateInputValue = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
 };
 
 const toneClass = (tone, dark) => {
@@ -196,7 +205,7 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
   }, []);
 
   const addSlot = useCallback(() => {
-    setPreferredSchedule((prev) => [...prev, { dayOfWeek: 5, startTime: "09:00", endTime: "12:00", note: "" }]);
+    setPreferredSchedule((prev) => [...prev, { exactDate: "", dayOfWeek: 5, startTime: "09:00", endTime: "12:00", note: "" }]);
   }, []);
 
   const removeSlot = useCallback((index) => {
@@ -283,6 +292,12 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
     { value: "CANCELLED", label: language === "vi" ? "Đã hủy" : "Cancelled" },
     { value: "EXPIRED", label: language === "vi" ? "Hết hạn" : "Expired" },
   ];
+
+  const currentScheduleCycle = Array.isArray(selectedSubscription?.bookingSchedule)
+    ? selectedSubscription.bookingSchedule.find((cycle) => Number(cycle.cycleIndex || 0) === Number(selectedSubscription?.renewalCount || 0)) || selectedSubscription.bookingSchedule[0]
+    : null;
+  const cycleMinDate = toDateInputValue(currentScheduleCycle?.cycleStart || selectedSubscription?.currentCycleStart || selectedSubscription?.startDate);
+  const cycleMaxDate = toDateInputValue(currentScheduleCycle?.cycleEnd || selectedSubscription?.currentCycleEnd || selectedSubscription?.endDate);
 
   return (
     <section className={`rounded-2xl border p-4 md:p-5 ${isDark ? "border-white/10 bg-white/5" : "border-slate-200/80 bg-white shadow-sm"}`}>
@@ -575,7 +590,20 @@ export default function CustomerSubscriptionHistory({ theme = "dark", language =
                     <div className="mt-4 space-y-3">
                       {preferredSchedule.map((slot, index) => (
                         <div key={`${index}-${slot.dayOfWeek}`} className={`rounded-2xl border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-slate-200 bg-white"}`}>
-                          <div className="grid gap-2 sm:grid-cols-3">
+                          <div className="grid gap-2 sm:grid-cols-4">
+                            <label className="block">
+                              <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                                {language === "vi" ? "Ngày trong tháng" : "Date"}
+                              </span>
+                              <input
+                                type="date"
+                                min={cycleMinDate}
+                                max={cycleMaxDate}
+                                value={toDateInputValue(slot.exactDate)}
+                                onChange={(e) => updateSlot(index, "exactDate", e.target.value)}
+                                className={`w-full rounded-xl border px-3 py-2 text-sm outline-none ${isDark ? "border-white/10 bg-[#09111f] text-white" : "border-slate-200 bg-white text-slate-900"}`}
+                              />
+                            </label>
                             <label className="block">
                               <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Day</span>
                               <select

@@ -11,12 +11,70 @@ const Wallet = require("../models/Wallet");
 const WithdrawRequest = require("../models/WithdrawRequest");
 const Report = require("../models/Report");
 const Notification = require("../models/Notification");
+const SubscriptionPayment = require("../../subscriptions/models/subscriptionPayment.model");
 const logAdminAction = require("../utils/adminActionLogger");
 const ApiResponse = require("../../../utils/ApiResponse");
 const { sendApprovalEmail, sendRejectionEmail } = require("../../../utils/emailService");
 
 const COMMISSION_RATE = Number(process.env.PHOTOGRAPHER_COMMISSION_RATE || 0.1);
 const getBookingAmount = (booking) => Number(booking?.totalPrice || booking?.price || booking?.depositAmount || 0);
+
+const buildDashboardDateRange = (query = {}) => {
+  let startDate = null;
+  let endDate = null;
+
+  if (query.startDate && query.endDate) {
+    startDate = new Date(query.startDate);
+    startDate.setHours(0, 0, 0, 0);
+    endDate = new Date(query.endDate);
+    endDate.setHours(23, 59, 59, 999);
+    return { startDate, endDate, grain: "day" };
+  }
+
+  if (query.startMonth && query.endMonth) {
+    const [sy, sm] = String(query.startMonth).split("-").map(Number);
+    const [ey, em] = String(query.endMonth).split("-").map(Number);
+    startDate = new Date(sy, sm - 1, 1);
+    endDate = new Date(ey, em, 0, 23, 59, 59, 999);
+    return { startDate, endDate, grain: "month" };
+  }
+
+  if (query.startYear && query.endYear) {
+    startDate = new Date(Number(query.startYear), 0, 1);
+    endDate = new Date(Number(query.endYear), 11, 31, 23, 59, 59, 999);
+    return { startDate, endDate, grain: "month" };
+  }
+
+  if (query.startQuarter && query.endQuarter) {
+    const parseQuarter = (value) => {
+      const match = String(value).match(/^(\d{4})-Q?([1-4])$/i);
+      return match ? { year: Number(match[1]), quarter: Number(match[2]) } : null;
+    };
+    const start = parseQuarter(query.startQuarter);
+    const end = parseQuarter(query.endQuarter);
+    if (start && end) {
+      startDate = new Date(start.year, (start.quarter - 1) * 3, 1);
+      endDate = new Date(end.year, end.quarter * 3, 0, 23, 59, 59, 999);
+      return { startDate, endDate, grain: "month" };
+    }
+  }
+
+  return { startDate: null, endDate: null, grain: "month" };
+};
+
+const isWithinRange = (date, startDate, endDate) => {
+  if (!startDate || !endDate) return true;
+  const value = new Date(date);
+  return value >= startDate && value <= endDate;
+};
+
+const chartKey = (date, grain = "month") => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  if (grain === "day") return `${year}-${month}-${String(d.getDate()).padStart(2, "0")}`;
+  return `${year}-${month}`;
+};
 
 const ensureWallet = async (userId) =>
   Wallet.findOneAndUpdate(
@@ -1160,54 +1218,95 @@ class AdminController {
   // GET /api/admin/dashboard/statistics - Báo cáo tổng thể và biểu đồ
   async getDashboardStatistics(req, res) {
     try {
+      const { startDate, endDate, grain } = buildDashboardDateRange(req.query || {});
+      const dateQuery = startDate && endDate ? { createdAt: { $gte: startDate, $lte: endDate } } : {};
+
       const totalUsers = await User.countDocuments({ isDeleted: { $ne: true } });
       const totalCustomers = await User.countDocuments({ role: "customer", isDeleted: { $ne: true } });
       const totalPhotographers = await User.countDocuments({ role: "photographer", isDeleted: { $ne: true } });
       const totalVerifiedPhotographers = await Photographer.countDocuments({ verificationStatus: "VERIFIED" });
 
-      const totalBookings = await Booking.countDocuments();
-      const completedBookings = await Booking.countDocuments({ status: "COMPLETED" });
-      const cancelledBookings = await Booking.countDocuments({ status: "CANCELLED" });
-      const disputedBookings = await Booking.countDocuments({ status: "DISPUTED" });
+      const totalBookingsAllTime = await Booking.countDocuments();
+      const totalBookings = await Booking.countDocuments(dateQuery);
+      const completedBookings = await Booking.countDocuments({ ...dateQuery, status: { $in: ["COMPLETED", "completed"] } });
+      const cancelledBookings = await Booking.countDocuments({ ...dateQuery, status: { $in: ["CANCELLED", "cancelled"] } });
+      const disputedBookings = await Booking.countDocuments({ ...dateQuery, status: { $in: ["DISPUTED", "disputed"] } });
 
       const pendingWithdrawRequests = await WithdrawRequest.countDocuments({ status: "PENDING" });
 
       // Tính tổng doanh thu & commission thu được
-      const payments = await Payment.find({ status: "SUCCESS" });
+      const payments = (await Payment.find({ status: "SUCCESS" }))
+        .filter((p) => isWithinRange(p.createdAt, startDate, endDate));
+      const subscriptionPayments = await SubscriptionPayment.find({
+        status: "SUCCESS",
+        paymentKind: { $in: ["PURCHASE", "RENEWAL"] },
+      }).then((items) => items.filter((p) => isWithinRange(p.paidAt || p.createdAt, startDate, endDate)));
       const commissions = await Commission.find();
 
-      let totalRevenue = 0;
+      let bookingRevenue = 0;
       payments.forEach(p => {
         if (p.paymentType === "DEPOSIT" || p.paymentType === "FINAL") {
-          totalRevenue += p.amount;
+          bookingRevenue += p.amount;
         }
       });
+      const subscriptionRevenue = subscriptionPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+      const totalRevenue = bookingRevenue + subscriptionRevenue;
 
       let totalCommission = 0;
       commissions.forEach(c => {
         totalCommission += c.amount;
       });
+      totalCommission += Math.round(subscriptionRevenue * COMMISSION_RATE);
 
       // 1. Biểu đồ doanh thu theo tháng (monthlyRevenueChart)
       // Nhóm giao dịch thành công theo tháng
       const monthlyRevenueMap = {};
       payments.forEach(p => {
         if (p.paymentType === "DEPOSIT" || p.paymentType === "FINAL") {
-          const date = new Date(p.createdAt);
-          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+          const monthKey = chartKey(p.createdAt, grain);
           monthlyRevenueMap[monthKey] = (monthlyRevenueMap[monthKey] || 0) + p.amount;
         }
       });
+      subscriptionPayments.forEach(p => {
+        const monthKey = chartKey(p.paidAt || p.createdAt, grain);
+        monthlyRevenueMap[monthKey] = (monthlyRevenueMap[monthKey] || 0) + Number(p.amount || 0);
+      });
       const monthlyRevenueChart = Object.keys(monthlyRevenueMap).map(key => ({
         month: key,
+        label: key,
         revenue: monthlyRevenueMap[key]
       })).sort((a, b) => a.month.localeCompare(b.month));
 
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date();
+      todayEnd.setHours(23, 59, 59, 999);
+      const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+      const monthEnd = new Date(todayStart.getFullYear(), todayStart.getMonth() + 1, 0, 23, 59, 59, 999);
+      const successfulPayments = [
+        ...payments
+          .filter((p) => p.paymentType === "DEPOSIT" || p.paymentType === "FINAL")
+          .map((p) => ({ amount: Number(p.amount || 0), date: new Date(p.createdAt) })),
+        ...subscriptionPayments.map((p) => ({ amount: Number(p.amount || 0), date: new Date(p.paidAt || p.createdAt) })),
+      ];
+      const todayRevenue = successfulPayments
+        .filter((p) => p.date >= todayStart && p.date <= todayEnd)
+        .reduce((sum, p) => sum + p.amount, 0);
+      const currentMonthRevenue = successfulPayments
+        .filter((p) => p.date >= monthStart && p.date <= monthEnd)
+        .reduce((sum, p) => sum + p.amount, 0);
+      const todayBookings = await Booking.countDocuments({
+        createdAt: { $gte: todayStart, $lte: todayEnd },
+      });
+      const currentMonthBookings = await Booking.countDocuments({
+        createdAt: { $gte: monthStart, $lte: monthEnd },
+      });
+
       // 2. Biểu đồ trạng thái đặt lịch (bookingStatusChart)
-      const bookingStatuses = ["PENDING", "ACCEPTED", "DEPOSIT_PAID", "IN_PROGRESS", "COMPLETED", "CANCELLED", "DISPUTED"];
+      const bookingStatuses = ["PENDING", "ACCEPTED", "CONFIRMED", "COMPLETED", "CANCELLED", "DISPUTED", "DRAFT", "NEED_RESCHEDULE"];
       const bookingStatusChart = [];
       for (const status of bookingStatuses) {
-        const count = await Booking.countDocuments({ status });
+        const count = await Booking.countDocuments({ ...dateQuery, status: { $in: [status, status.toLowerCase()] } });
         bookingStatusChart.push({ status, count });
       }
 
@@ -1222,13 +1321,25 @@ class AdminController {
         totalCustomers,
         totalPhotographers,
         totalVerifiedPhotographers,
+        totalBookingsAllTime,
         totalBookings,
         completedBookings,
         cancelledBookings,
         disputedBookings,
+        bookingRevenue,
+        subscriptionRevenue,
         totalRevenue,
         totalCommission,
+        todayRevenue,
+        currentMonthRevenue,
+        todayBookings,
+        currentMonthBookings,
         pendingWithdrawRequests,
+        filter: {
+          startDate,
+          endDate,
+          grain,
+        },
         monthlyRevenueChart,
         bookingStatusChart,
         topPhotographers

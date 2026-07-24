@@ -1,4 +1,4 @@
-const BASE_URL = "https://photo-hub-be-project.vercel.app/api/favoritephotographers";
+const BASE_URL = "http://localhost:3000/api/favoritephotographers";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");

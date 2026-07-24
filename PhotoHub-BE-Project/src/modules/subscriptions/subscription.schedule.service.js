@@ -51,6 +51,58 @@ const buildBookingTitle = (subscription, sessionNumber) => {
   return `${packageName} - Session ${sessionNumber}`;
 };
 
+const makeFallbackCandidateSlots = (cycleStart, cycleEnd, desiredSessions = 1) => {
+  const slots = [];
+  let cursor = dayjs.max
+    ? dayjs.max(dayjs(cycleStart), dayjs().add(1, "day").startOf("day"))
+    : (dayjs(cycleStart).isAfter(dayjs().add(1, "day").startOf("day")) ? dayjs(cycleStart) : dayjs().add(1, "day").startOf("day"));
+  const end = dayjs(cycleEnd).endOf("day");
+  const stepDays = Math.max(1, Math.floor(Math.max(1, end.diff(cursor, "day") + 1) / Math.max(1, desiredSessions)));
+
+  while ((cursor.isBefore(end) || cursor.isSame(end)) && slots.length < desiredSessions) {
+    const start = cursor.hour(9).minute(0).second(0).millisecond(0).toDate();
+    const slotEnd = cursor.hour(12).minute(0).second(0).millisecond(0).toDate();
+    if (start > new Date()) {
+      slots.push({
+        start,
+        end: slotEnd,
+        slot: {
+          exactDate: cursor.startOf("day").toDate().toISOString(),
+          startTime: "09:00",
+          endTime: "12:00",
+          note: "System suggested slot",
+        },
+      });
+    }
+    cursor = cursor.add(stepDays, "day");
+  }
+
+  return slots;
+};
+
+const makeOverflowCandidateSlot = (cycleStart, cycleEnd, index = 0) => {
+  const base = dayjs(cycleStart).isAfter(dayjs().add(1, "day").startOf("day"))
+    ? dayjs(cycleStart).startOf("day")
+    : dayjs().add(1, "day").startOf("day");
+  const cycleLastDay = dayjs(cycleEnd).endOf("day");
+  let date = base.add(index, "day");
+  if (date.isAfter(cycleLastDay)) {
+    const availableDays = Math.max(1, cycleLastDay.diff(base, "day") + 1);
+    date = base.add(index % availableDays, "day");
+  }
+  const start = date.hour(9).minute(0).second(0).millisecond(0).toDate();
+  return {
+    start,
+    end: date.hour(12).minute(0).second(0).millisecond(0).toDate(),
+    slot: {
+      exactDate: date.startOf("day").toDate().toISOString(),
+      startTime: "09:00",
+      endTime: "12:00",
+      note: "System overflow suggested slot",
+    },
+  };
+};
+
 class SubscriptionScheduleService {
   async rebuildSessions(subscription, { cycleIndex = 0, session = null } = {}) {
     const scheduleQuery = SubscriptionSchedule.findOne({
@@ -105,7 +157,11 @@ class SubscriptionScheduleService {
       { dayOfWeek: 6, startTime: "13:00", endTime: "16:00" },
     ]);
 
-    const candidateSlots = getCandidateDates(cycle.cycleStart, cycle.cycleEnd, preferredSchedule);
+    const desiredSessions = Number(subscription.sessionsPerMonth || 0);
+    let candidateSlots = getCandidateDates(cycle.cycleStart, cycle.cycleEnd, preferredSchedule);
+    if (candidateSlots.length === 0) {
+      candidateSlots = makeFallbackCandidateSlots(cycle.cycleStart, cycle.cycleEnd, desiredSessions);
+    }
     const busyBookings = await getBookedRangesForPhotographer({
       photographerIds: photographerIdentity.ids,
       start: cycle.cycleStart,
@@ -126,7 +182,6 @@ class SubscriptionScheduleService {
 
     if (!schedule.sessions) schedule.sessions = [];
 
-    const desiredSessions = Number(subscription.sessionsPerMonth || 0);
     const alreadyGenerated = schedule.sessions.length;
     const startSessionNumber = alreadyGenerated + 1;
     const sessionsToCreate = Math.max(0, desiredSessions - alreadyGenerated);
@@ -138,7 +193,11 @@ class SubscriptionScheduleService {
 
     for (let i = 0; i < sessionsToCreate; i += 1) {
       const sessionNumber = startSessionNumber + i;
-      const nextCandidate = candidateSlots.find((slot) => !usedCandidateIndexes.has(new Date(slot.start).getTime()));
+      const nextCandidate = candidateSlots.find((slot) => !usedCandidateIndexes.has(new Date(slot.start).getTime()))
+        || makeOverflowCandidateSlot(cycle.cycleStart, cycle.cycleEnd, i);
+      if (nextCandidate?.start) {
+        usedCandidateIndexes.add(new Date(nextCandidate.start).getTime());
+      }
       const draftNote = String(nextCandidate?.slot?.note || subscription.notes || "");
 
       let bookingPayload = {
@@ -181,6 +240,13 @@ class SubscriptionScheduleService {
       }
 
       const booking = await Booking.create([bookingPayload], session ? { session } : {}).then((items) => items[0]);
+      busyBookings.push({
+        _id: booking._id,
+        start: bookingPayload.start,
+        end: bookingPayload.end,
+        status: bookingPayload.status,
+        photographer: bookingPayload.photographer,
+      });
 
       const subscriptionBooking = await SubscriptionBooking.create(
         [{

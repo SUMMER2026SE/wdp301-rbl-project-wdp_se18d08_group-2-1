@@ -5,11 +5,12 @@ import {
   Camera,
   ShoppingBag,
   DollarSign,
-  Percent,
   Clock,
   TrendingUp,
   Award,
-  ChevronRight
+  CalendarDays,
+  Filter,
+  RotateCcw
 } from "lucide-react";
 import Swal from "sweetalert2";
 
@@ -17,15 +18,35 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hoveredPoint, setHoveredPoint] = useState(null);
+  const currentYear = new Date().getFullYear();
+  const [filterType, setFilterType] = useState("all");
+  const [filters, setFilters] = useState({
+    startDate: "",
+    endDate: "",
+    startMonth: "",
+    endMonth: "",
+    startYear: String(currentYear),
+    endYear: String(currentYear),
+    startQuarter: `${currentYear}-Q1`,
+    endQuarter: `${currentYear}-Q4`,
+  });
 
   useEffect(() => {
     fetchStats();
   }, []);
 
-  const fetchStats = async () => {
+  const buildFilterParams = (type = filterType, value = filters) => {
+    if (type === "day") return { startDate: value.startDate, endDate: value.endDate };
+    if (type === "month") return { startMonth: value.startMonth, endMonth: value.endMonth };
+    if (type === "year") return { startYear: value.startYear, endYear: value.endYear };
+    if (type === "quarter") return { startQuarter: value.startQuarter, endQuarter: value.endQuarter };
+    return {};
+  };
+
+  const fetchStats = async (params = buildFilterParams()) => {
     try {
       setLoading(true);
-      const res = await adminService.getDashboardStatistics();
+      const res = await adminService.getDashboardStatistics(params);
       if (res.success) {
         setStats(res.data);
       } else {
@@ -37,6 +58,36 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyQuickRange = (range) => {
+    const now = new Date();
+    const toInput = (date) => date.toISOString().slice(0, 10);
+    const start = new Date(now);
+    if (range === "7d") start.setDate(now.getDate() - 6);
+    if (range === "30d") start.setDate(now.getDate() - 29);
+    const nextFilters = { ...filters, startDate: toInput(start), endDate: toInput(now) };
+    setFilterType("day");
+    setFilters(nextFilters);
+    fetchStats(buildFilterParams("day", nextFilters));
+  };
+
+  const applyFilters = () => fetchStats(buildFilterParams());
+
+  const resetFilters = () => {
+    const clean = {
+      startDate: "",
+      endDate: "",
+      startMonth: "",
+      endMonth: "",
+      startYear: String(currentYear),
+      endYear: String(currentYear),
+      startQuarter: `${currentYear}-Q1`,
+      endQuarter: `${currentYear}-Q4`,
+    };
+    setFilterType("all");
+    setFilters(clean);
+    fetchStats({});
   };
 
   const formatCurrency = (amount) => {
@@ -87,12 +138,13 @@ export default function AdminDashboard() {
 
   // Cấu hình SVG Line/Area Chart cho doanh thu hàng tháng theo dòng tiền (phóng to dòng tiền dù ít tiền)
   const rawChartData = stats.monthlyRevenueChart || [];
+  const chartGrain = stats.filter?.grain || (filterType === "day" ? "day" : "month");
   
   // Tạo bản sao hoặc bổ sung dữ liệu
   const chartData = [...rawChartData];
 
   // Nếu dữ liệu rỗng hoặc ít hơn 6 tháng, tự động bù đắp các tháng trước đó để vẽ được đường dòng tiền liên tục
-  if (chartData.length < 6) {
+  if (chartGrain !== "day" && chartData.length < 6) {
     const monthsToShow = 6;
     let baseDate = new Date();
     if (chartData.length > 0) {
@@ -152,11 +204,113 @@ export default function AdminDashboard() {
           <p className="text-slate-400 mt-1">Tổng quan hoạt động kinh doanh và kiểm duyệt trên hệ thống PhotoHub.</p>
         </div>
         <button 
-          onClick={fetchStats}
+          onClick={() => fetchStats()}
           className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-semibold border border-slate-700 text-white transition duration-300"
         >
           Làm mới số liệu
         </button>
+      </div>
+
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4 shadow-xl shadow-slate-950/10">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-white">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500/10 text-orange-400">
+                <Filter size={17} />
+              </span>
+              <div>
+                <h2 className="text-sm font-black uppercase tracking-[0.16em]">Bộ lọc dashboard</h2>
+                <p className="text-xs text-slate-400">Lọc doanh thu, booking và biểu đồ theo ngày, tháng, quý hoặc năm.</p>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {[
+                { key: "all", label: "Tất cả" },
+                { key: "day", label: "Theo ngày" },
+                { key: "month", label: "Theo tháng" },
+                { key: "quarter", label: "Theo quý" },
+                { key: "year", label: "Theo năm" },
+              ].map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setFilterType(item.key)}
+                  className={`rounded-full border px-3.5 py-2 text-xs font-bold transition ${filterType === item.key
+                    ? "border-orange-500 bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                    : "border-slate-700 bg-slate-950/30 text-slate-300 hover:border-orange-400 hover:text-orange-300"
+                    }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-1 flex-wrap items-end gap-3 xl:justify-end">
+            {filterType === "day" && (
+              <>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Từ ngày</span>
+                  <input type="date" value={filters.startDate} onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))} className="h-11 rounded-xl border border-slate-700 bg-slate-950/60 px-3 text-sm text-white outline-none focus:border-orange-400" />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Đến ngày</span>
+                  <input type="date" value={filters.endDate} onChange={(e) => setFilters((prev) => ({ ...prev, endDate: e.target.value }))} className="h-11 rounded-xl border border-slate-700 bg-slate-950/60 px-3 text-sm text-white outline-none focus:border-orange-400" />
+                </label>
+              </>
+            )}
+
+            {filterType === "month" && (
+              <>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Từ tháng</span>
+                  <input type="month" value={filters.startMonth} onChange={(e) => setFilters((prev) => ({ ...prev, startMonth: e.target.value }))} className="h-11 rounded-xl border border-slate-700 bg-slate-950/60 px-3 text-sm text-white outline-none focus:border-orange-400" />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Đến tháng</span>
+                  <input type="month" value={filters.endMonth} onChange={(e) => setFilters((prev) => ({ ...prev, endMonth: e.target.value }))} className="h-11 rounded-xl border border-slate-700 bg-slate-950/60 px-3 text-sm text-white outline-none focus:border-orange-400" />
+                </label>
+              </>
+            )}
+
+            {filterType === "quarter" && (
+              <>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Từ quý</span>
+                  <input value={filters.startQuarter} placeholder="2026-Q1" onChange={(e) => setFilters((prev) => ({ ...prev, startQuarter: e.target.value }))} className="h-11 w-28 rounded-xl border border-slate-700 bg-slate-950/60 px-3 text-sm text-white outline-none focus:border-orange-400" />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Đến quý</span>
+                  <input value={filters.endQuarter} placeholder="2026-Q4" onChange={(e) => setFilters((prev) => ({ ...prev, endQuarter: e.target.value }))} className="h-11 w-28 rounded-xl border border-slate-700 bg-slate-950/60 px-3 text-sm text-white outline-none focus:border-orange-400" />
+                </label>
+              </>
+            )}
+
+            {filterType === "year" && (
+              <>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Từ năm</span>
+                  <input type="number" value={filters.startYear} onChange={(e) => setFilters((prev) => ({ ...prev, startYear: e.target.value }))} className="h-11 w-24 rounded-xl border border-slate-700 bg-slate-950/60 px-3 text-sm text-white outline-none focus:border-orange-400" />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Đến năm</span>
+                  <input type="number" value={filters.endYear} onChange={(e) => setFilters((prev) => ({ ...prev, endYear: e.target.value }))} className="h-11 w-24 rounded-xl border border-slate-700 bg-slate-950/60 px-3 text-sm text-white outline-none focus:border-orange-400" />
+                </label>
+              </>
+            )}
+
+            <button type="button" onClick={() => applyQuickRange("7d")} className="h-11 rounded-xl border border-slate-700 px-3 text-xs font-bold text-slate-300 transition hover:border-orange-400 hover:text-orange-300">7 ngày</button>
+            <button type="button" onClick={() => applyQuickRange("30d")} className="h-11 rounded-xl border border-slate-700 px-3 text-xs font-bold text-slate-300 transition hover:border-orange-400 hover:text-orange-300">30 ngày</button>
+            <button type="button" onClick={applyFilters} className="inline-flex h-11 items-center gap-2 rounded-xl bg-orange-500 px-4 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-600">
+              <CalendarDays size={16} />
+              Áp dụng
+            </button>
+            <button type="button" onClick={resetFilters} className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-700 px-4 text-sm font-bold text-slate-300 transition hover:border-slate-500 hover:bg-slate-800">
+              <RotateCcw size={15} />
+              Reset
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* KPI Cards Grid */}
@@ -242,7 +396,9 @@ export default function AdminDashboard() {
                   {/* Monthly Labels (X-Axis) - Tilted -25deg like the user's dashboard image */}
                   {points.map((p, idx) => {
                     const parts = p.month.split("-");
-                    const label = `${parts[1]}/${parts[0].slice(2)}`;
+                    const label = chartGrain === "day" && parts.length === 3
+                      ? `${parts[2]}/${parts[1]}`
+                      : `${parts[1]}/${parts[0].slice(2)}`;
                     return (
                       <text
                         key={idx}
@@ -286,7 +442,9 @@ export default function AdminDashboard() {
                       transform: "translate(-50%, -100%)",
                     }}
                   >
-                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider text-center">Tháng {points[hoveredPoint].month}</div>
+                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider text-center">
+                      {chartGrain === "day" ? "Ngày" : "Tháng"} {points[hoveredPoint].month}
+                    </div>
                     <div className="text-xs font-black text-emerald-400 mt-0.5 text-center">{formatCurrency(points[hoveredPoint].revenue)}</div>
                   </div>
                 )}
